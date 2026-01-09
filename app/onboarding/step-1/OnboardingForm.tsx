@@ -47,7 +47,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         return
       }
 
-      const { data, error } = await saveMyProfile({
+      const { error } = await saveMyProfile({
         display_name: formData.display_name,
         city: formData.city,
         zone: formData.zone,
@@ -60,9 +60,8 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         return
       }
 
-      // Éxito: redirigir a /explore
-      router.push('/explore')
-      router.refresh()
+      // Si no hay error, saveMyProfile hace redirect a /explore automáticamente
+      // No necesitamos hacer nada más aquí
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Error al guardar perfil')
       setLoading(false)
