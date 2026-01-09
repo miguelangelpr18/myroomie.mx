@@ -7,20 +7,20 @@ import { signIn, signOut } from '@/lib/auth'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError('')
+    setErrorMsg('')
     setLoading(true)
 
     try {
       const { data, error: signInError } = await signIn(email, password)
 
       if (signInError) {
-        setError(signInError.message)
+        setErrorMsg(signInError.message)
         setLoading(false)
         return
       }
@@ -30,15 +30,17 @@ export default function Login() {
       if (!user?.email_confirmed_at) {
         // Si el email no está confirmado, hacer signOut y mostrar mensaje
         await signOut()
-        setError('Verifica tu correo antes de iniciar sesión.')
+        setErrorMsg('Verifica tu correo antes de iniciar sesión.')
         setLoading(false)
         return
       }
 
-      // Si el email está confirmado, redirigir a /app
+      // Si el email está confirmado, redirigir a /app y refrescar para sincronizar cookies/sesión
       router.push('/app')
+      router.refresh()
+      setLoading(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
+      setErrorMsg(err instanceof Error ? err.message : 'Error al iniciar sesión')
       setLoading(false)
     }
   }
@@ -78,19 +80,19 @@ export default function Login() {
           />
         </div>
 
-        {error && (
-          <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
         <button
           type="submit"
           disabled={loading}
           className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+          {loading ? 'Entrando...' : 'Iniciar sesión'}
         </button>
+
+        {errorMsg && (
+          <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            {errorMsg}
+          </div>
+        )}
       </form>
 
       <div className="mt-4 text-center text-sm">

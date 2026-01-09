@@ -1,10 +1,11 @@
-import { supabase } from './supabaseClient'
+import { createBrowserSupabaseClient } from './supabase/client'
 
 export interface AuthError {
   message: string
 }
 
 export async function signUp(email: string, password: string) {
+  const supabase = createBrowserSupabaseClient()
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -18,6 +19,7 @@ export async function signUp(email: string, password: string) {
 }
 
 export async function signIn(email: string, password: string) {
+  const supabase = createBrowserSupabaseClient()
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -31,6 +33,7 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
+  const supabase = createBrowserSupabaseClient()
   const { error } = await supabase.auth.signOut()
 
   if (error) {
@@ -38,15 +41,5 @@ export async function signOut() {
   }
 
   return { error: null }
-}
-
-export async function getSession() {
-  const { data, error } = await supabase.auth.getSession()
-
-  if (error) {
-    return { data: null, error: { message: error.message } }
-  }
-
-  return { data, error: null }
 }
 
