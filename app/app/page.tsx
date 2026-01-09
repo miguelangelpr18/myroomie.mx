@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import LogoutButton from './LogoutButton'
 
 export default async function AppPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServerSupabaseClient()
   const { data: { session }, error } = await supabase.auth.getSession()
 
   // Si no hay sesión o hay error, redirigir a login

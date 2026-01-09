@@ -1,5 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -8,21 +8,27 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export async function createServerSupabaseClient() {
-  const cookieStore = await cookies()
+export function createServerSupabaseClient() {
+  const cookieStore = cookies()
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      getAll() {
-        return cookieStore.getAll()
+      get(name) {
+        return cookieStore.get(name)?.value
       },
-      setAll(cookiesToSet) {
+      set(name, value, options) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        } catch (error) {
+          cookieStore.set({ name, value, ...options })
+        } catch {
           // Cookie setting can fail in middleware or edge functions
+          // This is expected and safe to ignore
+        }
+      },
+      remove(name, options) {
+        try {
+          cookieStore.set({ name, value: '', ...options })
+        } catch {
+          // Cookie removal can fail in middleware or edge functions
           // This is expected and safe to ignore
         }
       },
