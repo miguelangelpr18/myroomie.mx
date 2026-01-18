@@ -43,7 +43,7 @@ export default async function ThreadPage({
           </p>
           <Link
             href="/messages"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
           >
             Volver a mensajes
           </Link>
@@ -79,7 +79,7 @@ export default async function ThreadPage({
       <div className="mb-6">
         <Link
           href="/messages"
-          className="text-blue-600 hover:underline text-sm"
+          className="text-[#FF7A18] hover:underline text-sm"
         >
           ← Volver a mensajes
         </Link>
@@ -94,7 +94,7 @@ export default async function ThreadPage({
               className="w-16 h-16 rounded-full object-cover"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-semibold">
+            <div className="w-16 h-16 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-xl font-semibold">
               {initial}
             </div>
           )}
@@ -104,7 +104,7 @@ export default async function ThreadPage({
             {thread.listing_id && (
               <Link
                 href={`/listings/${thread.listing_id}`}
-                className="text-sm text-blue-600 hover:underline mt-2 block"
+                className="text-sm text-[#FF7A18] hover:underline mt-2 block"
               >
                 Ver listing relacionado
               </Link>
@@ -138,14 +138,14 @@ export default async function ThreadPage({
                   <div
                     className={`max-w-[70%] rounded-lg px-4 py-2 ${
                       isOwn
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-[#FF7A18] text-white'
                         : 'bg-gray-100 text-gray-900'
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{message.body}</p>
                     <p
                       className={`text-xs mt-1 ${
-                        isOwn ? 'text-blue-100' : 'text-gray-500'
+                        isOwn ? 'text-white/80' : 'text-gray-500'
                       }`}
                     >
                       {new Date(message.created_at).toLocaleString('es-MX', {

@@ -133,7 +133,7 @@ export default function OnboardingLifestyleForm({ initialData }: OnboardingLifes
           value={formData.cleanliness ?? ''}
           onChange={(e) => setFormData({ ...formData, cleanliness: e.target.value ? parseInt(e.target.value, 10) : null })}
           required
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
         >
           <option value="">Selecciona un nivel</option>
           <option value="1">1 - Relajado</option>
@@ -218,7 +218,7 @@ export default function OnboardingLifestyleForm({ initialData }: OnboardingLifes
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="flex-1 bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {loading ? 'Guardando...' : 'Guardar y continuar'}
         </button>

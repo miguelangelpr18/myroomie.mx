@@ -81,7 +81,7 @@ export default function ListingForm() {
           value={formData.listing_type}
           onChange={(e) => setFormData({ ...formData, listing_type: e.target.value as 'room' | 'roommate' })}
           required
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
         >
           <option value="room">Rento cuarto</option>
           <option value="roommate">Busco roomie</option>
@@ -99,7 +99,7 @@ export default function ListingForm() {
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
           minLength={5}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Ej: Cuarto disponible en Roma Norte"
         />
         <p className="mt-1 text-sm text-gray-500">Mínimo 5 caracteres</p>
@@ -116,7 +116,7 @@ export default function ListingForm() {
           required
           minLength={20}
           rows={6}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Describe el espacio, las condiciones, etc."
         />
         <p className="mt-1 text-sm text-gray-500">Mínimo 20 caracteres</p>
@@ -133,7 +133,7 @@ export default function ListingForm() {
           onChange={(e) => setFormData({ ...formData, city: e.target.value })}
           required
           minLength={2}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Ej: Ciudad de México"
         />
       </div>
@@ -149,7 +149,7 @@ export default function ListingForm() {
           onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
           required
           minLength={2}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Ej: Roma Norte, Polanco, etc."
         />
       </div>
@@ -165,7 +165,7 @@ export default function ListingForm() {
           onChange={(e) => setFormData({ ...formData, price_mxn: e.target.value ? parseInt(e.target.value, 10) : null })}
           min="0"
           step="1"
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Ej: 5000"
         />
         <p className="mt-1 text-sm text-gray-500">Solo números enteros, mayor o igual a 0</p>
@@ -180,7 +180,7 @@ export default function ListingForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? 'Publicando...' : 'Publicar anuncio'}
       </button>

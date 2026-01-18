@@ -62,7 +62,7 @@ export default function Filters() {
             value={filters.q}
             onChange={(e) => setFilters({ ...filters, q: e.target.value })}
             placeholder="Nombre del usuario..."
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30 text-sm"
           />
         </div>
 
@@ -76,7 +76,7 @@ export default function Filters() {
             value={filters.city}
             onChange={(e) => setFilters({ ...filters, city: e.target.value })}
             placeholder="Ej: Ciudad de México"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30 text-sm"
           />
         </div>
 
@@ -90,7 +90,7 @@ export default function Filters() {
             value={filters.zone}
             onChange={(e) => setFilters({ ...filters, zone: e.target.value })}
             placeholder="Ej: Roma Norte"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30 text-sm"
           />
         </div>
       </div>
@@ -98,7 +98,7 @@ export default function Filters() {
       <div className="flex gap-2">
         <button
           type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          className="bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
         >
           Aplicar filtros
         </button>

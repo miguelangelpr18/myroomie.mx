@@ -8,7 +8,7 @@ export default function Home() {
         <div className="flex gap-4 justify-center mt-8">
           <a
             href="/signup"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            className="bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14]"
           >
             Crear perfil
           </a>

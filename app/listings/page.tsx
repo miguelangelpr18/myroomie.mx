@@ -101,7 +101,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
         </div>
         <Link
           href="/listings/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14]"
         >
           Publicar anuncio
         </Link>
@@ -146,21 +146,21 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
           {activeFilters.length > 0 ? (
             <Link
               href="/listings"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
             >
               Limpiar filtros
             </Link>
           ) : session ? (
             <Link
               href="/listings/new"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
             >
               Publicar anuncio
             </Link>
           ) : (
             <Link
               href="/login"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
             >
               Iniciar sesión
             </Link>
@@ -175,7 +175,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
               <Link key={listing.id} href={`/listings/${listing.id}`}>
                 <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="mb-3">
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                  <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium">
                     {typeLabel}
                   </span>
                 </div>

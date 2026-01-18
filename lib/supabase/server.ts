@@ -13,10 +13,10 @@ export function createServerSupabaseClient() {
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      get(name) {
-        return cookieStore.get(name)?.value
-      },
-      set(name, value, options) {
+  get(name: string) {
+    return cookieStore.get(name)?.value
+  },
+      set(name: string, value: string, options: any) {
         try {
           cookieStore.set({ name, value, ...options })
         } catch {
@@ -24,7 +24,7 @@ export function createServerSupabaseClient() {
           // This is expected and safe to ignore
         }
       },
-      remove(name, options) {
+      remove(name: string, options: any) {
         try {
           cookieStore.set({ name, value: '', ...options })
         } catch {

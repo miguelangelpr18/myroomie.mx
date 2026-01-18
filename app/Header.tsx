@@ -70,7 +70,7 @@ export default async function Header() {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+                <div className="w-8 h-8 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-sm font-semibold">
                   {initial}
                 </div>
               )}

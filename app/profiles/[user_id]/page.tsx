@@ -35,7 +35,7 @@ export default async function ProfilePage({
           </p>
           <Link
             href="/explore"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
           >
             Volver a explorar
           </Link>
@@ -59,7 +59,7 @@ export default async function ProfilePage({
       <div className="mb-6">
         <Link
           href="/explore"
-          className="text-blue-600 hover:underline text-sm"
+          className="text-[#FF7A18] hover:underline text-sm"
         >
           ← Volver
         </Link>
@@ -74,7 +74,7 @@ export default async function ProfilePage({
               className="w-24 h-24 rounded-full object-cover"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl font-semibold">
+            <div className="w-24 h-24 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-3xl font-semibold">
               {initial}
             </div>
           )}
@@ -105,7 +105,7 @@ export default async function ProfilePage({
                 <Link key={listing.id} href={`/listings/${listing.id}`}>
                   <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer">
                     <div className="mb-3">
-                      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                      <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium">
                         {typeLabel}
                       </span>
                     </div>

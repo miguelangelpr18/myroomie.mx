@@ -71,7 +71,7 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
             placeholder="tu@email.com"
           />
         </div>
@@ -86,7 +86,7 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
             placeholder="Tu contraseña"
           />
         </div>
@@ -94,7 +94,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {loading ? 'Entrando...' : 'Iniciar sesión'}
         </button>
@@ -108,7 +108,7 @@ export default function Login() {
 
       <div className="mt-4 text-center text-sm">
         <span>¿No tienes cuenta? </span>
-        <a href="/signup" className="text-blue-600 hover:underline">
+        <a href="/signup" className="text-[#FF7A18] hover:underline">
           Regístrate
         </a>
       </div>

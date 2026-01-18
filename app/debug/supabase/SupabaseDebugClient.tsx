@@ -40,7 +40,7 @@ export default function SupabaseDebugClient() {
         <button
           onClick={handleTest}
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {loading ? 'Probando...' : 'Probar conexión'}
         </button>

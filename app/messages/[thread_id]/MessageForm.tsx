@@ -59,13 +59,13 @@ export default function MessageForm({ threadId }: MessageFormProps) {
           placeholder="Escribe un mensaje..."
           rows={3}
           maxLength={5000}
-          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           disabled={loading}
         />
         <button
           type="submit"
           disabled={loading || !message.trim()}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+          className="bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
         >
           {loading ? 'Enviando...' : 'Enviar'}
         </button>

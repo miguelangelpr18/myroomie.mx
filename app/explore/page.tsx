@@ -147,7 +147,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
         </div>
         <Link
           href="/onboarding/step-1"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14]"
         >
           Crear/editar mi perfil
         </Link>
@@ -168,7 +168,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ pets: 'yes' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   petsParam === 'yes'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -178,7 +178,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ pets: 'no' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   petsParam === 'no'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -195,7 +195,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ smoker: 'yes' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   smokerParam === 'yes'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -205,7 +205,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ smoker: 'no' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   smokerParam === 'no'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -222,7 +222,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ parties: 'yes' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   partiesParam === 'yes'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -232,7 +232,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ parties: 'no' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   partiesParam === 'no'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -249,7 +249,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ cleanliness: '1' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   cleanlinessParam === '1'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -259,7 +259,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ cleanliness: '2' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   cleanlinessParam === '2'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -269,7 +269,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ cleanliness: '3' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   cleanlinessParam === '3'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -286,7 +286,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ schedule: 'day' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   scheduleParam === 'day'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -296,7 +296,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                 href={buildHref({ schedule: 'night' })}
                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   scheduleParam === 'night'
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -311,7 +311,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
           <div className="mt-4 pt-4 border-t">
             <Link
               href={buildHref({ pets: null, smoker: null, parties: null, cleanliness: null, schedule: null })}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-[#FF7A18] hover:underline text-sm"
             >
               Limpiar filtros de lifestyle
             </Link>
@@ -354,14 +354,14 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
           {activeFilters.length > 0 ? (
             <Link
               href="/explore"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
             >
               Limpiar filtros
             </Link>
           ) : (
             <Link
               href="/onboarding/step-1"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
             >
               Crear mi perfil
             </Link>
@@ -383,7 +383,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
                       className="w-20 h-20 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-semibold">
+                    <div className="w-20 h-20 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-2xl font-semibold">
                       {initial}
                     </div>
                   )}

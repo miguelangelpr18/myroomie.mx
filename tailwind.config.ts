@@ -7,7 +7,15 @@ const config: Config = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        brand: {
+          orange: '#FF7A18',
+        },
+        ink: '#111827',
+        muted: '#6B7280',
+      },
+    },
   },
   plugins: [],
 }

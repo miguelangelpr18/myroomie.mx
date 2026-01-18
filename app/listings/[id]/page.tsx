@@ -30,7 +30,7 @@ export default async function ListingDetailPage({
           </p>
           <Link
             href="/listings"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
           >
             Ver anuncios
           </Link>
@@ -54,14 +54,14 @@ export default async function ListingDetailPage({
       <div className="mb-6">
         <Link
           href="/listings"
-          className="text-blue-600 hover:underline text-sm"
+          className="text-[#FF7A18] hover:underline text-sm"
         >
           ← Volver a listings
         </Link>
       </div>
 
       <div className="mb-6">
-        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
+        <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium mb-4">
           {typeLabel}
         </span>
         <h1 className="text-4xl font-bold mb-4">{listing.title}</h1>
@@ -70,7 +70,7 @@ export default async function ListingDetailPage({
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <div className="space-y-3 mb-6">
           {listing.price_mxn && (
-            <p className="text-2xl font-semibold text-blue-600">
+            <p className="text-2xl font-semibold text-[#FF7A18]">
               ${listing.price_mxn.toLocaleString()} MXN/mes
             </p>
           )}
@@ -109,7 +109,7 @@ export default async function ListingDetailPage({
                   className="w-16 h-16 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-semibold">
+                <div className="w-16 h-16 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-xl font-semibold">
                   {initial}
                 </div>
               )}
@@ -124,7 +124,7 @@ export default async function ListingDetailPage({
           </Link>
         ) : (
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-semibold">
+            <div className="w-16 h-16 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-xl font-semibold">
               {initial}
             </div>
             <div>

@@ -168,7 +168,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           required
           minLength={2}
           maxLength={40}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Tu nombre público"
         />
         <p className="mt-1 text-sm text-gray-500">Entre 2 y 40 caracteres</p>
@@ -186,7 +186,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           required
           minLength={2}
           maxLength={60}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Ej: Ciudad de México"
         />
         <p className="mt-1 text-sm text-gray-500">Entre 2 y 60 caracteres</p>
@@ -204,7 +204,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           required
           minLength={2}
           maxLength={80}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
           placeholder="Ej: Roma Norte, Polanco, etc."
         />
         <p className="mt-1 text-sm text-gray-500">Entre 2 y 80 caracteres</p>
@@ -220,7 +220,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           id="avatar"
           accept="image/*"
           onChange={handleFileChange}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
         />
         <p className="mt-1 text-sm text-gray-500">
           Solo imágenes, máximo 2MB
@@ -252,7 +252,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? 'Guardando...' : 'Guardar perfil'}
       </button>

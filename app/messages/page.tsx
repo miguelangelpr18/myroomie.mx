@@ -78,7 +78,7 @@ export default async function MessagesPage() {
           </p>
           <Link
             href="/explore"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
           >
             Explorar perfiles
           </Link>
@@ -103,7 +103,7 @@ export default async function MessagesPage() {
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-semibold">
+                    <div className="w-16 h-16 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-xl font-semibold">
                       {initial}
                     </div>
                   )}
