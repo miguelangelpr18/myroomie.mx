@@ -1,17 +1,8 @@
-import { redirect } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import LogoutButton from './LogoutButton'
 
 export default async function AppPage() {
-  const supabase = createServerSupabaseClient()
-  const { data: { session }, error } = await supabase.auth.getSession()
-
-  // Si no hay sesión o hay error, redirigir a login
-  if (!session || error) {
-    redirect('/login')
-  }
-
-  const user = session.user
+  const { user } = await requireProfileOrRedirect()
 
   return (
     <div className="container mx-auto px-4 py-16">

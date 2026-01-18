@@ -80,7 +80,7 @@ export async function saveMyProfile(formData: ProfileData) {
     return { error: error.message }
   }
 
-  // Si OK => redirect a /explore
-  redirect('/explore')
+  // Si OK => redirect a /onboarding/step-2
+  redirect('/onboarding/step-2')
 }
 

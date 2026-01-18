@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Header from './Header'
 
 export const metadata: Metadata = {
   title: 'myroomie.mx',
@@ -14,24 +15,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="min-h-screen flex flex-col">
-        <header className="border-b">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <a href="/" className="text-xl font-bold">
-              myroomie.mx
-            </a>
-            <nav className="flex gap-4">
-              <a href="/explore" className="hover:underline">
-                Explore
-              </a>
-              <a href="/login" className="hover:underline">
-                Login
-              </a>
-              <a href="/signup" className="hover:underline">
-                Signup
-              </a>
-            </nav>
-          </div>
-        </header>
+        <Header />
         <main className="flex-1">{children}</main>
         <footer className="border-t mt-auto">
           <div className="container mx-auto px-4 py-6">

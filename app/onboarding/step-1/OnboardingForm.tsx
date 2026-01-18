@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveMyProfile, ProfileData } from './actions'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 interface OnboardingFormProps {
   initialData: ProfileData | null
@@ -10,16 +11,62 @@ interface OnboardingFormProps {
 
 export default function OnboardingForm({ initialData }: OnboardingFormProps) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    initialData?.avatar_url || null
+  )
 
   const [formData, setFormData] = useState<ProfileData>({
     display_name: initialData?.display_name || '',
     city: initialData?.city || '',
     zone: initialData?.zone || '',
-    avatar_url: initialData?.avatar_url || '',
+    avatar_url: initialData?.avatar_url || null,
   })
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setAvatarFile(null)
+      setAvatarPreview(null)
+      return
+    }
+
+    // Validar que sea imagen
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('Solo se permiten archivos de imagen')
+      setAvatarFile(null)
+      setAvatarPreview(null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
+
+    // Validar tamaño (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMsg('La imagen debe ser menor a 2MB')
+      setAvatarFile(null)
+      setAvatarPreview(null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
+
+    setAvatarFile(file)
+    setErrorMsg('')
+
+    // Crear preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -47,11 +94,50 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         return
       }
 
+      let avatarUrl = formData.avatar_url
+
+      // Si hay un archivo nuevo, subirlo a Supabase Storage
+      if (avatarFile) {
+        const supabase = createBrowserSupabaseClient()
+
+        // Obtener sesión para user_id
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (!session || sessionError) {
+          setErrorMsg('No autorizado. Por favor inicia sesión.')
+          setLoading(false)
+          return
+        }
+
+        const userId = session.user.id
+        const filePath = `${userId}/avatar.jpg`
+
+        // Subir archivo
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile, {
+            upsert: true,
+            contentType: avatarFile.type,
+          })
+
+        if (uploadError) {
+          setErrorMsg(`Error al subir imagen: ${uploadError.message}`)
+          setLoading(false)
+          return
+        }
+
+        // Obtener URL pública
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+
+        avatarUrl = urlData.publicUrl
+      }
+
       const { error } = await saveMyProfile({
         display_name: formData.display_name,
         city: formData.city,
         zone: formData.zone,
-        avatar_url: formData.avatar_url || null,
+        avatar_url: avatarUrl,
       })
 
       if (error) {
@@ -125,18 +211,30 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
       </div>
 
       <div>
-        <label htmlFor="avatar_url" className="block mb-2 font-medium">
-          Avatar URL (opcional)
+        <label htmlFor="avatar" className="block mb-2 font-medium">
+          Avatar (opcional)
         </label>
         <input
-          type="url"
-          id="avatar_url"
-          value={formData.avatar_url}
-          onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+          ref={fileInputRef}
+          type="file"
+          id="avatar"
+          accept="image/*"
+          onChange={handleFileChange}
           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="https://ejemplo.com/avatar.jpg"
         />
-        <p className="mt-1 text-sm text-gray-500">URL de tu imagen de perfil</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Solo imágenes, máximo 2MB
+        </p>
+
+        {avatarPreview && (
+          <div className="mt-4">
+            <img
+              src={avatarPreview}
+              alt="Preview"
+              className="w-32 h-32 rounded-full object-cover border-2 border-gray-300"
+            />
+          </div>
+        )}
       </div>
 
       {errorMsg && (

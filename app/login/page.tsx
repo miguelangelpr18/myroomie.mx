@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn, signOut } from '@/lib/auth'
+import { hasProfile } from './actions'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -35,9 +36,19 @@ export default function Login() {
         return
       }
 
-      // Si el email está confirmado, redirigir a /app y refrescar para sincronizar cookies/sesión
-      router.push('/app')
+      // Refrescar para sincronizar cookies/sesión antes de verificar perfil
       router.refresh()
+
+      // Verificar si el usuario tiene perfil
+      const profileExists = await hasProfile()
+
+      // Redirigir según si tiene perfil o no
+      if (!profileExists) {
+        router.push('/onboarding/step-1')
+      } else {
+        router.push('/explore')
+      }
+
       setLoading(false)
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Error al iniciar sesión')
