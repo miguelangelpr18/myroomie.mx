@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import LogoutButton from './app/LogoutButton'
+import HeaderModeTabs from './components/HeaderModeTabs'
+import UserMenu from './components/UserMenu'
 
 export default async function Header() {
   const supabase = createServerSupabaseClient()
@@ -17,12 +18,7 @@ export default async function Header() {
             myroomie.mx
           </Link>
           <nav className="flex gap-4 items-center">
-            <Link href="/explore" className="hover:underline">
-              Explore
-            </Link>
-            <Link href="/listings" className="hover:underline">
-              Listings
-            </Link>
+            <HeaderModeTabs userId={undefined} hasProfile={undefined} />
             <Link href="/login" className="hover:underline">
               Login
             </Link>
@@ -52,31 +48,17 @@ export default async function Header() {
           myroomie.mx
         </Link>
         <nav className="flex gap-4 items-center">
-          <Link href="/explore" className="hover:underline">
-            Explore
-          </Link>
-          <Link href="/listings" className="hover:underline">
-            Listings
-          </Link>
+          <HeaderModeTabs userId={session.user.id} hasProfile={!!profile} />
           <Link href="/messages" className="hover:underline">
             Messages
           </Link>
           <div className="flex items-center gap-3 ml-4 pl-4 border-l">
-            <div className="flex items-center gap-2">
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={displayName}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-sm font-semibold">
-                  {initial}
-                </div>
-              )}
-              <span className="text-sm font-medium">{displayName}</span>
-            </div>
-            <LogoutButton />
+            <UserMenu
+              displayName={displayName}
+              avatarUrl={profile?.avatar_url || null}
+              userId={session.user.id}
+              initial={initial}
+            />
           </div>
         </nav>
       </div>

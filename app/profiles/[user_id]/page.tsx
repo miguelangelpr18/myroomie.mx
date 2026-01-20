@@ -3,6 +3,7 @@ import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
 import LifestyleBadges from '../../components/LifestyleBadges'
 import ContactButton from './ContactButton'
+import TrustPanel from '../../components/TrustPanel'
 
 export default async function ProfilePage({
   params,
@@ -18,7 +19,7 @@ export default async function ProfilePage({
   // Obtener perfil por user_id
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('user_id, display_name, city, zone, avatar_url, pets, smoker, cleanliness, parties, schedule')
+    .select('user_id, display_name, city, zone, avatar_url, pets, smoker, cleanliness, parties, schedule, featured_until')
     .eq('user_id', params.user_id)
     .single()
 
@@ -53,6 +54,8 @@ export default async function ProfilePage({
     .limit(20)
 
   const initial = profile.display_name.charAt(0).toUpperCase()
+  const now = new Date()
+  const isFeatured = profile.featured_until && new Date(profile.featured_until) > now
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">
@@ -79,7 +82,14 @@ export default async function ProfilePage({
             </div>
           )}
           <div>
-            <h1 className="text-3xl font-bold mb-2">{profile.display_name}</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold">{profile.display_name}</h1>
+              {isFeatured && (
+                <span className="inline-block px-3 py-1 bg-[#FF7A18] text-white rounded-full text-sm font-semibold">
+                  Destacado
+                </span>
+              )}
+            </div>
             <p className="text-gray-600">
               {profile.city}, {profile.zone}
             </p>
@@ -87,6 +97,11 @@ export default async function ProfilePage({
           </div>
         </div>
         {!isOwnProfile && <ContactButton userId={profile.user_id} />}
+      </div>
+
+      {/* Trust Panel: Ratings + Verifications */}
+      <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <TrustPanel isOwner={isOwnProfile} />
       </div>
 
       <div className="mt-8">

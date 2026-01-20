@@ -33,7 +33,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   // Construir query base
   let query = supabase
     .from('profiles')
-    .select('user_id, display_name, city, zone, avatar_url, pets, smoker, cleanliness, parties, schedule')
+    .select('user_id, display_name, city, zone, avatar_url, pets, smoker, cleanliness, parties, schedule, featured_until')
 
   // Aplicar filtro de búsqueda por nombre (q)
   if (q.trim()) {
@@ -77,8 +77,8 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
     query = query.eq('schedule', scheduleParam)
   }
 
-  // Ordenar por fecha de creación (más recientes primero)
-  query = query.order('created_at', { ascending: false })
+  // Ordenar por featured_until desc nulls last (featured primero)
+  query = query.order('featured_until', { ascending: false, nullsFirst: false })
 
   // Limitar resultados
   query = query.limit(50)
@@ -86,8 +86,31 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   // Ejecutar query
   const { data: profiles, error } = await query
 
+  // Ordenar perfiles: featured primero (featured_until > now), luego mantener orden de Supabase
+  const now = new Date()
+  const sortedProfiles = profiles
+    ? [...profiles].sort((a, b) => {
+        const aFeatured = a.featured_until && new Date(a.featured_until) > now
+        const bFeatured = b.featured_until && new Date(b.featured_until) > now
+
+        // Si uno es featured y el otro no, featured va primero
+        if (aFeatured && !bFeatured) return -1
+        if (!aFeatured && bFeatured) return 1
+
+        // Si ambos son featured, ordenar por featured_until desc
+        if (aFeatured && bFeatured) {
+          const aDate = new Date(a.featured_until!).getTime()
+          const bDate = new Date(b.featured_until!).getTime()
+          return bDate - aDate
+        }
+
+        // Si ninguno es featured, mantener orden original (ya viene ordenado por Supabase)
+        return 0
+      })
+    : null
+
   // Calcular número de resultados
-  const resultCount = profiles?.length || 0
+  const resultCount = sortedProfiles?.length || 0
 
   // Construir resumen de filtros activos
   const activeFilters: string[] = []
@@ -369,12 +392,21 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {profiles.map((profile) => {
+          {sortedProfiles?.map((profile) => {
             const initial = profile.display_name.charAt(0).toUpperCase()
+            const now = new Date()
+            const isFeatured = profile.featured_until && new Date(profile.featured_until) > now
 
             return (
               <Link key={profile.user_id} href={`/profiles/${profile.user_id}`}>
-                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer relative">
+                {isFeatured && (
+                  <div className="absolute top-4 right-4">
+                    <span className="inline-block px-2 py-1 bg-[#FF7A18] text-white rounded-full text-xs font-semibold">
+                      Destacado
+                    </span>
+                  </div>
+                )}
                 <div className="mb-4">
                   {profile.avatar_url ? (
                     <img

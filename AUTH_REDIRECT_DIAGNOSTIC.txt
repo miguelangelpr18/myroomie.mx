@@ -1,0 +1,483 @@
+================================================================================
+DIAGNÓSTICO: AUTH REDIRECTS Y PROTECCIÓN DE ACCESO
+================================================================================
+
+1) BÚSQUEDA DE ARCHIVOS CLAVE
+================================================================================
+
+✅ middleware.ts
+   - NO EXISTE (no hay middleware de Next.js)
+
+✅ requireProfileOrRedirect
+   - Archivo: lib/requireProfile.ts
+   - Función: requireProfileOrRedirect()
+
+✅ Server Actions de onboarding
+   - app/onboarding/step-1/actions.ts (getMyProfile, saveMyProfile)
+   - app/onboarding/step-2/actions.ts (getMyLifestyle, saveMyLifestyle)
+
+✅ redirect() y router.push() relacionados a auth/onboarding
+   - Encontrados en múltiples archivos (ver sección 2)
+
+
+================================================================================
+2) ARCHIVOS Y FUNCIONES QUE DECIDEN REDIRECTS
+================================================================================
+
+A) CREAR CUENTA (SIGNUP)
+------------------------
+Archivo: app/signup/page.tsx
+Función: handleSubmit() (Client Component)
+
+Flujo actual:
+1. Usuario llena formulario
+2. Llama a lib/auth.ts::signUp()
+3. Si éxito → muestra mensaje: "Cuenta creada. Revisa tu correo para verificar tu email."
+4. NO HAY REDIRECT AUTOMÁTICO
+   - El usuario se queda en /signup
+   - Debe verificar email manualmente
+   - Después de verificar, debe ir a /login manualmente
+
+Líneas relevantes:
+- Línea 62: signUp(email, password)
+- Línea 67: setSuccess('Cuenta creada. Revisa tu correo...')
+- NO hay router.push() ni redirect()
+
+DECISIÓN ACTUAL: Signup NO redirige automáticamente
+
+
+B) INICIAR SESIÓN (LOGIN)
+-------------------------
+Archivo: app/login/page.tsx
+Función: handleSubmit() (Client Component)
+
+Flujo actual:
+1. Usuario llena formulario
+2. Llama a lib/auth.ts::signIn()
+3. Verifica email_confirmed_at
+   - Si NO confirmado → signOut() + error
+4. Si confirmado → router.refresh()
+5. Llama a app/login/actions.ts::hasProfile()
+6. DECISIÓN DE REDIRECT:
+   - Si NO tiene perfil → router.push('/onboarding/step-1')
+   - Si tiene perfil → router.push('/explore')
+
+Líneas relevantes:
+- Línea 21: signIn(email, password)
+- Línea 31: Verificación email_confirmed_at
+- Línea 40: router.refresh()
+- Línea 43: hasProfile() (Server Action)
+- Línea 46-47: if (!profileExists) router.push('/onboarding/step-1')
+- Línea 48-49: else router.push('/explore')
+
+DECISIÓN ACTUAL: Login redirige a /onboarding/step-1 o /explore según tenga perfil
+
+
+C) INTENTA ENTRAR A /app (DASHBOARD) SIN PERFIL
+-----------------------------------------------
+Archivo: app/app/page.tsx
+Función: AppPage() (Server Component)
+
+Flujo actual:
+1. Llama a lib/requireProfileOrRedirect()
+2. Si no hay session → redirect('/login')
+3. Si no hay profile → redirect('/onboarding/step-1')
+4. Si tiene perfil → renderiza dashboard
+
+Líneas relevantes:
+- Línea 5: await requireProfileOrRedirect()
+- La función requireProfileOrRedirect() está en lib/requireProfile.ts
+
+DECISIÓN ACTUAL: Dashboard protegido por requireProfileOrRedirect()
+
+
+D) ONBOARDING STEP-1
+--------------------
+Archivo: app/onboarding/step-1/page.tsx
+Función: OnboardingStep1Page() (Server Component)
+
+Protección:
+- Línea 9-12: Si no hay session → redirect('/login')
+- NO verifica si ya tiene perfil (permite editar)
+
+Archivo: app/onboarding/step-1/actions.ts
+Función: saveMyProfile()
+
+Redirect después de guardar:
+- Línea 84: redirect('/onboarding/step-2')
+
+DECISIÓN ACTUAL: Step-1 redirige a /onboarding/step-2 después de guardar
+
+
+E) ONBOARDING STEP-2
+--------------------
+Archivo: app/onboarding/step-2/page.tsx
+Función: OnboardingStep2Page() (Server Component)
+
+Protección:
+- Línea 8: await requireProfileOrRedirect() (verifica session + profile)
+- Línea 26-27: Si no existe perfil → redirect('/onboarding/step-1')
+
+Archivo: app/onboarding/step-2/actions.ts
+Función: saveMyLifestyle()
+
+Redirect después de guardar:
+- Línea 88: redirect('/explore')
+
+DECISIÓN ACTUAL: Step-2 redirige a /explore después de guardar
+
+
+F) OTRAS RUTAS PROTEGIDAS
+--------------------------
+Todas usan requireProfileOrRedirect():
+
+- app/explore/page.tsx (línea 14)
+- app/listings/new/page.tsx (línea 6)
+- app/messages/page.tsx (línea 8)
+- app/messages/[thread_id]/page.tsx (línea 14)
+- app/onboarding/step-2/page.tsx (línea 8)
+
+
+================================================================================
+3) FUNCIÓN PRINCIPAL DE PROTECCIÓN
+================================================================================
+
+Archivo: lib/requireProfile.ts
+Función: requireProfileOrRedirect()
+
+Código actual:
+```typescript
+export async function requireProfileOrRedirect() {
+  const supabase = createServerSupabaseClient()
+
+  // Obtener sesión
+  const { data: { session }, error } = await supabase.auth.getSession()
+
+  // Si no hay session.user => redirect("/login")
+  if (!session?.user || error) {
+    redirect('/login')
+  }
+
+  // Consultar tabla profiles
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', session.user.id)
+    .limit(1)
+    .maybeSingle()
+
+  // Si no existe => redirect("/onboarding/step-1")
+  if (!profile || profileError) {
+    redirect('/onboarding/step-1')
+  }
+
+  // Si existe => return { user: session.user }
+  return { user: session.user }
+}
+```
+
+CONDICIONES ACTUALES:
+---------------------
+1. Verifica session (auth.users)
+   - Si NO hay → redirect('/login')
+
+2. Verifica profile (public.profiles)
+   - Consulta: SELECT user_id FROM profiles WHERE user_id = session.user.id
+   - Si NO existe → redirect('/onboarding/step-1')
+   - Si existe → permite acceso
+
+3. NO verifica:
+   - Qué tipo de perfil (roomie vs listings)
+   - Si completó onboarding step-2
+   - Intent/contexto de navegación
+
+
+================================================================================
+4) SERVER ACTION: hasProfile()
+================================================================================
+
+Archivo: app/login/actions.ts
+Función: hasProfile()
+
+Código actual:
+```typescript
+export async function hasProfile() {
+  const supabase = createServerSupabaseClient()
+
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    return false
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', session.user.id)
+    .maybeSingle()
+
+  return !!profile
+}
+```
+
+USO:
+----
+- Solo se usa en app/login/page.tsx (línea 43)
+- Retorna true/false si existe perfil
+- NO distingue tipo de perfil
+
+
+================================================================================
+5) FLUJO COMPLETO ACTUAL
+================================================================================
+
+SIGNUP:
+-------
+1. Usuario crea cuenta → /signup
+2. signUp() → Supabase Auth
+3. Mensaje: "Verifica tu correo"
+4. Usuario verifica email manualmente
+5. Usuario va a /login manualmente
+6. NO HAY REDIRECT AUTOMÁTICO DESPUÉS DE SIGNUP
+
+LOGIN:
+------
+1. Usuario inicia sesión → /login
+2. signIn() → Supabase Auth
+3. Verifica email_confirmed_at
+4. router.refresh()
+5. hasProfile() → verifica si existe perfil
+6. DECISIÓN:
+   - NO tiene perfil → router.push('/onboarding/step-1')
+   - Tiene perfil → router.push('/explore')
+
+ONBOARDING:
+-----------
+1. Usuario en /onboarding/step-1
+2. Completa formulario básico
+3. saveMyProfile() → guarda en profiles
+4. redirect('/onboarding/step-2')
+5. Usuario en /onboarding/step-2
+6. Completa lifestyle
+7. saveMyLifestyle() → actualiza profiles
+8. redirect('/explore')
+
+PROTECCIÓN DE RUTAS:
+--------------------
+1. Usuario intenta acceder a ruta protegida
+2. requireProfileOrRedirect() se ejecuta
+3. Verifica session
+   - NO → redirect('/login')
+4. Verifica profile
+   - NO → redirect('/onboarding/step-1')
+5. Tiene perfil → permite acceso
+
+
+================================================================================
+6) CAMBIOS MÍNIMOS RECOMENDADOS
+================================================================================
+
+A) SOPORTAR intent=roomies vs intent=listings
+----------------------------------------------
+
+PROBLEMA ACTUAL:
+- No hay distinción entre "quiero buscar roomie" vs "quiero publicar listing"
+- Todos van al mismo flujo de onboarding
+- No hay forma de capturar el "intent" del usuario
+
+CAMBIOS NECESARIOS:
+
+1. CAPTURAR INTENT EN SIGNUP/LOGIN
+   Archivo: app/signup/page.tsx
+   - Agregar campo oculto o query param: ?intent=roomies o ?intent=listings
+   - Guardar en localStorage o sessionStorage
+   - O pasar como query param a /login
+
+   Archivo: app/login/page.tsx
+   - Leer intent de query params o localStorage
+   - Pasar intent a hasProfile() o nueva función
+
+2. MODIFICAR hasProfile() O CREAR NUEVA FUNCIÓN
+   Archivo: app/login/actions.ts
+   - Opción A: Modificar hasProfile() para retornar más info
+   - Opción B: Crear getProfileInfo() que retorne:
+     * hasProfile: boolean
+     * profileType: 'roomie' | 'listing' | null
+     * intent: 'roomies' | 'listings' | null
+
+3. MODIFICAR DECISIÓN DE REDIRECT EN LOGIN
+   Archivo: app/login/page.tsx
+   - Línea 43-49: Cambiar lógica
+   - Si NO tiene perfil:
+     * Si intent=roomies → router.push('/onboarding/step-1?intent=roomies')
+     * Si intent=listings → router.push('/listings/new?intent=listings')
+     * Si no hay intent → router.push('/onboarding/step-1')
+   - Si tiene perfil:
+     * Si intent=roomies → router.push('/explore')
+     * Si intent=listings → router.push('/listings')
+     * Si no hay intent → router.push('/explore') (default actual)
+
+4. MODIFICAR requireProfileOrRedirect()
+   Archivo: lib/requireProfile.ts
+   - Agregar parámetro opcional: intent?: 'roomies' | 'listings'
+   - Si intent=listings y NO tiene perfil → redirect('/listings/new?intent=listings')
+   - Si intent=roomies y NO tiene perfil → redirect('/onboarding/step-1?intent=roomies')
+   - Mantener comportamiento actual si no hay intent
+
+5. MODIFICAR ONBOARDING STEP-1
+   Archivo: app/onboarding/step-1/page.tsx
+   - Leer intent de query params
+   - Si intent=listings → mostrar mensaje o redirigir a /listings/new
+   - Si intent=roomies → continuar con onboarding normal
+
+6. MODIFICAR ONBOARDING STEP-2
+   Archivo: app/onboarding/step-2/actions.ts
+   - Línea 88: Cambiar redirect según intent
+   - Si intent=listings → redirect('/listings')
+   - Si intent=roomies → redirect('/explore')
+   - Default → redirect('/explore')
+
+
+B) PERMITIR TENER roomie_profile Y listings EN LA MISMA CUENTA
+---------------------------------------------------------------
+
+PROBLEMA ACTUAL:
+- requireProfileOrRedirect() solo verifica si existe CUALQUIER perfil
+- No distingue si el usuario quiere usar roomies o listings
+- Un usuario puede tener perfil de roomie Y publicar listings (no hay conflicto actual)
+- PERO: el flujo de onboarding asume que todos quieren perfil de roomie
+
+CAMBIOS NECESARIOS:
+
+1. MODIFICAR ESTRUCTURA DE profiles (OPCIONAL)
+   - Opción A: Agregar campo profile_type: 'roomie' | 'listing' | 'both'
+   - Opción B: Mantener estructura actual (un perfil puede servir para ambos)
+   - RECOMENDACIÓN: Opción B (mínimo cambio)
+
+2. MODIFICAR requireProfileOrRedirect()
+   Archivo: lib/requireProfile.ts
+   - Agregar parámetro opcional: requireProfileType?: 'roomie' | 'listing' | 'any'
+   - Si requireProfileType='listing':
+     * NO verificar profiles (listings no requiere perfil)
+     * Solo verificar session
+   - Si requireProfileType='roomie':
+     * Verificar profiles (comportamiento actual)
+   - Si requireProfileType='any' o no especificado:
+     * Comportamiento actual (verificar profiles)
+
+3. MODIFICAR RUTAS PROTEGIDAS
+   - app/explore/page.tsx:
+     * requireProfileOrRedirect('roomie') → requiere perfil de roomie
+   - app/listings/new/page.tsx:
+     * requireProfileOrRedirect('listing') → NO requiere perfil, solo session
+   - app/messages/page.tsx:
+     * requireProfileOrRedirect('any') → requiere cualquier perfil (comportamiento actual)
+
+4. MODIFICAR ONBOARDING STEP-1
+   Archivo: app/onboarding/step-1/page.tsx
+   - Permitir acceso incluso si ya tiene perfil (para editar)
+   - NO redirigir si ya tiene perfil (permitir edición)
+
+5. CREAR FLUJO PARA LISTINGS SIN PERFIL
+   - app/listings/new/page.tsx:
+     * Cambiar de requireProfileOrRedirect() a solo verificar session
+     * Permitir crear listing sin tener perfil de roomie
+   - app/listings/new/actions.ts:
+     * Ya no requiere perfil (solo session)
+     * Mantener validación de session
+
+
+================================================================================
+7) PUNTOS EXACTOS A TOCAR
+================================================================================
+
+ARCHIVOS A MODIFICAR (en orden de prioridad):
+
+1. app/login/page.tsx
+   - Línea 43-49: Lógica de redirect después de hasProfile()
+   - Agregar lectura de intent (query param o localStorage)
+   - Modificar router.push() según intent
+
+2. app/login/actions.ts
+   - Modificar hasProfile() o crear getProfileInfo()
+   - Retornar más información sobre el perfil
+
+3. lib/requireProfile.ts
+   - Agregar parámetro opcional: intent o requireProfileType
+   - Modificar lógica de redirect según parámetro
+
+4. app/onboarding/step-1/page.tsx
+   - Leer intent de query params
+   - Modificar comportamiento si intent=listings
+
+5. app/onboarding/step-2/actions.ts
+   - Línea 88: Modificar redirect según intent
+
+6. app/listings/new/page.tsx
+   - Cambiar requireProfileOrRedirect() a solo verificar session
+   - Permitir acceso sin perfil
+
+7. app/signup/page.tsx (OPCIONAL)
+   - Agregar campo para capturar intent
+   - Guardar intent en localStorage o pasar a /login
+
+ARCHIVOS A CREAR (OPCIONAL):
+
+- lib/requireAuth.ts (nuevo)
+  - Función: requireAuthOrRedirect() → solo verifica session
+  - Usar en /listings/new si no requiere perfil
+
+- app/login/actions.ts (modificar)
+  - Nueva función: getProfileInfo() → retorna hasProfile, profileType, intent
+
+
+================================================================================
+8) RESUMEN DE CAMBIOS MÍNIMOS
+================================================================================
+
+PARA SOPORTAR intent=roomies vs intent=listings:
+------------------------------------------------
+1. Capturar intent en signup/login (query param o localStorage)
+2. Modificar hasProfile() para retornar más info
+3. Modificar redirect en login según intent
+4. Modificar requireProfileOrRedirect() para aceptar intent
+5. Modificar onboarding step-1 y step-2 para manejar intent
+6. Modificar redirects finales según intent
+
+PARA PERMITIR roomie_profile Y listings EN LA MISMA CUENTA:
+------------------------------------------------------------
+1. Modificar requireProfileOrRedirect() para aceptar requireProfileType
+2. Cambiar /listings/new para NO requerir perfil (solo session)
+3. Mantener /explore requiriendo perfil de roomie
+4. Permitir edición de perfil incluso si ya existe
+
+ARCHIVOS CRÍTICOS (mínimo cambio):
+-----------------------------------
+- lib/requireProfile.ts (función principal de protección)
+- app/login/page.tsx (decisión de redirect después de login)
+- app/login/actions.ts (verificación de perfil)
+- app/listings/new/page.tsx (cambiar protección)
+
+ARCHIVOS SECUNDARIOS:
+---------------------
+- app/onboarding/step-1/page.tsx
+- app/onboarding/step-2/actions.ts
+- app/signup/page.tsx (opcional)
+
+
+================================================================================
+9) NOTAS IMPORTANTES
+================================================================================
+
+- NO hay middleware.ts → toda la protección es en cada página
+- requireProfileOrRedirect() es la función central de protección
+- hasProfile() solo se usa en login (no en otras partes)
+- Signup NO redirige automáticamente (usuario debe ir a /login manualmente)
+- Onboarding step-2 siempre redirige a /explore (hardcoded)
+- No hay forma actual de distinguir "intent" del usuario
+- Un usuario puede tener perfil Y publicar listings (no hay conflicto técnico)
+- El problema es UX: el flujo asume que todos quieren perfil de roomie primero
+
+================================================================================
+FIN DEL DIAGNÓSTICO
+================================================================================
+

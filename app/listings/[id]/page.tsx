@@ -17,6 +17,10 @@ export default async function ListingDetailPage({
     .eq('id', params.id)
     .single()
 
+  // Verificar si está featured
+  const now = new Date()
+  const isFeatured = listing?.featured_until && new Date(listing.featured_until) > now
+
   // Si no existe o hay error, mostrar error amigable
   if (!listing || listingError) {
     return (
@@ -61,9 +65,16 @@ export default async function ListingDetailPage({
       </div>
 
       <div className="mb-6">
-        <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium mb-4">
-          {typeLabel}
-        </span>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium">
+            {typeLabel}
+          </span>
+          {isFeatured && (
+            <span className="inline-block px-3 py-1 bg-[#FF7A18] text-white rounded-full text-sm font-semibold">
+              Destacado
+            </span>
+          )}
+        </div>
         <h1 className="text-4xl font-bold mb-4">{listing.title}</h1>
       </div>
 

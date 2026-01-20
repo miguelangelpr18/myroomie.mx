@@ -7,9 +7,9 @@ export async function requireProfileOrRedirect() {
   // Obtener sesión
   const { data: { session }, error } = await supabase.auth.getSession()
 
-  // Si no hay session.user => redirect("/login")
+  // Si no hay session.user => redirect("/login?intent=roomies")
   if (!session?.user || error) {
-    redirect('/login')
+    redirect('/login?intent=roomies')
   }
 
   // Consultar tabla profiles

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn, signOut } from '@/lib/auth'
 import { hasProfile } from './actions'
 
@@ -11,6 +11,11 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Leer intent de query params
+  const intentParam = searchParams.get('intent')
+  const intent = intentParam === 'listings' || intentParam === 'roomies' ? intentParam : null
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -42,11 +47,25 @@ export default function Login() {
       // Verificar si el usuario tiene perfil
       const profileExists = await hasProfile()
 
-      // Redirigir según si tiene perfil o no
+      // Redirigir según si tiene perfil y el intent
       if (!profileExists) {
-        router.push('/onboarding/step-1')
+        // Sin perfil
+        if (intent === 'listings') {
+          router.push('/listings/new')
+        } else if (intent === 'roomies') {
+          router.push('/onboarding/step-1')
+        } else {
+          // intent === null
+          router.push('/signup/intent')
+        }
       } else {
-        router.push('/explore')
+        // Con perfil
+        if (intent === 'listings') {
+          router.push('/listings')
+        } else {
+          // intent === 'roomies' o null
+          router.push('/explore')
+        }
       }
 
       setLoading(false)

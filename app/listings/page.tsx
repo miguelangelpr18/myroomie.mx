@@ -24,7 +24,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   // Construir query base
   let query = supabase
     .from('listings')
-    .select('id, title, description, city, zone, price_mxn, listing_type, created_at')
+    .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until')
 
   // Aplicar filtro de búsqueda por texto (q)
   if (q.trim()) {
@@ -62,7 +62,10 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
     }
   }
 
-  // Aplicar ordenamiento
+  // Ordenar por featured_until desc nulls last primero (featured primero)
+  query = query.order('featured_until', { ascending: false, nullsFirst: false })
+  
+  // Aplicar ordenamiento secundario según sort param
   if (sort === 'price_asc') {
     query = query.order('price_mxn', { ascending: true, nullsFirst: false })
   } else if (sort === 'price_desc') {
@@ -78,8 +81,31 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   // Ejecutar query
   const { data: listings, error } = await query
 
+  // Ordenar listings: featured primero (featured_until > now), luego mantener orden de Supabase
+  const now = new Date()
+  const sortedListings = listings
+    ? [...listings].sort((a, b) => {
+        const aFeatured = a.featured_until && new Date(a.featured_until) > now
+        const bFeatured = b.featured_until && new Date(b.featured_until) > now
+
+        // Si uno es featured y el otro no, featured va primero
+        if (aFeatured && !bFeatured) return -1
+        if (!aFeatured && bFeatured) return 1
+
+        // Si ambos son featured, ordenar por featured_until desc
+        if (aFeatured && bFeatured) {
+          const aDate = new Date(a.featured_until!).getTime()
+          const bDate = new Date(b.featured_until!).getTime()
+          return bDate - aDate
+        }
+
+        // Si ninguno es featured, mantener orden original (ya viene ordenado por Supabase según sort param)
+        return 0
+      })
+    : null
+
   // Calcular número de resultados
-  const resultCount = listings?.length || 0
+  const resultCount = sortedListings?.length || 0
 
   // Construir resumen de filtros activos
   const activeFilters: string[] = []
@@ -168,12 +194,21 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {listings.map((listing) => {
+          {sortedListings?.map((listing) => {
             const typeLabel = listing.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'
+            const now = new Date()
+            const isFeatured = listing.featured_until && new Date(listing.featured_until) > now
 
             return (
               <Link key={listing.id} href={`/listings/${listing.id}`}>
-                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer relative">
+                {isFeatured && (
+                  <div className="absolute top-4 right-4">
+                    <span className="inline-block px-2 py-1 bg-[#FF7A18] text-white rounded-full text-xs font-semibold">
+                      Destacado
+                    </span>
+                  </div>
+                )}
                 <div className="mb-3">
                   <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium">
                     {typeLabel}

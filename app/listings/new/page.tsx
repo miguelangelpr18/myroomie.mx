@@ -1,9 +1,10 @@
-import { requireProfileOrRedirect } from '@/lib/requireProfile'
+import { requireAuthOrRedirect } from '@/lib/requireAuth'
 import ListingForm from './ListingForm'
 
 export default async function NewListingPage() {
-  // Verificar que el usuario tenga perfil
-  await requireProfileOrRedirect()
+  // Verificar que el usuario esté logueado (no requiere perfil)
+  // Si no hay sesión, redirigir a /login?intent=listings para que vuelva aquí después del login
+  await requireAuthOrRedirect({ intent: 'listings' })
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-2xl">
