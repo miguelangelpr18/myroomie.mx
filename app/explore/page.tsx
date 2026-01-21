@@ -1,42 +1,31 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
-import Filters from './Filters'
-import LifestyleBadges from '../components/LifestyleBadges'
-import ContactButton from './ContactButton'
-import { Card, CardHeader, CardContent } from '../components/ui/Card'
-import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
+import RoomieCard from '../components/roomies/RoomieCard'
 
 interface ExplorePageProps {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
 export default async function Explore({ searchParams }: ExplorePageProps) {
-  // Verificar que el usuario tenga perfil
-  await requireProfileOrRedirect()
-
   const supabase = createServerSupabaseClient()
 
-  // Obtener sesión para verificar si es el propio perfil (para ocultar botón Contactar)
-  const { data: { session } } = await supabase.auth.getSession()
-
-  // Extraer parámetros de búsqueda
+  // Extraer parámetros de búsqueda (del GlobalSearchBar mode roomies)
   const q = typeof searchParams.q === 'string' ? searchParams.q : ''
   const city = typeof searchParams.city === 'string' ? searchParams.city : ''
-  const zone = typeof searchParams.zone === 'string' ? searchParams.zone : ''
+  // Nota: budget_min/budget_max no existen en profiles table, se ignoran silenciosamente
 
-  // Extraer parámetros de lifestyle
+  // Extraer parámetros legacy de lifestyle (compatibilidad con URLs viejas, sin UI)
   const petsParam = typeof searchParams.pets === 'string' ? searchParams.pets : ''
   const smokerParam = typeof searchParams.smoker === 'string' ? searchParams.smoker : ''
   const partiesParam = typeof searchParams.parties === 'string' ? searchParams.parties : ''
   const cleanlinessParam = typeof searchParams.cleanliness === 'string' ? searchParams.cleanliness : ''
   const scheduleParam = typeof searchParams.schedule === 'string' ? searchParams.schedule : ''
 
-  // Construir query base
+  // Construir query base (sin budget_min/budget_max - no existen en profiles table)
   let query = supabase
     .from('profiles')
-    .select('user_id, display_name, city, zone, avatar_url, pets, smoker, cleanliness, parties, schedule, featured_until')
+    .select('user_id, display_name, city, zone, avatar_url, featured_until, pets, smoker, cleanliness, parties, schedule')
 
   // Aplicar filtro de búsqueda por nombre (q)
   if (q.trim()) {
@@ -48,12 +37,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
     query = query.ilike('city', `%${city.trim()}%`)
   }
 
-  // Aplicar filtro de zona
-  if (zone.trim()) {
-    query = query.ilike('zone', `%${zone.trim()}%`)
-  }
-
-  // Aplicar filtros de lifestyle
+  // Aplicar filtros legacy de lifestyle (solo si vienen en URL)
   if (petsParam === 'yes') {
     query = query.eq('pets', true)
   } else if (petsParam === 'no') {
@@ -80,8 +64,9 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
     query = query.eq('schedule', scheduleParam)
   }
 
-  // Ordenar por featured_until desc nulls last (featured primero)
+  // Ordenar: destacados primero (featured_until > now), luego más recientes
   query = query.order('featured_until', { ascending: false, nullsFirst: false })
+  query = query.order('created_at', { ascending: false })
 
   // Limitar resultados
   query = query.limit(50)
@@ -119,57 +104,15 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   const activeFilters: string[] = []
   if (q.trim()) activeFilters.push(`buscar: "${q.trim()}"`)
   if (city.trim()) activeFilters.push(`ciudad: ${city.trim()}`)
-  if (zone.trim()) activeFilters.push(`zona: ${zone.trim()}`)
-  if (petsParam === 'yes') activeFilters.push('con mascotas')
-  if (petsParam === 'no') activeFilters.push('sin mascotas')
-  if (smokerParam === 'yes') activeFilters.push('fuma')
-  if (smokerParam === 'no') activeFilters.push('no fuma')
-  if (partiesParam === 'yes') activeFilters.push('fiestero')
-  if (partiesParam === 'no') activeFilters.push('tranquilo')
-  if (cleanlinessParam === '1') activeFilters.push('limpieza: relax')
-  if (cleanlinessParam === '2') activeFilters.push('limpieza: normal')
-  if (cleanlinessParam === '3') activeFilters.push('limpieza: muy limpio')
-  if (scheduleParam === 'day') activeFilters.push('día')
-  if (scheduleParam === 'night') activeFilters.push('noche')
-
-  // Helper para construir URLs preservando params existentes
-  function buildHref(overrides: Partial<Record<string, string | null>>): string {
-    const params = new URLSearchParams()
-    
-    // Preservar params existentes (búsqueda básica)
-    if (q.trim()) params.set('q', q.trim())
-    if (city.trim()) params.set('city', city.trim())
-    if (zone.trim()) params.set('zone', zone.trim())
-    
-    // Preservar params de lifestyle existentes (a menos que sean overriden)
-    if (!overrides.hasOwnProperty('pets') && petsParam) params.set('pets', petsParam)
-    if (!overrides.hasOwnProperty('smoker') && smokerParam) params.set('smoker', smokerParam)
-    if (!overrides.hasOwnProperty('parties') && partiesParam) params.set('parties', partiesParam)
-    if (!overrides.hasOwnProperty('cleanliness') && cleanlinessParam) params.set('cleanliness', cleanlinessParam)
-    if (!overrides.hasOwnProperty('schedule') && scheduleParam) params.set('schedule', scheduleParam)
-    
-    // Aplicar overrides (null = remover, string = setear)
-    Object.entries(overrides).forEach(([key, value]) => {
-      if (value === null) {
-        params.delete(key)
-      } else if (value) {
-        params.set(key, value)
-      }
-    })
-
-    const queryString = params.toString()
-    return queryString ? `/explore?${queryString}` : '/explore'
-  }
-
-  // Verificar si hay filtros de lifestyle activos
-  const hasLifestyleFilters = petsParam || smokerParam || partiesParam || cleanlinessParam || scheduleParam
+  // Nota: No mostrar lifestyle filters en resumen (son legacy, sin UI)
+  // Nota: budget_min/budget_max no existen en profiles table, se ignoran silenciosamente
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-16">
       <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight mb-2">Explora perfiles</h1>
-          <p className="text-gray-600 text-sm">Filtra por ciudad, zona y estilo de vida.</p>
+          <p className="text-gray-600 text-sm">Encuentra roomies que compartan tu estilo de vida.</p>
         </div>
         <Link
           href="/onboarding/step-1"
@@ -177,172 +120,6 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
         >
           Crear/editar mi perfil
         </Link>
-      </div>
-
-      <Filters />
-
-      {/* Filtros de Lifestyle (chips toggle SSR-friendly) */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <h3 className="text-sm font-medium mb-4 text-gray-700">Estilo de vida</h3>
-        
-        <div className="space-y-4">
-          {/* Mascotas */}
-          <div>
-            <p className="text-xs text-gray-600 mb-2">Mascotas</p>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={buildHref({ pets: 'yes' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  petsParam === 'yes'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Con mascotas
-              </Link>
-              <Link
-                href={buildHref({ pets: 'no' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  petsParam === 'no'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Sin mascotas
-              </Link>
-            </div>
-          </div>
-
-          {/* Fuma */}
-          <div>
-            <p className="text-xs text-gray-600 mb-2">Fuma</p>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={buildHref({ smoker: 'yes' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  smokerParam === 'yes'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Fuma
-              </Link>
-              <Link
-                href={buildHref({ smoker: 'no' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  smokerParam === 'no'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                No fuma
-              </Link>
-            </div>
-          </div>
-
-          {/* Plan */}
-          <div>
-            <p className="text-xs text-gray-600 mb-2">Plan</p>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={buildHref({ parties: 'yes' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  partiesParam === 'yes'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Fiestero
-              </Link>
-              <Link
-                href={buildHref({ parties: 'no' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  partiesParam === 'no'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Tranquilo
-              </Link>
-            </div>
-          </div>
-
-          {/* Limpieza */}
-          <div>
-            <p className="text-xs text-gray-600 mb-2">Limpieza</p>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={buildHref({ cleanliness: '1' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  cleanlinessParam === '1'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Relax (1)
-              </Link>
-              <Link
-                href={buildHref({ cleanliness: '2' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  cleanlinessParam === '2'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Normal (2)
-              </Link>
-              <Link
-                href={buildHref({ cleanliness: '3' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  cleanlinessParam === '3'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Muy limpio (3)
-              </Link>
-            </div>
-          </div>
-
-          {/* Horario */}
-          <div>
-            <p className="text-xs text-gray-600 mb-2">Horario</p>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={buildHref({ schedule: 'day' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  scheduleParam === 'day'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Día
-              </Link>
-              <Link
-                href={buildHref({ schedule: 'night' })}
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  scheduleParam === 'night'
-                    ? 'bg-[#FF7A18]/10 text-[#FF7A18] border-[#FF7A18]'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Noche
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Botón Limpiar (solo si hay lifestyle filters activos) */}
-        {hasLifestyleFilters && (
-          <div className="mt-4 pt-4 border-t">
-            <Link
-              href={buildHref({ pets: null, smoker: null, parties: null, cleanliness: null, schedule: null })}
-              className="text-[#FF7A18] hover:underline text-sm"
-            >
-              Limpiar filtros de lifestyle
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* Resumen de resultados y filtros activos */}
@@ -366,69 +143,32 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
       )}
 
       {!profiles || profiles.length === 0 ? (
-        <EmptyState
-          icon="search"
-          title={activeFilters.length > 0
-            ? 'No encontramos roomies con esos filtros'
-            : 'Aún no hay perfiles'}
-          description={activeFilters.length > 0
-            ? 'Prueba quitar filtros o buscar otra zona.'
-            : 'Sé el primero en crear tu perfil'}
-          ctaLabel={activeFilters.length > 0 ? 'Ver todos' : 'Crear mi perfil'}
-          ctaHref={activeFilters.length > 0 ? '/explore' : '/onboarding/step-1'}
-        />
+        activeFilters.length > 0 ? (
+          <EmptyState
+            icon="search"
+            title="No encontramos roomies con esos filtros"
+            description="Intenta cambiar la ciudad o quitar algunos filtros."
+            ctaLabel="Ver todos"
+            ctaHref="/explore"
+          />
+        ) : (
+          <EmptyState
+            icon="search"
+            title="Aún no hay perfiles"
+            description="Sé el primero en crear tu perfil y conectar con otros roomies."
+            ctaLabel="Crear mi perfil"
+            ctaHref="/onboarding/step-1"
+          />
+        )
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {sortedProfiles?.map((profile) => {
-            const initial = profile.display_name.charAt(0).toUpperCase()
-            const now = new Date()
-            const isFeatured = profile.featured_until && new Date(profile.featured_until) > now
-
-            return (
-              <Link 
-                key={profile.user_id} 
-                href={`/profiles/${profile.user_id}`}
-                className="rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
-              >
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-3">
-                        {profile.avatar_url ? (
-                          <img
-                            src={profile.avatar_url}
-                            alt={profile.display_name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-lg font-semibold">
-                            {initial}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h2 className="text-base md:text-lg font-medium mb-1">{profile.display_name}</h2>
-                          <p className="text-xs text-neutral-500">
-                            {profile.city} · {profile.zone}
-                          </p>
-                        </div>
-                      </div>
-                      {isFeatured && (
-                        <Badge variant="featured">Destacado</Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <LifestyleBadges profile={profile} />
-                    {session?.user?.id !== profile.user_id && (
-                      <div className="mt-4 pt-4 border-t border-neutral-200">
-                        <ContactButton userId={profile.user_id} />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
+          {sortedProfiles?.map((profile) => (
+            <RoomieCard
+              key={profile.user_id}
+              profile={profile}
+              href={`/profiles/${profile.user_id}`}
+            />
+          ))}
         </div>
       )}
     </div>

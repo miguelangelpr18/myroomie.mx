@@ -13,7 +13,7 @@ export default function Badge({ children, variant = 'default', className }: Badg
   const variantStyles = {
     default: 'border-neutral-200 text-neutral-700 bg-white',
     subtle: 'border-transparent bg-neutral-100 text-neutral-700',
-    featured: 'border-orange-200 bg-orange-50 text-orange-700',
+    featured: 'border-brandBorder bg-brandSoft text-brandText',
   }
 
   return (

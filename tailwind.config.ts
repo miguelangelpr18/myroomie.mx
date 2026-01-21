@@ -9,9 +9,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: {
-          orange: '#FF7A18',
-        },
+        brand: '#FF7A18',
+        brandHover: '#E96A0F',
+        brandSoft: '#FFF1E8',
+        brandBorder: '#FFD6BD',
+        brandText: '#A63C00',
         ink: '#111827',
         muted: '#6B7280',
       },

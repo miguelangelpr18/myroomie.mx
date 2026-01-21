@@ -27,7 +27,7 @@ export default function Button({
   }
 
   const variantStyles = {
-    primary: 'bg-orange-600 text-white hover:bg-orange-700',
+    primary: 'bg-brand text-white hover:bg-brandHover',
     secondary: 'border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50',
     ghost: 'bg-transparent text-neutral-700 hover:bg-neutral-100',
   }
@@ -37,7 +37,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:opacity-50 disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brandBorder disabled:opacity-50 disabled:cursor-not-allowed',
         sizeStyles[size],
         variantStyles[variant],
         className

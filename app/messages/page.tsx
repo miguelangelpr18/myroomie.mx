@@ -88,7 +88,7 @@ export default async function MessagesPage() {
               <Link
                 key={thread.id}
                 href={`/messages/${thread.id}`}
-                className="block rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+                className="block rounded-xl focus:outline-none focus:ring-2 focus:ring-brandBorder focus:ring-offset-2"
               >
                 <Card className="hover:shadow-md transition-shadow">
                   <CardContent>

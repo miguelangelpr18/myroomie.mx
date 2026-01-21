@@ -54,7 +54,7 @@ export default function EmptyState({
         <div className="mt-4">
           <Link
             href={ctaHref}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-orange-600 px-4 text-sm font-medium text-white hover:bg-orange-700 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white hover:bg-brandHover transition-colors focus:outline-none focus:ring-2 focus:ring-brandBorder focus:ring-offset-2"
           >
             {ctaLabel}
           </Link>

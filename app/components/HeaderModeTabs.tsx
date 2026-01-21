@@ -85,14 +85,14 @@ export default function HeaderModeTabs({ userId, hasProfile }: HeaderModeTabsPro
       {currentMode === 'listings' ? (
         <Link
           href="/listings/new"
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-orange-600 px-4 text-sm font-medium text-white hover:bg-orange-700 transition-colors whitespace-nowrap"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white hover:bg-brandHover transition-colors whitespace-nowrap"
         >
           Crear listing
         </Link>
       ) : (
         <Link
           href={hasProfile && userId ? `/profiles/${userId}` : '/onboarding/step-1'}
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-orange-600 px-4 text-sm font-medium text-white hover:bg-orange-700 transition-colors whitespace-nowrap"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white hover:bg-brandHover transition-colors whitespace-nowrap"
         >
           {hasProfile && userId ? 'Ver mi perfil' : 'Crear perfil roomie'}
         </Link>

@@ -1,9 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import Filters from './Filters'
-import { Card, CardHeader, CardContent } from '../components/ui/Card'
-import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
+import ListingCard from '../components/listings/ListingCard'
 
 interface ListingsPageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -27,7 +25,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   // Construir query base
   let query = supabase
     .from('listings')
-    .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until')
+    .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until, image_urls')
 
   // Aplicar filtro de búsqueda por texto (q)
   if (q.trim()) {
@@ -65,7 +63,8 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
     }
   }
 
-  // Ordenar por featured_until desc nulls last primero (featured primero)
+  // Ordenar: destacados primero (featured_until > now), luego por sort param
+  // Primero ordenar por featured_until desc (nulls last) para que destacados vayan primero
   query = query.order('featured_until', { ascending: false, nullsFirst: false })
   
   // Aplicar ordenamiento secundario según sort param
@@ -84,25 +83,26 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   // Ejecutar query
   const { data: listings, error } = await query
 
-  // Ordenar listings: featured primero (featured_until > now), luego mantener orden de Supabase
+  // Ordenar listings: destacados primero (featured_until > now), luego mantener orden de Supabase
   const now = new Date()
   const sortedListings = listings
     ? [...listings].sort((a, b) => {
+        // Verificar si está destacado: featured_until IS NOT NULL AND featured_until > now()
         const aFeatured = a.featured_until && new Date(a.featured_until) > now
         const bFeatured = b.featured_until && new Date(b.featured_until) > now
 
-        // Si uno es featured y el otro no, featured va primero
+        // Si uno es destacado y el otro no, destacado va primero
         if (aFeatured && !bFeatured) return -1
         if (!aFeatured && bFeatured) return 1
 
-        // Si ambos son featured, ordenar por featured_until desc
+        // Si ambos son destacados, ordenar por featured_until desc
         if (aFeatured && bFeatured) {
           const aDate = new Date(a.featured_until!).getTime()
           const bDate = new Date(b.featured_until!).getTime()
           return bDate - aDate
         }
 
-        // Si ninguno es featured, mantener orden original (ya viene ordenado por Supabase según sort param)
+        // Si ninguno es destacado, mantener orden original (ya viene ordenado por Supabase según sort param)
         return 0
       })
     : null
@@ -135,8 +135,6 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
           Publicar anuncio
         </Link>
       </div>
-
-      <Filters />
 
       {/* Resumen de resultados y filtros activos */}
       {(activeFilters.length > 0 || resultCount > 0) && (
@@ -180,45 +178,13 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
         )
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {sortedListings?.map((listing) => {
-            const typeLabel = listing.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'
-            const now = new Date()
-            const isFeatured = listing.featured_until && new Date(listing.featured_until) > now
-
-            return (
-              <Link 
-                key={listing.id} 
-                href={`/listings/${listing.id}`}
-                className="rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
-              >
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="subtle">{typeLabel}</Badge>
-                        {isFeatured && <Badge variant="featured">Destacado</Badge>}
-                      </div>
-                    </div>
-                    <h2 className="text-base md:text-lg font-medium mb-1">{listing.title}</h2>
-                    <p className="text-xs text-neutral-500">
-                      {listing.city} · {listing.zone}
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-neutral-700 line-clamp-3 mb-3">{listing.description}</p>
-                    {listing.price_mxn && (
-                      <p className="text-sm font-medium text-neutral-900 mb-2">
-                        ${listing.price_mxn.toLocaleString()} MXN/mes
-                      </p>
-                    )}
-                    <p className="text-xs text-neutral-400">
-                      {new Date(listing.created_at).toLocaleDateString('es-MX')}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
+          {sortedListings?.map((listing) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              href={`/listings/${listing.id}`}
+            />
+          ))}
         </div>
       )}
     </div>
