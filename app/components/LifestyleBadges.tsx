@@ -1,7 +1,7 @@
 interface LifestyleProfile {
   pets?: boolean | null
   smoker?: boolean | null
-  cleanliness?: number | null
+  cleanliness?: number | string | null
   parties?: boolean | null
   schedule?: string | null
 }
@@ -23,14 +23,25 @@ export default function LifestyleBadges({ profile }: LifestyleBadgesProps) {
     badges.push(profile.smoker ? 'Fuma' : 'No fuma')
   }
 
-  // cleanliness
+  // cleanliness: normalizar string -> number
   if (profile.cleanliness !== null && profile.cleanliness !== undefined) {
-    if (profile.cleanliness === 1) {
-      badges.push('Limpieza: Relax')
-    } else if (profile.cleanliness === 2) {
-      badges.push('Limpieza: Normal')
-    } else if (profile.cleanliness === 3) {
-      badges.push('Limpieza: Muy limpio')
+    let cleanlinessValue: number | null = null
+    
+    if (typeof profile.cleanliness === 'string') {
+      const parsed = Number(profile.cleanliness)
+      cleanlinessValue = !isNaN(parsed) ? parsed : null
+    } else if (typeof profile.cleanliness === 'number') {
+      cleanlinessValue = profile.cleanliness
+    }
+
+    if (cleanlinessValue !== null) {
+      if (cleanlinessValue === 1) {
+        badges.push('Limpieza: Relax')
+      } else if (cleanlinessValue === 2) {
+        badges.push('Limpieza: Normal')
+      } else if (cleanlinessValue === 3) {
+        badges.push('Limpieza: Muy limpio')
+      }
     }
   }
 

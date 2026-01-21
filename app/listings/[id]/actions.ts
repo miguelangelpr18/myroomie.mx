@@ -80,8 +80,9 @@ export async function getOrCreateListingThread(listingId: string) {
 /**
  * Toggle guardar listing (wishlist)
  * Si existe → delete, si no existe → insert
+ * Server action compatible con <form action>
  */
-export async function toggleSave(listingId: string) {
+export async function toggleSave(listingId: string, formData: FormData): Promise<void> {
   const supabase = createServerSupabaseClient()
 
   // Verificar sesión
@@ -100,7 +101,7 @@ export async function toggleSave(listingId: string) {
     .single()
 
   if (listingError || !listing) {
-    return { error: 'Anuncio no encontrado.' }
+    throw new Error('Anuncio no encontrado.')
   }
 
   // Verificar si ya está guardado
@@ -112,7 +113,7 @@ export async function toggleSave(listingId: string) {
     .maybeSingle()
 
   if (checkError && checkError.code !== 'PGRST116') {
-    return { error: `Error al verificar: ${checkError.message}` }
+    throw new Error(`Error al verificar: ${checkError.message}`)
   }
 
   // Si existe, eliminar
@@ -123,7 +124,7 @@ export async function toggleSave(listingId: string) {
       .eq('id', existingSave.id)
 
     if (deleteError) {
-      return { error: `Error al eliminar: ${deleteError.message}` }
+      throw new Error(`Error al eliminar: ${deleteError.message}`)
     }
   } else {
     // Si no existe, crear
@@ -135,14 +136,12 @@ export async function toggleSave(listingId: string) {
       })
 
     if (insertError) {
-      return { error: `Error al guardar: ${insertError.message}` }
+      throw new Error(`Error al guardar: ${insertError.message}`)
     }
   }
 
   // Revalidar paths
   revalidatePath(`/listings/${listingId}`)
   revalidatePath('/saved')
-
-  return { error: null }
 }
 
