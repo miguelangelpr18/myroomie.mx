@@ -492,3 +492,4 @@ threads (1) ──> (*) messages.thread_id (CASCADE)
 **Mantenido por:** Equipo myroomie.mx  
 **Repositorio:** `git@github.com:miguelangelpr18/myroomie.mx.git`
 
+

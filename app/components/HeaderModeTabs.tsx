@@ -56,25 +56,25 @@ export default function HeaderModeTabs({ userId, hasProfile }: HeaderModeTabsPro
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       {/* Tabs */}
-      <div className="flex items-center bg-gray-100 rounded-lg p-1">
+      <div className="inline-flex items-center rounded-xl border border-neutral-200 bg-neutral-50 p-1">
         <Link
           href={buildHref('roomies')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             currentMode === 'roomies'
-              ? 'bg-[#FF7A18] text-white'
-              : 'text-gray-700 hover:text-gray-900'
+              ? 'bg-white text-neutral-900 shadow-sm'
+              : 'text-neutral-600 hover:text-neutral-900'
           }`}
         >
           Roomies
         </Link>
         <Link
           href={buildHref('listings')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             currentMode === 'listings'
-              ? 'bg-[#FF7A18] text-white'
-              : 'text-gray-700 hover:text-gray-900'
+              ? 'bg-white text-neutral-900 shadow-sm'
+              : 'text-neutral-600 hover:text-neutral-900'
           }`}
         >
           Listings
@@ -85,14 +85,14 @@ export default function HeaderModeTabs({ userId, hasProfile }: HeaderModeTabsPro
       {currentMode === 'listings' ? (
         <Link
           href="/listings/new"
-          className="bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium whitespace-nowrap"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-orange-600 px-4 text-sm font-medium text-white hover:bg-orange-700 transition-colors whitespace-nowrap"
         >
           Crear listing
         </Link>
       ) : (
         <Link
           href={hasProfile && userId ? `/profiles/${userId}` : '/onboarding/step-1'}
-          className="bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium whitespace-nowrap"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-orange-600 px-4 text-sm font-medium text-white hover:bg-orange-700 transition-colors whitespace-nowrap"
         >
           {hasProfile && userId ? 'Ver mi perfil' : 'Crear perfil roomie'}
         </Link>

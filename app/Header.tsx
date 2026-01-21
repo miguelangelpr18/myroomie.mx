@@ -12,9 +12,9 @@ export default async function Header() {
   if (!session) {
     // No hay sesión: mostrar links públicos
     return (
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold">
+      <header className="h-16 border-b border-neutral-200 bg-white">
+        <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-8">
+          <Link href="/" className="text-xl font-semibold tracking-tight text-neutral-900 hover:text-neutral-700">
             myroomie.mx
           </Link>
           <nav className="flex gap-4 items-center">
@@ -42,9 +42,9 @@ export default async function Header() {
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold">
+    <header className="h-16 border-b border-neutral-200 bg-white">
+      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-8">
+        <Link href="/" className="text-xl font-semibold tracking-tight text-neutral-900 hover:text-neutral-700">
           myroomie.mx
         </Link>
         <nav className="flex gap-4 items-center">

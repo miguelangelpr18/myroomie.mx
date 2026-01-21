@@ -4,6 +4,9 @@ import Link from 'next/link'
 import Filters from './Filters'
 import LifestyleBadges from '../components/LifestyleBadges'
 import ContactButton from './ContactButton'
+import { Card, CardHeader, CardContent } from '../components/ui/Card'
+import Badge from '../components/ui/Badge'
+import EmptyState from '../components/ui/EmptyState'
 
 interface ExplorePageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -162,10 +165,10 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   const hasLifestyleFilters = petsParam || smokerParam || partiesParam || cleanlinessParam || scheduleParam
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 md:px-8 py-16">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Explora perfiles</h1>
+          <h1 className="text-2xl font-semibold tracking-tight mb-2">Explora perfiles</h1>
           <p className="text-gray-600 text-sm">Filtra por ciudad, zona y estilo de vida.</p>
         </div>
         <Link
@@ -363,77 +366,66 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
       )}
 
       {!profiles || profiles.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {activeFilters.length > 0
-              ? 'No encontramos perfiles con estos filtros'
-              : 'Aún no hay perfiles'}
-          </h2>
-          <p className="text-gray-600 text-sm mb-4">
-            {activeFilters.length > 0
-              ? 'Prueba ajustando los filtros o quitando algunos criterios.'
-              : 'Sé el primero en crear tu perfil'}
-          </p>
-          {activeFilters.length > 0 ? (
-            <Link
-              href="/explore"
-              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
-            >
-              Limpiar filtros
-            </Link>
-          ) : (
-            <Link
-              href="/onboarding/step-1"
-              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
-            >
-              Crear mi perfil
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          icon="search"
+          title={activeFilters.length > 0
+            ? 'No encontramos roomies con esos filtros'
+            : 'Aún no hay perfiles'}
+          description={activeFilters.length > 0
+            ? 'Prueba quitar filtros o buscar otra zona.'
+            : 'Sé el primero en crear tu perfil'}
+          ctaLabel={activeFilters.length > 0 ? 'Ver todos' : 'Crear mi perfil'}
+          ctaHref={activeFilters.length > 0 ? '/explore' : '/onboarding/step-1'}
+        />
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {sortedProfiles?.map((profile) => {
             const initial = profile.display_name.charAt(0).toUpperCase()
             const now = new Date()
             const isFeatured = profile.featured_until && new Date(profile.featured_until) > now
 
             return (
-              <Link key={profile.user_id} href={`/profiles/${profile.user_id}`}>
-                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer relative">
-                {isFeatured && (
-                  <div className="absolute top-4 right-4">
-                    <span className="inline-block px-2 py-1 bg-[#FF7A18] text-white rounded-full text-xs font-semibold">
-                      Destacado
-                    </span>
-                  </div>
-                )}
-                <div className="mb-4">
-                  {profile.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.display_name}
-                      className="w-20 h-20 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-2xl font-semibold">
-                      {initial}
+              <Link 
+                key={profile.user_id} 
+                href={`/profiles/${profile.user_id}`}
+                className="rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+              >
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-3">
+                        {profile.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.display_name}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-lg font-semibold">
+                            {initial}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-base md:text-lg font-medium mb-1">{profile.display_name}</h2>
+                          <p className="text-xs text-neutral-500">
+                            {profile.city} · {profile.zone}
+                          </p>
+                        </div>
+                      </div>
+                      {isFeatured && (
+                        <Badge variant="featured">Destacado</Badge>
+                      )}
                     </div>
-                  )}
-                </div>
-                <h2 className="text-xl font-semibold mb-2">{profile.display_name}</h2>
-                <p className="text-gray-600 mb-1">
-                  <strong>Ciudad:</strong> {profile.city}
-                </p>
-                <p className="text-gray-600">
-                  <strong>Zona:</strong> {profile.zone}
-                </p>
-                <LifestyleBadges profile={profile} />
-                {session?.user?.id !== profile.user_id && (
-                  <div className="mt-4 pt-4 border-t">
-                    <ContactButton userId={profile.user_id} />
-                  </div>
-                )}
-                </div>
+                  </CardHeader>
+                  <CardContent>
+                    <LifestyleBadges profile={profile} />
+                    {session?.user?.id !== profile.user_id && (
+                      <div className="mt-4 pt-4 border-t border-neutral-200">
+                        <ContactButton userId={profile.user_id} />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </Link>
             )
           })}

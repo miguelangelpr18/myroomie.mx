@@ -88,3 +88,4 @@ export async function saveMyLifestyle(formData: LifestyleData) {
   redirect('/explore')
 }
 
+

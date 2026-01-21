@@ -63,10 +63,10 @@ export default function UserMenu({ displayName, avatarUrl, userId, initial }: Us
           <img
             src={avatarUrl}
             alt={displayName}
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-8 h-8 rounded-full object-cover ring-1 ring-neutral-200 hover:ring-neutral-300 transition"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-sm font-semibold">
+          <div className="w-8 h-8 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-sm font-semibold ring-1 ring-neutral-200 hover:ring-neutral-300 transition">
             {initial}
           </div>
         )}
@@ -74,53 +74,56 @@ export default function UserMenu({ displayName, avatarUrl, userId, initial }: Us
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-          <Link
-            href="/dashboard"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/messages"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Inbox
-          </Link>
-          <Link
-            href="/shortlist"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Shortlist
-          </Link>
-          <Link
-            href="/matches"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Matches
-          </Link>
-          <Link
-            href="/account"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Account
-          </Link>
-          <div className="border-t border-gray-200 my-1"></div>
-          <button
-            onClick={handleLogout}
-            disabled={loading}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Saliendo...' : 'Log out'}
-          </button>
+        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-neutral-200 bg-white p-2 shadow-lg z-50">
+          <div className="flex flex-col gap-1">
+            <Link
+              href="/dashboard"
+              onClick={() => setIsOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/messages"
+              onClick={() => setIsOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
+            >
+              Inbox
+            </Link>
+            <Link
+              href="/shortlist"
+              onClick={() => setIsOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
+            >
+              Shortlist
+            </Link>
+            <Link
+              href="/matches"
+              onClick={() => setIsOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
+            >
+              Matches
+            </Link>
+            <Link
+              href="/account"
+              onClick={() => setIsOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
+            >
+              Account
+            </Link>
+            <div className="my-1 border-t border-neutral-200"></div>
+            <button
+              onClick={handleLogout}
+              disabled={loading}
+              className="w-full text-left rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Saliendo...' : 'Log out'}
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
 }
+
 

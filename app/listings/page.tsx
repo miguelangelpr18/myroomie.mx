@@ -1,6 +1,9 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Filters from './Filters'
+import { Card, CardHeader, CardContent } from '../components/ui/Card'
+import Badge from '../components/ui/Badge'
+import EmptyState from '../components/ui/EmptyState'
 
 interface ListingsPageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -119,10 +122,10 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   if (maxPrice.trim()) activeFilters.push(`max: $${parseInt(maxPrice, 10).toLocaleString()}`)
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 md:px-8 py-16">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Anuncios</h1>
+          <h1 className="text-2xl font-semibold tracking-tight mb-2">Anuncios</h1>
           <p className="text-gray-600 text-sm">Cuartos disponibles y personas buscando roomie.</p>
         </div>
         <Link
@@ -156,83 +159,63 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
       )}
 
       {!listings || listings.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {activeFilters.length > 0
-              ? 'No hay resultados con esos filtros'
-              : 'Aún no hay anuncios publicados'}
-          </h2>
-          <p className="text-gray-600 text-sm mb-4">
-            {activeFilters.length > 0
-              ? 'Prueba ajustando los filtros o quitando algunos criterios.'
-              : session
+        activeFilters.length > 0 ? (
+          <EmptyState
+            icon="listings"
+            title="No hay anuncios con esos filtros"
+            description="Intenta ampliar el rango de precio o cambiar la zona."
+            ctaLabel="Ver todos"
+            ctaHref="/listings"
+          />
+        ) : (
+          <EmptyState
+            icon="listings"
+            title="Aún no hay anuncios publicados"
+            description={session
               ? 'Sé el primero en publicar un cuarto o buscar roomie.'
               : 'Inicia sesión para crear un anuncio'}
-          </p>
-          {activeFilters.length > 0 ? (
-            <Link
-              href="/listings"
-              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
-            >
-              Limpiar filtros
-            </Link>
-          ) : session ? (
-            <Link
-              href="/listings/new"
-              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
-            >
-              Publicar anuncio
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
-            >
-              Iniciar sesión
-            </Link>
-          )}
-        </div>
+            ctaLabel={session ? 'Publicar anuncio' : 'Iniciar sesión'}
+            ctaHref={session ? '/listings/new' : '/login'}
+          />
+        )
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {sortedListings?.map((listing) => {
             const typeLabel = listing.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'
             const now = new Date()
             const isFeatured = listing.featured_until && new Date(listing.featured_until) > now
 
             return (
-              <Link key={listing.id} href={`/listings/${listing.id}`}>
-                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer relative">
-                {isFeatured && (
-                  <div className="absolute top-4 right-4">
-                    <span className="inline-block px-2 py-1 bg-[#FF7A18] text-white rounded-full text-xs font-semibold">
-                      Destacado
-                    </span>
-                  </div>
-                )}
-                <div className="mb-3">
-                  <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium">
-                    {typeLabel}
-                  </span>
-                </div>
-                <h2 className="text-xl font-semibold mb-2">{listing.title}</h2>
-                <p className="text-gray-600 mb-3 line-clamp-3">{listing.description}</p>
-                <div className="space-y-1 text-sm text-gray-600 mb-3">
-                  <p>
-                    <strong>Ciudad:</strong> {listing.city}
-                  </p>
-                  <p>
-                    <strong>Zona:</strong> {listing.zone}
-                  </p>
-                  {listing.price_mxn && (
-                    <p>
-                      <strong>Precio:</strong> ${listing.price_mxn.toLocaleString()} MXN/mes
+              <Link 
+                key={listing.id} 
+                href={`/listings/${listing.id}`}
+                className="rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+              >
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="subtle">{typeLabel}</Badge>
+                        {isFeatured && <Badge variant="featured">Destacado</Badge>}
+                      </div>
+                    </div>
+                    <h2 className="text-base md:text-lg font-medium mb-1">{listing.title}</h2>
+                    <p className="text-xs text-neutral-500">
+                      {listing.city} · {listing.zone}
                     </p>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400">
-                  {new Date(listing.created_at).toLocaleDateString('es-MX')}
-                </p>
-                </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-neutral-700 line-clamp-3 mb-3">{listing.description}</p>
+                    {listing.price_mxn && (
+                      <p className="text-sm font-medium text-neutral-900 mb-2">
+                        ${listing.price_mxn.toLocaleString()} MXN/mes
+                      </p>
+                    )}
+                    <p className="text-xs text-neutral-400">
+                      {new Date(listing.created_at).toLocaleDateString('es-MX')}
+                    </p>
+                  </CardContent>
+                </Card>
               </Link>
             )
           })}

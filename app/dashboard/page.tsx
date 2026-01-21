@@ -1,6 +1,10 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { requireAuthOrRedirect } from '@/lib/requireAuth'
 import Link from 'next/link'
+import { Card, CardHeader, CardContent } from '../components/ui/Card'
+import Badge from '../components/ui/Badge'
+import Button from '../components/ui/Button'
+import EmptyState from '../components/ui/EmptyState'
 
 export default async function DashboardPage() {
   await requireAuthOrRedirect()
@@ -33,13 +37,16 @@ export default async function DashboardPage() {
   const isFeatured = profile?.featured_until && new Date(profile.featured_until) > now
 
   return (
-    <div className="container mx-auto px-4 py-16 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+    <div className="container mx-auto px-4 md:px-8 py-16 max-w-6xl">
+      <h1 className="text-2xl font-semibold tracking-tight mb-8">Dashboard</h1>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         {/* Card: Your profile */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Your profile</h2>
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-medium mb-4">Your profile</h2>
+          </CardHeader>
+          <CardContent>
           
           {profile ? (
             <>
@@ -56,16 +63,14 @@ export default async function DashboardPage() {
                   </div>
                 )}
                 <div>
-                  <p className="font-semibold text-lg">{profile.display_name}</p>
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium mt-1">
-                    Active
-                  </span>
+                  <p className="font-medium text-lg">{profile.display_name}</p>
+                  <Badge variant="subtle" className="mt-1">Active</Badge>
                 </div>
               </div>
               {isFeatured && profile.featured_until && (
-                <div className="mb-4 p-3 bg-[#FF7A18]/10 border border-[#FF7A18] rounded-lg">
-                  <p className="text-sm text-gray-700">
-                    <strong className="text-[#FF7A18]">Promoción activa hasta:</strong>{' '}
+                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-neutral-700">
+                    <strong className="text-orange-700">Promoción activa hasta:</strong>{' '}
                     {new Date(profile.featured_until).toLocaleDateString('es-MX', {
                       year: 'numeric',
                       month: 'long',
@@ -75,52 +80,51 @@ export default async function DashboardPage() {
                 </div>
               )}
               {!isFeatured && (
-                <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-sm text-gray-600">No tienes promoción activa</p>
+                <div className="mb-4 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
+                  <p className="text-sm text-neutral-600">No tienes promoción activa</p>
                 </div>
               )}
               <div className="flex gap-2">
                 <Link
                   href={`/profiles/${session.user.id}`}
-                  className="flex-1 bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium text-center"
+                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors bg-orange-600 text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
                 >
                   Ver mi perfil
                 </Link>
                 <Link
                   href="/promote/profile"
-                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm font-medium text-center"
+                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-orange-300"
                 >
                   Promocionar perfil (Roomies)
                 </Link>
               </div>
             </>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">Aún no has completado tu perfil</p>
-              <Link
-                href="/onboarding/step-1"
-                className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
-              >
-                Completar perfil
-              </Link>
-            </div>
+            <EmptyState
+              variant="compact"
+              icon="profile"
+              title="Aún no has completado tu perfil"
+              ctaLabel="Completar perfil"
+              ctaHref="/onboarding/step-1"
+            />
           )}
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Card: Your listings */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Your listings</h2>
-          
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-medium mb-4">Your listings</h2>
+          </CardHeader>
+          <CardContent>
           {!listings || listings.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">Aún no has creado ningún listing</p>
-              <Link
-                href="/listings/new"
-                className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
-              >
-                Crear listing
-              </Link>
-            </div>
+            <EmptyState
+              variant="compact"
+              icon="listings"
+              title="Aún no has creado ningún listing"
+              ctaLabel="Crear listing"
+              ctaHref="/listings/new"
+            />
           ) : (
             <div className="space-y-3">
               {listings.map((listing) => {
@@ -130,31 +134,25 @@ export default async function DashboardPage() {
                 return (
                   <div
                     key={listing.id}
-                    className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    className="p-4 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <Link href={`/listings/${listing.id}`} className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="inline-block px-2 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded text-xs font-medium">
-                            {typeLabel}
-                          </span>
-                          {isFeatured && (
-                            <span className="inline-block px-2 py-1 bg-[#FF7A18] text-white rounded text-xs font-semibold">
-                              Destacado
-                            </span>
-                          )}
+                          <Badge variant="subtle">{typeLabel}</Badge>
+                          {isFeatured && <Badge variant="featured">Destacado</Badge>}
                         </div>
-                        <h3 className="font-semibold mb-1">{listing.title}</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="font-medium mb-1">{listing.title}</h3>
+                        <p className="text-sm text-neutral-600">
                           {listing.city}, {listing.zone}
                         </p>
                         {listing.price_mxn && (
-                          <p className="text-sm font-medium text-gray-800 mt-1">
+                          <p className="text-sm font-medium text-neutral-800 mt-1">
                             ${listing.price_mxn.toLocaleString()} MXN/mes
                           </p>
                         )}
                         {isFeatured && listing.featured_until && (
-                          <p className="text-xs text-[#FF7A18] mt-2">
+                          <p className="text-xs text-orange-700 mt-2">
                             Destacado hasta:{' '}
                             {new Date(listing.featured_until).toLocaleDateString('es-MX', {
                               year: 'numeric',
@@ -164,9 +162,9 @@ export default async function DashboardPage() {
                           </p>
                         )}
                       </Link>
-                      <Link
+                      <Link 
                         href={`/promote/listing/${listing.id}`}
-                        className="bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium whitespace-nowrap"
+                        className="inline-flex items-center justify-center h-9 px-3 text-sm rounded-lg font-medium transition-colors bg-orange-600 text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-300 whitespace-nowrap"
                       >
                         Promocionar anuncio
                       </Link>
@@ -176,51 +174,48 @@ export default async function DashboardPage() {
               })}
             </div>
           )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Card: Verifications */}
-      <div className="bg-white p-6 rounded-lg shadow mt-6">
-        <h2 className="text-xl font-semibold mb-4">Verifications</h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 border rounded-lg opacity-50">
-            <div>
-              <p className="font-medium">Verify phone</p>
-              <p className="text-sm text-gray-500">Coming soon</p>
+      <Card className="mt-4 md:mt-6">
+        <CardHeader>
+          <h2 className="text-lg font-medium mb-4">Verifications</h2>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
+              <div>
+                <p className="font-medium text-sm">Verify phone</p>
+                <p className="text-xs text-neutral-500">Coming soon</p>
+              </div>
+              <Button disabled variant="secondary" size="sm">Verify</Button>
             </div>
-            <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm cursor-not-allowed">
-              Verify
-            </button>
-          </div>
-          <div className="flex items-center justify-between p-3 border rounded-lg opacity-50">
-            <div>
-              <p className="font-medium">Verify ID</p>
-              <p className="text-sm text-gray-500">Coming soon</p>
+            <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
+              <div>
+                <p className="font-medium text-sm">Verify ID</p>
+                <p className="text-xs text-neutral-500">Coming soon</p>
+              </div>
+              <Button disabled variant="secondary" size="sm">Verify</Button>
             </div>
-            <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm cursor-not-allowed">
-              Verify
-            </button>
-          </div>
-          <div className="flex items-center justify-between p-3 border rounded-lg opacity-50">
-            <div>
-              <p className="font-medium">Social media</p>
-              <p className="text-sm text-gray-500">Coming soon</p>
+            <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
+              <div>
+                <p className="font-medium text-sm">Social media</p>
+                <p className="text-xs text-neutral-500">Coming soon</p>
+              </div>
+              <Button disabled variant="secondary" size="sm">Verify</Button>
             </div>
-            <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm cursor-not-allowed">
-              Verify
-            </button>
-          </div>
-          <div className="flex items-center justify-between p-3 border rounded-lg opacity-50">
-            <div>
-              <p className="font-medium">Credit check</p>
-              <p className="text-sm text-gray-500">Coming soon</p>
+            <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
+              <div>
+                <p className="font-medium text-sm">Credit check</p>
+                <p className="text-xs text-neutral-500">Coming soon</p>
+              </div>
+              <Button disabled variant="secondary" size="sm">Verify</Button>
             </div>
-            <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm cursor-not-allowed">
-              Verify
-            </button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
