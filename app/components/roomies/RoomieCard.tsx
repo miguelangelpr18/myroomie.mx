@@ -29,6 +29,21 @@ export default function RoomieCard({ profile, href }: RoomieCardProps) {
   // Normalizar avatar_url
   const avatarUrl = profile.avatar_url?.trim() || null
 
+  // Convertir profile a formato LifestyleBadges (cleanliness: string -> number)
+  const lifestyleProfile = {
+    pets: profile.pets,
+    smoker: profile.smoker,
+    cleanliness: profile.cleanliness
+      ? typeof profile.cleanliness === 'string'
+        ? Number(profile.cleanliness) || null
+        : typeof profile.cleanliness === 'number'
+        ? profile.cleanliness
+        : null
+      : null,
+    parties: profile.parties,
+    schedule: profile.schedule,
+  }
+
   return (
     <Link
       href={href}
@@ -66,7 +81,7 @@ export default function RoomieCard({ profile, href }: RoomieCardProps) {
           </p>
         </CardHeader>
         <CardContent>
-          <LifestyleBadges profile={profile} />
+          <LifestyleBadges profile={lifestyleProfile} />
         </CardContent>
       </Card>
     </Link>
