@@ -187,8 +187,16 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       <div className="relative flex-1 max-w-2xl mx-auto">
         {/* Barra pill con input cuando está abierto */}
         {isOpen ? (
-          <div className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-3 h-12 shadow-sm focus-within:ring-2 focus-within:ring-brand/30">
-            <span className="text-sm text-neutral-600 flex-shrink-0">🔍</span>
+          <div className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2.5 h-11 shadow-sm focus-within:ring-2 focus-within:ring-brand/30 ring-1 ring-black/5">
+            <svg
+              className="w-4 h-4 text-neutral-500 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input
               ref={inputRef}
               type="text"
@@ -220,55 +228,55 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="w-full flex items-center justify-between gap-3 rounded-full border border-neutral-200 bg-white px-4 py-3 h-12 shadow-sm hover:shadow-md transition-shadow text-left focus:outline-none focus:ring-2 focus:ring-brand/30"
+            className="w-full flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2.5 h-11 shadow-sm hover:shadow-md transition-shadow text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 ring-1 ring-black/5"
           >
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="text-sm text-neutral-600 flex-shrink-0">🔍</span>
-              {activeFiltersCount > 0 ? (
-                <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
-                  {(filters.q ?? '').trim() && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[120px]">
-                      "{(filters.q ?? '').trim().slice(0, 15)}{(filters.q ?? '').trim().length > 15 ? '...' : ''}"
-                    </span>
-                  )}
-                  {(filters.city ?? '').trim() && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
-                      {(filters.city ?? '').trim().slice(0, 12)}{(filters.city ?? '').trim().length > 12 ? '...' : ''}
-                    </span>
-                  )}
-                  {mode === 'listings' && (filters.zone ?? '').trim() && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
-                      {(filters.zone ?? '').trim().slice(0, 12)}{(filters.zone ?? '').trim().length > 12 ? '...' : ''}
-                    </span>
-                  )}
-                  {mode === 'listings' && filters.listing_type !== 'all' && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
-                      {filters.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'}
-                    </span>
-                  )}
-                  {(mode === 'listings' && ((filters.min ?? '').trim() || (filters.max ?? '').trim())) && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
-                      Precio
-                    </span>
-                  )}
-                  {(mode === 'roomies' && ((filters.budget_min ?? '').trim() || (filters.budget_max ?? '').trim())) && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
-                      Presupuesto
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <span className="text-sm text-neutral-700 truncate">
-                  {getSummaryText()}
-                </span>
-              )}
-            </div>
-            <span
-              className="flex-shrink-0 w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center shadow-sm pointer-events-none"
+            <svg
+              className="w-4 h-4 text-neutral-500 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
               aria-hidden="true"
             >
-              <span className="text-sm">🔍</span>
-            </span>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {activeFiltersCount > 0 ? (
+              <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
+                {(filters.q ?? '').trim() && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[120px]">
+                    "{(filters.q ?? '').trim().slice(0, 15)}{(filters.q ?? '').trim().length > 15 ? '...' : ''}"
+                  </span>
+                )}
+                {(filters.city ?? '').trim() && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
+                    {(filters.city ?? '').trim().slice(0, 12)}{(filters.city ?? '').trim().length > 12 ? '...' : ''}
+                  </span>
+                )}
+                {mode === 'listings' && (filters.zone ?? '').trim() && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
+                    {(filters.zone ?? '').trim().slice(0, 12)}{(filters.zone ?? '').trim().length > 12 ? '...' : ''}
+                  </span>
+                )}
+                {mode === 'listings' && filters.listing_type !== 'all' && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
+                    {filters.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'}
+                  </span>
+                )}
+                {(mode === 'listings' && ((filters.min ?? '').trim() || (filters.max ?? '').trim())) && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
+                    Precio
+                  </span>
+                )}
+                {(mode === 'roomies' && ((filters.budget_min ?? '').trim() || (filters.budget_max ?? '').trim())) && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
+                    Presupuesto
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-sm text-neutral-700 truncate">
+                {getSummaryText()}
+              </span>
+            )}
           </button>
         )}
 

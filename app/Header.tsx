@@ -13,14 +13,30 @@ export default async function Header() {
   if (!session) {
     // No hay sesión: mostrar links públicos
     return (
-      <header className="border-b border-neutral-200 bg-white relative z-30">
-        <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-8">
-          <Link href="/" className="text-xl font-semibold tracking-tight text-neutral-900 hover:text-neutral-700 flex-shrink-0">
-            myroomie.mx
+      <header className="border-b border-brand bg-white relative z-30">
+        <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-6">
+          {/* Left: Logo */}
+          <Link href="/" className="text-lg md:text-xl font-semibold tracking-tight leading-none select-none flex-shrink-0 hover:opacity-80 transition-opacity">
+            <span className="text-brand">my</span>
+            <span className="text-neutral-900">roomie</span>
+            <span className="text-neutral-900">.mx</span>
           </Link>
-          <div className="flex-1 max-w-2xl mx-4 hidden md:block">
-            <GlobalSearchBar />
+          
+          {/* Center: Search + Create Button */}
+          <div className="flex-1 flex items-center justify-center gap-2 max-w-xl mx-4 hidden md:flex">
+            <div className="flex-1">
+              <GlobalSearchBar />
+            </div>
+            <Link
+              href="/listings/new"
+              className="flex-shrink-0 w-11 h-11 rounded-full bg-white text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 active:bg-neutral-100 transition-colors flex items-center justify-center shadow-sm ring-1 ring-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2"
+              aria-label="Publicar anuncio"
+            >
+              <span className="text-xl font-semibold leading-none">+</span>
+            </Link>
           </div>
+          
+          {/* Right: Actions */}
           <nav className="flex gap-4 items-center flex-shrink-0">
             <HeaderModeTabs userId={undefined} hasProfile={undefined} />
             <Link href="/login" className="hover:underline">
@@ -31,6 +47,7 @@ export default async function Header() {
             </Link>
           </nav>
         </div>
+        {/* Mobile: Search bar below */}
         <div className="md:hidden px-4 pb-3">
           <GlobalSearchBar />
         </div>
@@ -49,29 +66,66 @@ export default async function Header() {
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
-    <header className="border-b border-neutral-200 bg-white relative z-30">
-      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-8">
-        <Link href="/" className="text-xl font-semibold tracking-tight text-neutral-900 hover:text-neutral-700 flex-shrink-0">
-          myroomie.mx
+    <header className="border-b border-brand bg-white relative z-30">
+      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-6">
+        {/* Left: Logo */}
+        <Link href="/" className="text-lg md:text-xl font-semibold tracking-tight leading-none select-none flex-shrink-0 hover:opacity-80 transition-opacity">
+          <span className="text-brand">my</span>
+          <span className="text-neutral-900">roomie</span>
+          <span className="text-neutral-900">.mx</span>
         </Link>
-        <div className="flex-1 max-w-2xl mx-4 hidden md:block">
-          <GlobalSearchBar />
+        
+        {/* Center: Search + Create Button */}
+        <div className="flex-1 flex items-center justify-center gap-2 max-w-xl mx-4 hidden md:flex">
+          <div className="flex-1">
+            <GlobalSearchBar />
+          </div>
+          <Link
+            href="/listings/new"
+            className="flex-shrink-0 w-11 h-11 rounded-full bg-white text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 active:bg-neutral-100 transition-colors flex items-center justify-center shadow-sm ring-1 ring-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2"
+            aria-label="Publicar anuncio"
+          >
+            <span className="text-xl font-semibold leading-none">+</span>
+          </Link>
         </div>
+        
+        {/* Right: Actions */}
         <nav className="flex gap-4 items-center flex-shrink-0">
           <HeaderModeTabs userId={session.user.id} hasProfile={!!profile} />
-          <Link href="/messages" className="hover:underline">
-            Messages
-          </Link>
-          <div className="flex items-center gap-3 ml-4 pl-4 border-l">
-            <UserMenu
-              displayName={displayName}
-              avatarUrl={profile?.avatar_url || null}
-              userId={session.user.id}
-              initial={initial}
-            />
+          {/* Minimal Right: Messages Icon + Avatar */}
+          <div className="inline-flex items-center gap-2">
+            <Link
+              href="/messages"
+              className="w-10 h-10 rounded-full bg-white ring-1 ring-black/5 hover:bg-neutral-50 transition-colors flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+              aria-label="Messages"
+            >
+              <svg
+                className="w-5 h-5 text-neutral-700"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            </Link>
+            <div className="[&_button>span]:hidden">
+              <UserMenu
+                displayName={displayName}
+                avatarUrl={profile?.avatar_url || null}
+                userId={session.user.id}
+                initial={initial}
+              />
+            </div>
           </div>
         </nav>
       </div>
+      {/* Mobile: Search bar below */}
       <div className="md:hidden px-4 pb-3">
         <GlobalSearchBar />
       </div>

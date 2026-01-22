@@ -1,52 +1,34 @@
 import Link from 'next/link'
 import HomeFeaturedProfiles from './components/home/HomeFeaturedProfiles'
 import HomeFeaturedListings from './components/home/HomeFeaturedListings'
-import HomeSearchBar from './components/home/HomeSearchBar'
 
 export default function Home() {
   return (
-    <div className="bg-neutral-50">
-      <div className="mx-auto max-w-6xl px-4 md:px-8 py-16">
+    <div className="bg-white">
+      <div className="mx-auto max-w-7xl px-4 md:px-8">
         {/* Hero */}
-        <section className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-gradient-to-b from-white to-neutral-50 px-6 py-10 md:px-12 md:py-14">
-          <div className="pointer-events-none absolute -top-24 right-[-120px] h-72 w-72 rounded-full bg-brandSoft blur-2xl" />
-          <div className="relative max-w-2xl">
-            <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-neutral-900">
-              Encuentra roomie o depa con confianza
+        <section className="py-16 md:py-24">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-neutral-900">
+              Tu roomie ideal y tu próximo hogar, en un solo lugar.
             </h1>
-            <p className="mt-4 text-base md:text-lg text-neutral-600">
-              Conecta con roomies compatibles o publica tu anuncio de renta. 
-              Todo en un solo lugar.
+            <p className="mt-4 text-base md:text-lg text-neutral-600 max-w-xl">
+              Publica, busca y conecta con roomies reales, con total seguridad.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/explore"
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-brand px-5 text-sm font-medium text-white hover:bg-brandHover transition-colors"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white hover:bg-brandHover transition-colors focus:outline-none focus:ring-2 focus:ring-brandBorder"
               >
-                Buscar roomies
-              </Link>
-              <Link
-                href="/listings"
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 transition-colors"
-              >
-                Ver anuncios
-              </Link>
-            </div>
-            <div className="mt-3 flex items-center gap-4 text-sm font-medium text-neutral-700">
-              <Link
-                href="/onboarding/step-1"
-                className="hover:text-neutral-900"
-              >
-                Crear mi perfil
+                Buscar roomie
               </Link>
               <Link
                 href="/listings/new"
-                className="hover:text-neutral-900"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brandBorder"
               >
                 Publicar anuncio
               </Link>
             </div>
-            <HomeSearchBar />
           </div>
         </section>
 

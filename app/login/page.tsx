@@ -9,7 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -19,15 +19,18 @@ export default function Login() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    
+    // Prevenir múltiples submits
+    if (isSubmitting) return
+    
     setErrorMsg('')
-    setLoading(true)
+    setIsSubmitting(true)
 
     try {
       const { data, error: signInError } = await signIn(email, password)
 
       if (signInError) {
         setErrorMsg(signInError.message)
-        setLoading(false)
         return
       }
 
@@ -37,7 +40,6 @@ export default function Login() {
         // Si el email no está confirmado, hacer signOut y mostrar mensaje
         await signOut()
         setErrorMsg('Verifica tu correo antes de iniciar sesión.')
-        setLoading(false)
         return
       }
 
@@ -67,11 +69,10 @@ export default function Login() {
           router.push('/explore')
         }
       }
-
-      setLoading(false)
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Error al iniciar sesión')
-      setLoading(false)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -112,10 +113,10 @@ export default function Login() {
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+          className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? 'Entrando...' : 'Iniciar sesión'}
+          {isSubmitting ? 'Entrando...' : 'Iniciar sesión'}
         </button>
 
         {errorMsg && (
