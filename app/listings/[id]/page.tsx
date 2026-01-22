@@ -142,7 +142,7 @@ export default async function ListingDetailPage({
             </div>
             {/* Thumbnails */}
             <div className="md:col-span-1 grid grid-cols-1 gap-3">
-              {listing.image_urls.slice(1, 4).map((url, index) => (
+              {((listing.image_urls as string[] | null) ?? []).slice(1, 4).map((url: string, index: number) => (
                 <div key={index} className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
                   <ListingImage
                     src={url}
@@ -183,7 +183,7 @@ export default async function ListingDetailPage({
             {/* Thumbnails en grid 2 columnas */}
             {listing.image_urls.length > 1 && (
               <div className="grid grid-cols-2 gap-3">
-                {listing.image_urls.slice(1, 5).map((url, index) => (
+                {((listing.image_urls as string[] | null) ?? []).slice(1, 5).map((url: string, index: number) => (
                   <div key={index} className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
                     <ListingImage
                       src={url}
