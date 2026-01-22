@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { sendMessage } from '../actions'
 
 interface MessageFormProps {
@@ -8,6 +9,7 @@ interface MessageFormProps {
 }
 
 export default function MessageForm({ threadId }: MessageFormProps) {
+  const router = useRouter()
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -36,17 +38,20 @@ export default function MessageForm({ threadId }: MessageFormProps) {
       setMessage('')
       setLoading(false)
       
-      // Recargar página para mostrar nuevo mensaje
-      window.location.reload()
+      // Refrescar datos del servidor para mostrar nuevo mensaje
+      router.refresh()
     } catch (err) {
       setErrorMsg('No se pudo completar la acción. Intenta de nuevo.')
       setLoading(false)
     }
   }
 
+  const hasText = message.trim().length > 0
+  const isDisabled = loading || !hasText
+
   return (
-    <form onSubmit={handleSubmit} className="mt-6">
-      <div className="flex gap-2">
+    <form onSubmit={handleSubmit}>
+      <div className="flex gap-3 items-end">
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -57,15 +62,20 @@ export default function MessageForm({ threadId }: MessageFormProps) {
             }
           }}
           placeholder="Escribe un mensaje..."
-          rows={3}
+          rows={2}
           maxLength={5000}
-          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+          className="flex-1 resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#FF7A18]/30 focus:border-[#FF7A18]"
           disabled={loading}
         />
         <button
           type="submit"
-          disabled={loading || !message.trim()}
-          className="bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+          disabled={isDisabled}
+          className={`h-12 px-5 rounded-2xl font-medium transition whitespace-nowrap ${
+            isDisabled
+              ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+              : 'bg-[#FF7A18] text-white hover:opacity-90'
+          }`}
+          aria-label={loading ? 'Enviando mensaje...' : 'Enviar mensaje'}
         >
           {loading ? 'Enviando...' : 'Enviar'}
         </button>
