@@ -32,9 +32,9 @@ export default function ListingCard({ listing, href }: ListingCardProps) {
   return (
     <Link
       href={href}
-      className="group rounded-2xl focus:outline-none focus:ring-2 focus:ring-brandBorder focus:ring-offset-2 transition-shadow hover:shadow-md"
+      className="group rounded-2xl h-full flex flex-col focus:outline-none focus:ring-2 focus:ring-brandBorder focus:ring-offset-2 transition-shadow hover:shadow-md"
     >
-      <Card className="cursor-pointer">
+      <Card className="cursor-pointer h-full flex flex-col">
         <div className="relative overflow-hidden">
           <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
             <ListingImage
@@ -55,18 +55,18 @@ export default function ListingCard({ listing, href }: ListingCardProps) {
             </div>
           )}
         </div>
-        <CardHeader>
+        <CardHeader className="flex-1 flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="subtle">{typeLabel}</Badge>
             </div>
           </div>
-          <h2 className="text-base md:text-lg font-medium mb-1 line-clamp-1">{listing.title}</h2>
+          <h2 className="text-base md:text-lg font-medium mb-1 line-clamp-2">{listing.title}</h2>
           <p className="text-xs text-neutral-500 line-clamp-1">
             {listing.city} · {listing.zone}
           </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="mt-auto">
           <p className="text-sm text-neutral-700 line-clamp-2 mb-3">{listing.description}</p>
           <p className="text-xs text-neutral-400">
             {new Date(listing.created_at).toLocaleDateString('es-MX')}

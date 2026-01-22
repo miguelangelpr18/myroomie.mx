@@ -47,9 +47,9 @@ export default function RoomieCard({ profile, href }: RoomieCardProps) {
   return (
     <Link
       href={href}
-      className="group rounded-2xl focus:outline-none focus:ring-2 focus:ring-brandBorder focus:ring-offset-2 transition-shadow hover:shadow-md"
+      className="group rounded-2xl h-full flex flex-col focus:outline-none focus:ring-2 focus:ring-brandBorder focus:ring-offset-2 transition-shadow hover:shadow-md"
     >
-      <Card className="cursor-pointer">
+      <Card className="cursor-pointer h-full flex flex-col">
         <div className="relative overflow-hidden">
           <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
             {avatarUrl ? (
@@ -74,13 +74,13 @@ export default function RoomieCard({ profile, href }: RoomieCardProps) {
             </div>
           )}
         </div>
-        <CardHeader>
+        <CardHeader className="flex-1 flex flex-col">
           <h2 className="text-base md:text-lg font-semibold mb-1 line-clamp-1">{profile.display_name}</h2>
           <p className="text-xs text-neutral-500 line-clamp-1">
             {profile.city} · {profile.zone}
           </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="mt-auto">
           <LifestyleBadges profile={lifestyleProfile} />
         </CardContent>
       </Card>

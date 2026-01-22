@@ -12,7 +12,7 @@ export default async function HomeFeaturedProfiles() {
     .select('user_id, display_name, city, zone, avatar_url, featured_until, pets, smoker, cleanliness, parties, schedule')
     .gt('featured_until', now)
     .order('featured_until', { ascending: false })
-    .limit(5)
+    .limit(4)
 
   // Opción A: Ocultar sección completa si no hay destacados
   if (error || !profiles || profiles.length === 0) {
@@ -20,33 +20,37 @@ export default async function HomeFeaturedProfiles() {
   }
 
   return (
-    <div className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 md:p-8">
-      <div className="flex justify-between items-end gap-4">
-        <div>
-          <h2 className="text-lg md:text-xl font-semibold tracking-tight text-neutral-900">
-            Roomies destacados
-          </h2>
-          <p className="mt-1 text-sm text-neutral-600">
-            Perfiles promovidos para mayor visibilidad
-          </p>
+    <section className="mt-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        {/* Header */}
+        <div className="flex justify-between items-end gap-4 mb-6">
+          <div>
+            <h2 className="text-lg md:text-xl font-semibold tracking-[-0.01em] text-neutral-900">
+              Roomies destacados
+            </h2>
+            <p className="text-sm text-neutral-600 mt-1">
+              Perfiles promovidos para mayor visibilidad
+            </p>
+          </div>
+          <Link
+            href="/explore"
+            className="inline-flex items-center justify-center h-10 px-4 rounded-lg bg-brand text-white hover:bg-brandHover transition-colors text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2 whitespace-nowrap"
+          >
+            Ver más roomies
+          </Link>
         </div>
-        <Link
-          href="/explore"
-          className="text-sm font-medium text-neutral-700 hover:text-neutral-900"
-        >
-          Ver más
-        </Link>
+        {/* Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {profiles.map((profile) => (
+            <RoomieCard
+              key={profile.user_id}
+              profile={profile}
+              href={`/profiles/${profile.user_id}`}
+            />
+          ))}
+        </div>
       </div>
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-        {profiles.map((profile) => (
-          <RoomieCard
-            key={profile.user_id}
-            profile={profile}
-            href={`/profiles/${profile.user_id}`}
-          />
-        ))}
-      </div>
-    </div>
+    </section>
   )
 }
 

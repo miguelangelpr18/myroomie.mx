@@ -13,7 +13,7 @@ export default async function Header() {
   if (!session) {
     // No hay sesión: mostrar links públicos
     return (
-      <header className="border-b border-brand bg-white relative z-30">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-neutral-200/60">
         <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-6">
           {/* Left: Logo */}
           <Link href="/" className="text-lg md:text-xl font-semibold tracking-tight leading-none select-none flex-shrink-0 hover:opacity-80 transition-opacity">
@@ -66,7 +66,7 @@ export default async function Header() {
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
-    <header className="border-b border-brand bg-white relative z-30">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-neutral-200/60">
       <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-6">
         {/* Left: Logo */}
         <Link href="/" className="text-lg md:text-xl font-semibold tracking-tight leading-none select-none flex-shrink-0 hover:opacity-80 transition-opacity">
