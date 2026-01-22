@@ -7,3 +7,4 @@ ADD COLUMN IF NOT EXISTS featured_until timestamptz;
 -- Nota: No se modifican políticas RLS
 
 
+

@@ -493,3 +493,4 @@ threads (1) ──> (*) messages.thread_id (CASCADE)
 **Repositorio:** `git@github.com:miguelangelpr18/myroomie.mx.git`
 
 
+

@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import RoomieCard from '../roomies/RoomieCard'
+import FeaturedCarousel from './FeaturedCarousel'
 
 export default async function HomeFeaturedProfiles() {
   const supabase = createServerSupabaseClient()
@@ -12,7 +13,7 @@ export default async function HomeFeaturedProfiles() {
     .select('user_id, display_name, city, zone, avatar_url, featured_until, pets, smoker, cleanliness, parties, schedule')
     .gt('featured_until', now)
     .order('featured_until', { ascending: false })
-    .limit(4)
+    .limit(12)
 
   // Opción A: Ocultar sección completa si no hay destacados
   if (error || !profiles || profiles.length === 0) {
@@ -39,16 +40,21 @@ export default async function HomeFeaturedProfiles() {
             Ver más roomies
           </Link>
         </div>
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Carousel */}
+        <FeaturedCarousel>
           {profiles.map((profile) => (
-            <RoomieCard
+            <div
               key={profile.user_id}
-              profile={profile}
-              href={`/profiles/${profile.user_id}`}
-            />
+              data-carousel-item
+              className="flex-shrink-0 w-[280px] sm:w-[300px] md:w-[280px] snap-start"
+            >
+              <RoomieCard
+                profile={profile}
+                href={`/profiles/${profile.user_id}`}
+              />
+            </div>
           ))}
-        </div>
+        </FeaturedCarousel>
       </div>
     </section>
   )

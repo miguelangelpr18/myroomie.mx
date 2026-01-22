@@ -13,3 +13,4 @@ ADD COLUMN IF NOT EXISTS image_urls TEXT[] NOT NULL DEFAULT '{}';
 -- 3. El default es '{}' (array vacío)
 -- =====================================================
 
+

@@ -42,3 +42,4 @@ CREATE INDEX IF NOT EXISTS listing_saves_listing_id_idx ON public.listing_saves(
 -- Nota: No se permite UPDATE (no hace falta)
 -- =====================================================
 
+
