@@ -4,6 +4,7 @@ import Link from 'next/link'
 import MessageForm from './[thread_id]/MessageForm'
 import LifestyleBadges from '../components/LifestyleBadges'
 import AutoScrollToBottom from './AutoScrollToBottom'
+import { markThreadAsRead } from './actions'
 
 export default async function ThreadPanel({ threadId }: { threadId: string }) {
   // Verificar que el usuario tenga perfil
@@ -59,6 +60,9 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
     )
   }
 
+  // Marcar thread como leído al abrirlo
+  await markThreadAsRead(threadId)
+
   // Identificar el otro usuario
   const otherUserId = thread.user1_id === session.user.id 
     ? thread.user2_id 
@@ -84,7 +88,7 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
   return (
     <div className="flex flex-col w-full h-full min-w-0 min-h-0">
       {/* Header fijo */}
-      <div className="flex-shrink-0 border-b border-neutral-200 bg-white p-4">
+      <div className="flex-shrink-0 border-b border-neutral-200 bg-white px-5 py-4">
         <div className="flex items-center gap-3">
           {otherProfile?.avatar_url ? (
             <img
@@ -98,16 +102,16 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-semibold truncate">{otherProfile?.display_name || 'Usuario'}</h1>
+            <h1 className="text-sm font-semibold text-neutral-900 leading-none truncate">{otherProfile?.display_name || 'Usuario'}</h1>
             {otherProfile && (
-              <div className="mt-1">
+              <div className="mt-2">
                 <LifestyleBadges profile={otherProfile} />
               </div>
             )}
             {thread.listing_id && (
               <Link
                 href={`/listings/${thread.listing_id}`}
-                className="text-xs text-[#FF7A18] hover:underline mt-1 inline-block"
+                className="mt-1 inline-flex text-xs text-neutral-500 hover:text-[#FF7A18] hover:underline underline-offset-4 transition-colors"
               >
                 Ver listing relacionado
               </Link>
@@ -125,12 +129,21 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
         )}
 
         {!messages || messages.length === 0 ? (
-          <div className="text-center py-12 text-neutral-500">
-            <p className="text-sm">No hay mensajes aún.</p>
-            <p className="text-xs mt-2">Envía el primer mensaje abajo.</p>
+          <div className="h-full flex items-center justify-center px-6">
+            <div className="max-w-sm text-center">
+              <div className="mx-auto mb-3 h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500">
+                <span className="text-lg">💬</span>
+              </div>
+              <h3 className="text-sm font-semibold text-neutral-900">
+                Aún no hay mensajes
+              </h3>
+              <p className="mt-1 text-sm text-neutral-500">
+                Escribe el primer mensaje para iniciar la conversación.
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {messages.map((message) => {
               const isOwn = message.sender_id === session.user.id
 
@@ -140,16 +153,16 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
                   className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-2.5 overflow-hidden min-w-0 ${
+                    className={`max-w-[70%] rounded-2xl px-4 py-3 overflow-hidden min-w-0 ${
                       isOwn
                         ? 'bg-[#FF7A18] text-white'
                         : 'bg-neutral-100 text-neutral-900'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words text-sm">{message.body}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.body}</p>
                     <p
-                      className={`text-xs mt-1.5 ${
-                        isOwn ? 'text-white/80' : 'text-neutral-500'
+                      className={`text-[11px] mt-1 ${
+                        isOwn ? 'text-white/80' : 'text-neutral-400'
                       }`}
                     >
                       {new Date(message.created_at).toLocaleString('es-MX', {

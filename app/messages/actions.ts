@@ -127,3 +127,66 @@ export async function sendMessage(threadId: string, body: string) {
   return { data: message.id, error: null }
 }
 
+/**
+ * Marcar thread como leído (actualizar last_read_at)
+ */
+export async function markThreadAsRead(threadId: string) {
+  const supabase = createServerSupabaseClient()
+
+  // Verificar sesión
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  if (!session || sessionError) {
+    return { error: 'No autorizado. Por favor inicia sesión.' }
+  }
+
+  const currentUserId = session.user.id
+
+  // Obtener perfil del usuario actual (profile.user_id = auth.uid())
+  const { data: currentProfile, error: profileError } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', currentUserId)
+    .single()
+
+  if (!currentProfile || profileError) {
+    return { error: 'Perfil no encontrado.' }
+  }
+
+  const currentProfileId = currentProfile.user_id
+
+  // Verificar que el usuario es participant del thread
+  const { data: thread, error: threadError } = await supabase
+    .from('threads')
+    .select('user1_id, user2_id')
+    .eq('id', threadId)
+    .single()
+
+  if (!thread || threadError) {
+    return { error: 'Thread no encontrado.' }
+  }
+
+  if (thread.user1_id !== currentUserId && thread.user2_id !== currentUserId) {
+    return { error: 'No tienes permiso para acceder a este thread.' }
+  }
+
+  // Upsert en thread_participants usando profile_id (que es igual a user_id pero referencia profiles)
+  const { error: upsertError } = await supabase
+    .from('thread_participants')
+    .upsert({
+      thread_id: threadId,
+      profile_id: currentProfileId,
+      last_read_at: new Date().toISOString(),
+    }, {
+      onConflict: 'thread_id,profile_id',
+    })
+
+  if (upsertError) {
+    return { error: `Error al marcar thread como leído: ${upsertError.message}` }
+  }
+
+  // NO revalidar aquí - el refresh sucede por navegación/cambio de searchParams
+  // Si hace falta, se puede forzar router.refresh del lado cliente (FASE 4O.3)
+
+  return { data: null, error: null }
+}
+

@@ -3,6 +3,7 @@ import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
 import MessageForm from './MessageForm'
 import LifestyleBadges from '../../components/LifestyleBadges'
+import { markThreadAsRead } from '../actions'
 
 export default async function ThreadPage({
   params,
@@ -51,6 +52,9 @@ export default async function ThreadPage({
       </div>
     )
   }
+
+  // Marcar thread como leído al abrirlo
+  await markThreadAsRead(params.thread_id)
 
   // Identificar el otro usuario
   const otherUserId = thread.user1_id === session.user.id 

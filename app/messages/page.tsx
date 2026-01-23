@@ -1,9 +1,9 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
-import LifestyleBadges from '../components/LifestyleBadges'
 import EmptyState from '../components/ui/EmptyState'
 import ThreadPanel from './ThreadPanel'
+import InboxSearch from './InboxSearch'
 
 interface MessagesPageProps {
   searchParams?: { thread?: string }
@@ -13,6 +13,7 @@ interface MessagesPageProps {
 function ThreadRow({
   thread,
   selectedThreadId,
+  isUnread,
 }: {
   thread: {
     id: string
@@ -25,9 +26,10 @@ function ThreadRow({
       parties?: boolean | null
       schedule?: string | null
     } | null
-    lastMessage: { body: string; created_at: string } | null
+    lastMessage: { body: string; created_at: string; sender_id: string } | null
   }
   selectedThreadId: string | null
+  isUnread: boolean
 }) {
   const otherUser = thread.otherUser
   const initial = otherUser?.display_name?.charAt(0).toUpperCase() || '?'
@@ -52,24 +54,21 @@ function ThreadRow({
             <img
               src={otherUser.avatar_url}
               alt={otherUser.display_name || 'Usuario'}
-              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-lg font-semibold flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
               {initial}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm mb-0.5 truncate">
+            <h3 className={`text-sm mb-0.5 truncate ${
+              isUnread ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-900'
+            }`}>
               {otherUser?.display_name || 'Usuario'}
             </h3>
-            {otherUser && (
-              <div className="mb-1">
-                <LifestyleBadges profile={otherUser} />
-              </div>
-            )}
             {thread.lastMessage ? (
-              <p className="text-xs text-neutral-600 truncate">
+              <p className="text-sm text-neutral-500 line-clamp-2">
                 {thread.lastMessage.body}
               </p>
             ) : (
@@ -78,14 +77,19 @@ function ThreadRow({
               </p>
             )}
           </div>
-          {thread.lastMessage && (
-            <p className="text-xs text-neutral-500 whitespace-nowrap flex-shrink-0">
-              {new Date(thread.lastMessage.created_at).toLocaleDateString('es-MX', {
-                month: 'short',
-                day: 'numeric',
-              })}
-            </p>
-          )}
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            {thread.lastMessage && (
+              <p className="text-xs text-neutral-400 whitespace-nowrap">
+                {new Date(thread.lastMessage.created_at).toLocaleDateString('es-MX', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </p>
+            )}
+            {isUnread && (
+              <div className="h-2 w-2 rounded-full bg-[#FF7A18]" />
+            )}
+          </div>
         </div>
       </Link>
 
@@ -101,24 +105,21 @@ function ThreadRow({
             <img
               src={otherUser.avatar_url}
               alt={otherUser.display_name || 'Usuario'}
-              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-lg font-semibold flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
               {initial}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm mb-0.5 truncate">
+            <h3 className={`text-sm mb-0.5 truncate ${
+              isUnread ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-900'
+            }`}>
               {otherUser?.display_name || 'Usuario'}
             </h3>
-            {otherUser && (
-              <div className="mb-1">
-                <LifestyleBadges profile={otherUser} />
-              </div>
-            )}
             {thread.lastMessage ? (
-              <p className="text-xs text-neutral-600 truncate">
+              <p className="text-sm text-neutral-500 line-clamp-2">
                 {thread.lastMessage.body}
               </p>
             ) : (
@@ -127,14 +128,19 @@ function ThreadRow({
               </p>
             )}
           </div>
-          {thread.lastMessage && (
-            <p className="text-xs text-neutral-500 whitespace-nowrap flex-shrink-0">
-              {new Date(thread.lastMessage.created_at).toLocaleDateString('es-MX', {
-                month: 'short',
-                day: 'numeric',
-              })}
-            </p>
-          )}
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            {thread.lastMessage && (
+              <p className="text-xs text-neutral-400 whitespace-nowrap">
+                {new Date(thread.lastMessage.created_at).toLocaleDateString('es-MX', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </p>
+            )}
+            {isUnread && (
+              <div className="h-2 w-2 rounded-full bg-[#FF7A18]" />
+            )}
+          </div>
         </div>
       </Link>
     </div>
@@ -152,6 +158,19 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
   if (!session) {
     return null // requireProfileOrRedirect ya maneja redirect
   }
+
+  // Obtener perfil del usuario actual
+  const { data: currentProfile, error: profileError } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', session.user.id)
+    .single()
+
+  if (!currentProfile || profileError) {
+    return null // requireProfileOrRedirect ya maneja redirect
+  }
+
+  const currentProfileId = currentProfile.user_id
 
   // Leer thread seleccionado desde query param
   const selectedThreadId = searchParams?.thread ?? null
@@ -182,16 +201,33 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
       // Obtener último mensaje
       const { data: lastMessage } = await supabase
         .from('messages')
-        .select('body, created_at')
+        .select('body, created_at, sender_id')
         .eq('thread_id', thread.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
+      // Obtener last_read_at del participante actual usando profile_id
+      const { data: participant } = await supabase
+        .from('thread_participants')
+        .select('last_read_at')
+        .eq('thread_id', thread.id)
+        .eq('profile_id', currentProfileId)
+        .maybeSingle()
+
+      // Calcular isUnread usando profile_id
+      const lastReadAt = participant?.last_read_at ? new Date(participant.last_read_at) : null
+      const lastMsgAt = lastMessage ? new Date(lastMessage.created_at) : null
+      const isUnread =
+        !!lastMsgAt &&
+        lastMessage.sender_id !== currentProfileId &&
+        (!lastReadAt || lastMsgAt > lastReadAt)
+
       return {
         ...thread,
         otherUser: otherProfile,
         lastMessage: lastMessage || null,
+        isUnread,
       }
     })
   )
@@ -201,9 +237,22 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
       <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 lg:h-[calc(100vh-220px)]">
         {/* Sidebar izquierdo */}
         <aside className="rounded-2xl border border-neutral-200 bg-white overflow-hidden h-full min-h-0 flex flex-col">
-          <div className="p-4 border-b border-neutral-200">
+          <div className="px-4 py-3 border-b border-neutral-200 bg-white">
             <h1 className="text-xl font-semibold tracking-tight">Mensajes</h1>
             <p className="text-xs text-neutral-600 mt-1">Tus conversaciones privadas.</p>
+            
+            {/* Tools section: search + new button */}
+            <div className="mt-3 flex items-center gap-2">
+              <InboxSearch />
+              <button
+                type="button"
+                disabled
+                className="h-9 w-9 rounded-full border border-neutral-200 hover:bg-neutral-50 transition grid place-items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Nuevo mensaje"
+              >
+                <span className="text-lg text-neutral-600">+</span>
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -231,6 +280,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
                     key={thread.id}
                     thread={thread}
                     selectedThreadId={selectedThreadId}
+                    isUnread={thread.isUnread}
                   />
                 ))}
               </div>
