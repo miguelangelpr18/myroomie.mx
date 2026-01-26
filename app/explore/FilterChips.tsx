@@ -41,7 +41,7 @@ export default function FilterChips() {
 
   return (
     <div className="mb-4">
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
         {CHIPS.map((chip) => {
           const isActive = searchParams.get(chip.param) === '1'
           

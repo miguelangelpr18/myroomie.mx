@@ -47,11 +47,11 @@ export default function RoomieCard({ profile, href }: RoomieCardProps) {
   return (
     <Link
       href={href}
-      className="group rounded-2xl h-full flex flex-col focus:outline-none focus:ring-2 focus:ring-brandBorder focus:ring-offset-2 transition-shadow hover:shadow-md"
+      className="group h-full flex flex-col rounded-2xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2 hover:-translate-y-[1px]"
     >
-      <Card className="cursor-pointer h-full flex flex-col">
+      <Card className="h-full flex flex-col overflow-hidden rounded-2xl border-0 shadow-none ring-1 ring-black/5 transition-all duration-200 group-hover:shadow-md">
         <div className="relative overflow-hidden">
-          <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
+          <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-neutral-100">
             {avatarUrl ? (
               <ListingImage
                 src={avatarUrl}
@@ -75,12 +75,12 @@ export default function RoomieCard({ profile, href }: RoomieCardProps) {
           )}
         </div>
         <CardHeader className="flex-1 flex flex-col">
-          <h2 className="text-base md:text-lg font-semibold mb-1 line-clamp-1">{profile.display_name}</h2>
-          <p className="text-xs text-neutral-500 line-clamp-1">
+          <h2 className="text-base md:text-lg font-medium tracking-[-0.01em] text-neutral-900 line-clamp-2">{profile.display_name}</h2>
+          <p className="text-xs text-neutral-600 mt-0.5 line-clamp-1">
             {profile.city} · {profile.zone}
           </p>
         </CardHeader>
-        <CardContent className="mt-auto">
+        <CardContent className="mt-auto pt-0">
           <LifestyleBadges profile={lifestyleProfile} />
         </CardContent>
       </Card>

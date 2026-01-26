@@ -12,6 +12,20 @@ interface ExplorePageProps {
 export default async function Explore({ searchParams }: ExplorePageProps) {
   const supabase = createServerSupabaseClient()
 
+  // Verificar si el usuario actual tiene perfil
+  const { data: { session } } = await supabase.auth.getSession()
+  let hasMyProfile = false
+  
+  if (session?.user) {
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+    
+    hasMyProfile = !!myProfile
+  }
+
   // Extraer parámetros de búsqueda (del GlobalSearchBar mode roomies)
   const q = typeof searchParams.q === 'string' ? searchParams.q : ''
   const city = typeof searchParams.city === 'string' ? searchParams.city : ''
@@ -142,18 +156,23 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 py-10 md:py-12">
-      <div className="flex justify-between items-center mb-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-3">
+        <div className="max-w-2xl">
           <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.01em] text-neutral-900">Explora perfiles</h1>
           <p className="text-neutral-700 text-sm mt-1">Encuentra roomies que compartan tu estilo de vida.</p>
         </div>
-        <Link
-          href="/onboarding/step-1"
-          className="bg-brand text-white h-10 px-4 rounded-lg text-sm font-medium hover:bg-brandHover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A18]/30 focus-visible:ring-offset-2"
-        >
-          Crear/editar mi perfil
-        </Link>
+        {!hasMyProfile && (
+          <Link
+            href="/onboarding/step-1"
+            className="inline-flex items-center justify-center bg-brand text-white h-10 px-4 rounded-lg text-sm font-medium leading-none hover:bg-brandHover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A18]/30 focus-visible:ring-offset-2"
+          >
+            Crear mi perfil
+          </Link>
+        )}
       </div>
+
+      {/* Divider */}
+      <div className="mt-5 mb-4 h-px w-full bg-black/5" />
 
       {/* Chips de filtros */}
       <FilterChips />
@@ -203,7 +222,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
           </div>
         )
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
           {sortedProfiles?.map((profile) => (
             <RoomieCard
               key={profile.user_id}

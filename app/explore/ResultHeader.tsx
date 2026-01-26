@@ -42,7 +42,7 @@ export default function ResultHeader({
   }
 
   return (
-    <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex-1">
         <p className="text-sm text-neutral-600">
           Mostrando <strong className="font-semibold text-neutral-900">{count}</strong>{' '}
@@ -51,7 +51,7 @@ export default function ResultHeader({
 
         {/* Badges de filtros activos */}
         {hasAnyFilter && (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             {/* Filtros de chips */}
             {Object.entries(activeFilters).map(([key, isActive]) => {
               if (!isActive) return null
@@ -87,7 +87,7 @@ export default function ResultHeader({
         <button
           type="button"
           onClick={handleClear}
-          className="flex-shrink-0 px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30 focus:ring-offset-2"
+          className="flex-shrink-0 h-9 px-3 rounded-lg text-sm font-medium text-neutral-700 bg-white ring-1 ring-black/10 hover:bg-neutral-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2"
         >
           Limpiar
         </button>
