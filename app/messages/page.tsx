@@ -39,13 +39,13 @@ function ThreadRow({
     <div className="relative">
       {/* Barra izquierda naranja cuando está seleccionado (desktop) */}
       {isSelected && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF7A18] rounded-r-full hidden lg:block" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand rounded-r-full hidden lg:block" />
       )}
       
       {/* Link mobile: navega a /messages/[id] */}
       <Link
         href={`/messages/${thread.id}`}
-        className={`lg:hidden block px-4 py-3 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30 focus:ring-offset-2 rounded-lg ${
+        className={`lg:hidden block px-4 py-3 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand/30 focus:ring-offset-2 rounded-lg ${
           isSelected ? 'bg-orange-50' : ''
         }`}
       >
@@ -57,7 +57,7 @@ function ThreadRow({
               className="w-10 h-10 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
               {initial}
             </div>
           )}
@@ -87,7 +87,7 @@ function ThreadRow({
               </p>
             )}
             {isUnread && (
-              <div className="h-2 w-2 rounded-full bg-[#FF7A18]" />
+              <div className="h-2 w-2 rounded-full bg-brand" />
             )}
           </div>
         </div>
@@ -96,7 +96,7 @@ function ThreadRow({
       {/* Link desktop: navega a /messages?thread={id} */}
       <Link
         href={`/messages?thread=${thread.id}`}
-        className={`hidden lg:block px-4 py-3 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30 focus:ring-offset-2 rounded-lg ${
+        className={`hidden lg:block px-4 py-3 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand/30 focus:ring-offset-2 rounded-lg ${
           isSelected ? 'bg-orange-50' : ''
         }`}
       >
@@ -108,7 +108,7 @@ function ThreadRow({
               className="w-10 h-10 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
               {initial}
             </div>
           )}
@@ -138,7 +138,7 @@ function ThreadRow({
               </p>
             )}
             {isUnread && (
-              <div className="h-2 w-2 rounded-full bg-[#FF7A18]" />
+              <div className="h-2 w-2 rounded-full bg-brand" />
             )}
           </div>
         </div>

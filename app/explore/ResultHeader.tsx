@@ -58,7 +58,7 @@ export default function ResultHeader({
               return (
                 <span
                   key={key}
-                  className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#FF7A18]/10 text-xs font-medium text-[#FF7A18] border border-[#FF7A18]/20"
+                  className="inline-flex items-center px-2.5 py-1 rounded-full bg-brand/10 text-xs font-medium text-brand border border-brand/20"
                 >
                   {FILTER_LABELS[key]}
                 </span>

@@ -56,7 +56,7 @@ export default function FilterChips() {
                 border focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
                 ${
                   isActive
-                    ? 'bg-[#FF7A18]/10 border-[#FF7A18]/30 text-[#FF7A18] focus-visible:ring-[#FF7A18]/30'
+                    ? 'bg-brand/10 border-brand/30 text-brand focus-visible:ring-brand/30'
                     : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 focus-visible:ring-neutral-300'
                 }
               `}

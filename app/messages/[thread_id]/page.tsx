@@ -123,7 +123,7 @@ export default async function ThreadPage({
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-lg shadow min-h-[400px] max-h-[600px] overflow-y-auto">
+      <div className="bg-white p-6 rounded-lg shadow min-h-[400px] max-h-[600px] overflow-y-auto overflow-x-hidden">
         {!messages || messages.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p>No hay mensajes aún.</p>
@@ -140,13 +140,13 @@ export default async function ThreadPage({
                   className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                    className={`max-w-[75%] md:max-w-[65%] rounded-lg px-4 py-2 overflow-hidden min-w-0 ${
                       isOwn
                         ? 'bg-[#FF7A18] text-white'
                         : 'bg-gray-100 text-gray-900'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{message.body}</p>
+                    <p className="whitespace-pre-wrap break-words" style={{ overflowWrap: 'anywhere' }}>{message.body}</p>
                     <p
                       className={`text-xs mt-1 ${
                         isOwn ? 'text-white/80' : 'text-gray-500'

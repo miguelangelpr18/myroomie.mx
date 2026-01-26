@@ -92,7 +92,7 @@ export default function Signup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
             placeholder="tu@email.com"
           />
         </div>
@@ -107,7 +107,7 @@ export default function Signup() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
             placeholder="Mínimo 8 caracteres, 1 mayúscula, 1 número"
           />
         </div>
@@ -122,7 +122,7 @@ export default function Signup() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
             placeholder="Repite tu contraseña"
           />
         </div>
@@ -138,11 +138,11 @@ export default function Signup() {
           />
           <label htmlFor="acceptTerms" className="text-sm">
             Acepto los{' '}
-            <a href="/legal/terms" className="text-[#FF7A18] hover:underline">
+            <a href="/legal/terms" className="text-brand hover:underline">
               Términos y Condiciones
             </a>{' '}
             y la{' '}
-            <a href="/legal/privacy" className="text-[#FF7A18] hover:underline">
+            <a href="/legal/privacy" className="text-brand hover:underline">
               Política de Privacidad
             </a>
           </label>
@@ -163,7 +163,7 @@ export default function Signup() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>

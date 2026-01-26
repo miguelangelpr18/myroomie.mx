@@ -121,7 +121,7 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
       </div>
 
       {/* Body scroll */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 min-w-0 min-h-0 bg-neutral-50">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 min-w-0 min-h-0 bg-neutral-50">
         {messagesError && (
           <div className="p-4 bg-red-100 text-red-700 rounded-lg mb-4">
             <p className="text-sm">Error al cargar mensajes: {messagesError.message}</p>
@@ -153,13 +153,13 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
                   className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-3 overflow-hidden min-w-0 ${
+                    className={`max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-3 overflow-hidden min-w-0 ${
                       isOwn
                         ? 'bg-[#FF7A18] text-white'
                         : 'bg-neutral-100 text-neutral-900'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.body}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed" style={{ overflowWrap: 'anywhere' }}>{message.body}</p>
                     <p
                       className={`text-[11px] mt-1 ${
                         isOwn ? 'text-white/80' : 'text-neutral-400'
