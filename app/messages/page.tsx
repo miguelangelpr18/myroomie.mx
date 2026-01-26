@@ -220,6 +220,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
       const lastMsgAt = lastMessage ? new Date(lastMessage.created_at) : null
       const isUnread =
         !!lastMsgAt &&
+        !!lastMessage &&
         lastMessage.sender_id !== currentProfileId &&
         (!lastReadAt || lastMsgAt > lastReadAt)
 
