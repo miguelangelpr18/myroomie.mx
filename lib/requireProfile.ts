@@ -32,9 +32,10 @@ export async function requireProfileOrRedirect() {
       currentPath !== '/' &&
       !currentPath.startsWith('/legal')
     
-    const loginUrl = isValidProtectedRoute
-      ? `/login?intent=roomies&next=${encodeURIComponent(currentPath)}`
-      : '/login?intent=roomies'
+    const loginUrl =
+      isValidProtectedRoute && currentPath
+        ? `/login?intent=roomies&next=${encodeURIComponent(currentPath)}`
+        : '/login?intent=roomies'
     
     redirect(loginUrl)
   }
