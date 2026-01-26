@@ -40,7 +40,7 @@ export async function requireAuthOrRedirect(options?: RequireAuthOptions) {
     if (options?.intent) {
       params.set('intent', options.intent)
     }
-    if (isValidProtectedRoute) {
+    if (isValidProtectedRoute && currentPath) {
       params.set('next', currentPath)
     }
     
