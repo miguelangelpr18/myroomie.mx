@@ -2,6 +2,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import EmptyState from '../components/ui/EmptyState'
 import RoomieCard from '../components/roomies/RoomieCard'
+import FilterChips from './FilterChips'
+import ResultHeader from './ResultHeader'
 
 interface ExplorePageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -15,8 +17,15 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   const city = typeof searchParams.city === 'string' ? searchParams.city : ''
   // Nota: budget_min/budget_max no existen en profiles table, se ignoran silenciosamente
 
+  // Extraer parámetros de chips (filtros booleanos)
+  const featuredParam = typeof searchParams.featured === 'string' ? searchParams.featured : ''
+  const petsChipParam = typeof searchParams.pets === 'string' ? searchParams.pets : ''
+  const noSmokerParam = typeof searchParams.no_smoker === 'string' ? searchParams.no_smoker : ''
+  const calmParam = typeof searchParams.calm === 'string' ? searchParams.calm : ''
+
   // Extraer parámetros legacy de lifestyle (compatibilidad con URLs viejas, sin UI)
-  const petsParam = typeof searchParams.pets === 'string' ? searchParams.pets : ''
+  // Nota: pets legacy usa 'yes'/'no', chips usa '1', así que no hay conflicto
+  const petsLegacyParam = typeof searchParams.pets === 'string' ? searchParams.pets : ''
   const smokerParam = typeof searchParams.smoker === 'string' ? searchParams.smoker : ''
   const partiesParam = typeof searchParams.parties === 'string' ? searchParams.parties : ''
   const cleanlinessParam = typeof searchParams.cleanliness === 'string' ? searchParams.cleanliness : ''
@@ -37,10 +46,33 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
     query = query.ilike('city', `%${city.trim()}%`)
   }
 
-  // Aplicar filtros legacy de lifestyle (solo si vienen en URL)
-  if (petsParam === 'yes') {
+  // Aplicar filtros de chips (booleanos)
+  // Featured: filtrar donde featured_until > now()
+  if (featuredParam === '1') {
+    const now = new Date().toISOString()
+    query = query.gt('featured_until', now)
+  }
+
+  // Pets: filtrar donde pets = true
+  if (petsChipParam === '1') {
     query = query.eq('pets', true)
-  } else if (petsParam === 'no') {
+  }
+
+  // No smoker: filtrar donde smoker = false
+  if (noSmokerParam === '1') {
+    query = query.eq('smoker', false)
+  }
+
+  // Calm (tranquilo): filtrar donde parties = false
+  if (calmParam === '1') {
+    query = query.eq('parties', false)
+  }
+
+  // Aplicar filtros legacy de lifestyle (solo si vienen en URL, compatibilidad)
+  // Nota: Solo aplicar legacy si NO es un valor de chip (pets=1 es chip, pets=yes/no es legacy)
+  if (petsLegacyParam === 'yes' && petsChipParam !== '1') {
+    query = query.eq('pets', true)
+  } else if (petsLegacyParam === 'no' && petsChipParam !== '1') {
     query = query.eq('pets', false)
   }
 
@@ -100,40 +132,42 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   // Calcular número de resultados
   const resultCount = sortedProfiles?.length || 0
 
-  // Construir resumen de filtros activos
-  const activeFilters: string[] = []
-  if (q.trim()) activeFilters.push(`buscar: "${q.trim()}"`)
-  if (city.trim()) activeFilters.push(`ciudad: ${city.trim()}`)
-  // Nota: No mostrar lifestyle filters en resumen (son legacy, sin UI)
-  // Nota: budget_min/budget_max no existen en profiles table, se ignoran silenciosamente
+  // Construir objeto de filtros activos para ResultHeader
+  const activeFilters = {
+    featured: featuredParam === '1',
+    pets: petsChipParam === '1',
+    no_smoker: noSmokerParam === '1',
+    calm: calmParam === '1',
+  }
 
   return (
-    <div className="container mx-auto px-4 md:px-8 py-16">
-      <div className="flex justify-between items-center mb-4">
+    <div className="mx-auto max-w-7xl px-4 md:px-6 py-10 md:py-12">
+      <div className="flex justify-between items-center mb-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight mb-2">Explora perfiles</h1>
-          <p className="text-gray-600 text-sm">Encuentra roomies que compartan tu estilo de vida.</p>
+          <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.01em] text-neutral-900">Explora perfiles</h1>
+          <p className="text-neutral-700 text-sm mt-1">Encuentra roomies que compartan tu estilo de vida.</p>
         </div>
         <Link
           href="/onboarding/step-1"
-          className="bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14]"
+          className="bg-brand text-white h-10 px-4 rounded-lg text-sm font-medium hover:bg-brandHover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A18]/30 focus-visible:ring-offset-2"
         >
           Crear/editar mi perfil
         </Link>
       </div>
 
-      {/* Resumen de resultados y filtros activos */}
-      {(activeFilters.length > 0 || resultCount > 0) && (
-        <div className="mb-6">
-          <p className="text-gray-600 text-sm">
-            Mostrando <strong>{resultCount}</strong> {resultCount === 1 ? 'perfil' : 'perfiles'}
-            {activeFilters.length > 0 && (
-              <span className="ml-2">
-                • {activeFilters.join(' • ')}
-              </span>
-            )}
-          </p>
-        </div>
+      {/* Chips de filtros */}
+      <FilterChips />
+
+      {/* Result Header */}
+      {resultCount > 0 && (
+        <ResultHeader
+          count={resultCount}
+          activeFilters={activeFilters}
+          hasSearch={!!q.trim()}
+          searchQuery={q.trim() || undefined}
+          hasCity={!!city.trim()}
+          cityName={city.trim() || undefined}
+        />
       )}
 
       {error && (
@@ -143,22 +177,30 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
       )}
 
       {!profiles || profiles.length === 0 ? (
-        activeFilters.length > 0 ? (
-          <EmptyState
-            icon="search"
-            title="No encontramos roomies con esos filtros"
-            description="Intenta cambiar la ciudad o quitar algunos filtros."
-            ctaLabel="Ver todos"
-            ctaHref="/explore"
-          />
+        (Object.values(activeFilters).some(Boolean) || q.trim() || city.trim()) ? (
+          <div className="py-12">
+            <EmptyState
+              icon="search"
+              title="No encontramos perfiles con esos filtros"
+              description={
+                q.trim()
+                  ? 'Prueba quitar un filtro o ajustar tu búsqueda. Intenta otro nombre o solo una palabra.'
+                  : 'Prueba quitar un filtro o ajustar tu búsqueda.'
+              }
+              ctaLabel="Limpiar filtros"
+              ctaHref="/explore"
+            />
+          </div>
         ) : (
-          <EmptyState
-            icon="search"
-            title="Aún no hay perfiles"
-            description="Sé el primero en crear tu perfil y conectar con otros roomies."
-            ctaLabel="Crear mi perfil"
-            ctaHref="/onboarding/step-1"
-          />
+          <div className="py-12">
+            <EmptyState
+              icon="search"
+              title="Aún no hay perfiles"
+              description="Sé el primero en crear tu perfil y conectar con otros roomies."
+              ctaLabel="Crear mi perfil"
+              ctaHref="/onboarding/step-1"
+            />
+          </div>
         )
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">

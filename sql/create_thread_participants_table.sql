@@ -53,3 +53,4 @@ USING (auth.uid() = user_id);
 -- 4. Los índices están creados
 -- =====================================================
 
+

@@ -84,8 +84,8 @@ export async function saveMyLifestyle(formData: LifestyleData) {
     return { error: error.message }
   }
 
-  // Si OK => redirect a /explore
-  redirect('/explore')
+  // Si OK => redirect a home
+  redirect('/')
 }
 
 

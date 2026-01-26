@@ -13,9 +13,10 @@ export default function Login() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Leer intent de query params
+  // Leer intent y next de query params
   const intentParam = searchParams.get('intent')
   const intent = intentParam === 'listings' || intentParam === 'roomies' ? intentParam : null
+  const nextParam = searchParams.get('next') || searchParams.get('redirectTo') || null
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -49,7 +50,14 @@ export default function Login() {
       // Verificar si el usuario tiene perfil
       const profileExists = await hasProfile()
 
-      // Redirigir según si tiene perfil y el intent
+      // Redirigir según si tiene perfil, el intent y el next param
+      // Si existe next param, tiene prioridad (para rutas protegidas)
+      if (nextParam) {
+        router.push(nextParam)
+        return
+      }
+
+      // Sin next param, redirigir según si tiene perfil y el intent
       if (!profileExists) {
         // Sin perfil
         if (intent === 'listings') {
@@ -65,8 +73,8 @@ export default function Login() {
         if (intent === 'listings') {
           router.push('/listings')
         } else {
-          // intent === 'roomies' o null
-          router.push('/explore')
+          // intent === 'roomies' o null - redirigir a home
+          router.push('/')
         }
       }
     } catch (err) {
