@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { clearLocationPersistence, clearLocationFromUrlParams } from '@/app/lib/search/clearLocation'
 
 interface GlobalSearchBarProps {
   mode?: 'listings' | 'roomies'
@@ -15,7 +16,6 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   const triggerRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const cityInputRef = useRef<HTMLInputElement>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
   const [recentCity, setRecentCity] = useState<{ label: string; value: string; location_id?: string } | null>(null)
@@ -34,9 +34,8 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   const [citySelectLoading, setCitySelectLoading] = useState(false)
   const [citySelectError, setCitySelectError] = useState<string | null>(null)
 
-  // Texto del input del header (filters.q) para poder copiarlo a Ciudad al abrir
-  const [inputHeaderQuery, setInputHeaderQuery] = useState(searchParams.get('q') || '')
-  const [headerUserEdited, setHeaderUserEdited] = useState(false)
+  // Location selection (cuando el usuario selecciona un resultado/cerca de aquí/reciente)
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
 
   // Determinar mode según pathname si no se pasa como prop
   // Si pathname es /explore, usar mode 'roomies', sino 'listings'
@@ -87,10 +86,8 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
         sort: searchParams.get('sort') || 'recent',
       })
     }
-
-    // Si viene de URL/navegación, no lo tratamos como input del usuario
-    setInputHeaderQuery(searchParams.get('q') || '')
-    setHeaderUserEdited(false)
+    setSelectedLocationId(searchParams.get('location_id') || null)
+    setCityUserEdited(false)
   }, [searchParams, pathname, propMode])
 
   // Leer ciudad reciente de localStorage cuando se abre el dropdown
@@ -178,11 +175,11 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     }
   }, [isOpen, cityUserEdited, cityQuery])
 
-  // Auto-focus al abrir: enfocar "Ciudad" para que el usuario pueda escribir inmediatamente
+  // Auto-focus al abrir: enfocar el input principal (header) para que el usuario pueda escribir inmediatamente
   useEffect(() => {
     if (!isOpen) return
     requestAnimationFrame(() => {
-      cityInputRef.current?.focus()
+      inputRef.current?.focus()
     })
   }, [isOpen])
 
@@ -220,33 +217,27 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     }
   }, [isOpen])
 
-  // Unificar escritura header -> ciudad:
-  // Si el usuario ya escribió en el header (q) y Ciudad está vacío al abrir, copiamos para disparar autocomplete sin click extra.
-  useEffect(() => {
-    if (!isOpen) return
-    if (!headerUserEdited) return
-
-    const headerText = (inputHeaderQuery || '').trim()
-    if (!headerText) return
-
-    setFilters((prev: any) => {
-      if ((prev.city || '').trim()) return prev
-      return { ...prev, city: headerText }
-    })
-    setCityUserEdited(true)
-  }, [isOpen, headerUserEdited, inputHeaderQuery])
-
   const handleSearch = () => {
     const params = new URLSearchParams()
 
     if (mode === 'roomies') {
       if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
-      if ((filters.city ?? '').trim()) params.set('city', (filters.city ?? '').trim())
+      if (selectedLocationId) {
+        params.set('location_id', selectedLocationId)
+      } else if ((filters.city ?? '').trim()) {
+        // Legacy fallback
+        params.set('city', (filters.city ?? '').trim())
+      }
       if ((filters.budget_min ?? '').trim()) params.set('budget_min', (filters.budget_min ?? '').trim())
       if ((filters.budget_max ?? '').trim()) params.set('budget_max', (filters.budget_max ?? '').trim())
     } else {
       if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
-      if ((filters.city ?? '').trim()) params.set('city', (filters.city ?? '').trim())
+      if (selectedLocationId) {
+        params.set('location_id', selectedLocationId)
+      } else if ((filters.city ?? '').trim()) {
+        // Legacy fallback
+        params.set('city', (filters.city ?? '').trim())
+      }
       if ((filters.zone ?? '').trim()) params.set('zone', (filters.zone ?? '').trim())
       if (filters.listing_type !== 'all') params.set('listing_type', filters.listing_type)
       if ((filters.min ?? '').trim()) params.set('min', (filters.min ?? '').trim())
@@ -257,6 +248,45 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     router.push(`${targetPath}?${params.toString()}`)
     setIsOpen(false)
   }
+
+  const clearLocationFromUIAndPersistence = () => {
+    // Limpiar SOLO ubicación (input principal) + estado asociado
+    setFilters((prev: any) => ({ ...prev, city: '' }))
+    setSelectedLocationId(null)
+
+    // Limpiar estados UI relacionados a ubicación
+    setRecentCity(null)
+    setGeoError(null)
+    setCitySelectError(null)
+    setCityResultsError(null)
+    setCityResultsLoading(false)
+    setCityResults([])
+    setCityUserEdited(false)
+
+    // Limpiar persistencia usando helper compartido
+    clearLocationPersistence()
+
+    // Actualizar URL removiendo location/city/q pero manteniendo la ruta actual
+    const cleanedParams = clearLocationFromUrlParams(searchParams.toString())
+    const nextUrl = cleanedParams ? `${pathname}?${cleanedParams}` : pathname
+    router.push(nextUrl)
+  }
+
+  // Escuchar evento de limpieza de ubicación desde LogoLink (cuando se hace click en logo)
+  // Debe estar después de la definición de clearLocationFromUIAndPersistence
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleClearLocationEvent = () => {
+      clearLocationFromUIAndPersistence()
+    }
+
+    window.addEventListener('myroomie:clear-location', handleClearLocationEvent)
+
+    return () => {
+      window.removeEventListener('myroomie:clear-location', handleClearLocationEvent)
+    }
+  }, []) // Solo al montar, clearLocationFromUIAndPersistence usa closures de los hooks del componente
 
   const handleClear = () => {
     if (mode === 'roomies') {
@@ -285,8 +315,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     setCityResultsLoading(false)
     setCityResults([])
     setCityUserEdited(false)
-    setHeaderUserEdited(false)
-    setInputHeaderQuery('')
+    setSelectedLocationId(null)
 
     // Limpiar persistencia (para que no reaparezca al reabrir)
     if (typeof window !== 'undefined') {
@@ -296,7 +325,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       localStorage.removeItem('last_city_value')
     }
 
-    router.push(targetPath)
+    router.push(pathname || targetPath)
     setIsOpen(false)
   }
 
@@ -325,6 +354,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     setGeoError(null)
     setCitySelectError(null)
     setCityUserEdited(false)
+    setSelectedLocationId(locationId || null)
 
     // Si viene location_id, usarlo; sino usar city (legacy)
     const params = new URLSearchParams()
@@ -494,6 +524,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
 
           // Actualizar filtro con label completo si hay locationId, sino con cityValue (legacy)
           setFilters({ ...filters, city: locationId ? cityLabel : cityValue })
+          setSelectedLocationId(locationId || null)
           
           // Aplicar searchParams inmediatamente
           const params = new URLSearchParams()
@@ -579,11 +610,14 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
             <input
               ref={inputRef}
               type="text"
-              value={filters.q || ''}
+              value={filters.city || ''}
               onChange={(e) => {
-                setFilters({ ...filters, q: e.target.value })
-                setInputHeaderQuery(e.target.value)
-                setHeaderUserEdited(true)
+                // Input principal = ubicación
+                setFilters({ ...filters, city: e.target.value })
+                setGeoError(null)
+                setCitySelectError(null)
+                setSelectedLocationId(null)
+                setCityUserEdited(true)
               }}
               placeholder="Buscar..."
               className="flex-1 text-sm text-neutral-700 bg-transparent border-none outline-none"
@@ -600,9 +634,9 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
             )}
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={clearLocationFromUIAndPersistence}
               className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
-              aria-label="Cerrar"
+              aria-label="Limpiar ubicación"
             >
               ✕
             </button>
@@ -800,23 +834,6 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
                   )}
                 </div>
               )}
-
-              {/* Row 1: Ciudad */}
-              <div>
-                <input
-                  ref={cityInputRef}
-                  type="text"
-                  value={filters.city || ''}
-                  onChange={(e) => {
-                    setFilters({ ...filters, city: e.target.value })
-                    setGeoError(null)
-                    setCitySelectError(null)
-                    setCityUserEdited(true)
-                  }}
-                  placeholder="Ciudad"
-                  className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
-                />
-              </div>
 
               {/* Row 2: Tipo (solo listings) y Precio/Presupuesto */}
               {mode === 'listings' ? (

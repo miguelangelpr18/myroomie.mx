@@ -3,6 +3,7 @@ import Link from 'next/link'
 import HeaderModeTabs from './components/HeaderModeTabs'
 import UserMenu from './components/UserMenu'
 import GlobalSearchBar from './components/search/GlobalSearchBar'
+import LogoLink from './components/LogoLink'
 
 export default async function Header() {
   const supabase = createServerSupabaseClient()
@@ -16,11 +17,7 @@ export default async function Header() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-neutral-200/60">
         <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-6">
           {/* Left: Logo */}
-          <Link href="/" className="text-lg md:text-xl font-semibold tracking-tight leading-none select-none flex-shrink-0 hover:opacity-80 transition-opacity">
-            <span className="text-brand">my</span>
-            <span className="text-neutral-900">roomie</span>
-            <span className="text-neutral-900">.mx</span>
-          </Link>
+          <LogoLink />
           
           {/* Center: Search + Create Button */}
           <div className="flex-1 flex items-center justify-center gap-2 max-w-xl mx-4 hidden md:flex">
@@ -69,11 +66,7 @@ export default async function Header() {
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-neutral-200/60">
       <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 md:px-6">
         {/* Left: Logo */}
-        <Link href="/" className="text-lg md:text-xl font-semibold tracking-tight leading-none select-none flex-shrink-0 hover:opacity-80 transition-opacity">
-          <span className="text-brand">my</span>
-          <span className="text-neutral-900">roomie</span>
-          <span className="text-neutral-900">.mx</span>
-        </Link>
+        <LogoLink />
         
         {/* Center: Search + Create Button */}
         <div className="flex-1 flex items-center justify-center gap-2 max-w-xl mx-4 hidden md:flex">

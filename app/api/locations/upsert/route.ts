@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,16 +101,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const supabase = createServerSupabaseClient()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    // Verificar autenticación (requerida por RLS)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (!session || sessionError) {
+    if (!serviceRoleKey) {
       return NextResponse.json(
-        { error: 'No autorizado. Por favor inicia sesión.' },
-        { status: 401 }
+        { error: 'Missing SUPABASE_SERVICE_ROLE_KEY' },
+        { status: 500 }
       )
     }
+
+    if (!supabaseUrl) {
+      return NextResponse.json(
+        { error: 'Missing NEXT_PUBLIC_SUPABASE_URL' },
+        { status: 500 }
+      )
+    }
+
+    // Service role (admin) client: bypass RLS on server
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
 
     // Upsert en locations (usando unique index en provider+place_id)
     // latNum y lngNum ya están validados y parseados arriba
