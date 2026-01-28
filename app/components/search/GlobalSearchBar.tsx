@@ -16,6 +16,16 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   const inputRef = useRef<HTMLInputElement>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
+  const [recentCity, setRecentCity] = useState<{ label: string; value: string; location_id?: string } | null>(null)
+
+  // Sugerencias de ciudades hardcodeadas
+  const citySuggestions = [
+    { label: 'Monterrey, Nuevo León', value: 'Monterrey' },
+    { label: 'San Nicolás de los Garza, Nuevo León', value: 'San Nicolás de los Garza' },
+    { label: 'San Pedro Garza García, Nuevo León', value: 'San Pedro Garza García' },
+    { label: 'Santa Catarina, Nuevo León', value: 'Santa Catarina' },
+    { label: 'Guadalupe, Nuevo León', value: 'Guadalupe' },
+  ]
 
   // Determinar mode según pathname si no se pasa como prop
   // Si pathname es /explore, usar mode 'roomies', sino 'listings'
@@ -66,6 +76,37 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       })
     }
   }, [searchParams, pathname, propMode])
+
+  // Leer ciudad reciente de localStorage cuando se abre el dropdown
+  useEffect(() => {
+    if (isOpen && typeof window !== 'undefined') {
+      // Priorizar location_id si existe
+      const lastLocationId = localStorage.getItem('last_location_id')
+      const lastLocationLabel = localStorage.getItem('last_location_label')
+      if (lastLocationId && lastLocationLabel) {
+        setRecentCity({ label: lastLocationLabel, value: lastLocationLabel, location_id: lastLocationId })
+        // Poblar input de ciudad con el label completo solo si está vacío
+        setFilters((prevFilters: any) => ({
+          ...prevFilters,
+          city: prevFilters.city || lastLocationLabel,
+        }))
+      } else {
+        // Fallback a city legacy
+        const lastLabel = localStorage.getItem('last_city_label')
+        const lastValue = localStorage.getItem('last_city_value')
+        if (lastLabel && lastValue) {
+          setRecentCity({ label: lastLabel, value: lastValue })
+          // Poblar input de ciudad con el label legacy solo si está vacío
+          setFilters((prevFilters: any) => ({
+            ...prevFilters,
+            city: prevFilters.city || lastLabel,
+          }))
+        } else {
+          setRecentCity(null)
+        }
+      }
+    }
+  }, [isOpen])
 
   // Auto-focus al abrir
   useEffect(() => {
@@ -158,6 +199,53 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
         filters.sort !== 'recent',
       ].filter(Boolean).length
 
+  // Manejar selección de ciudad (reciente o sugerencia)
+  const handleSelectCity = async (label: string, value: string, locationId?: string) => {
+    // Si hay locationId, usar label completo; sino usar value (legacy)
+    setFilters({ ...filters, city: locationId ? label : value })
+    setGeoError(null)
+
+    // Si viene location_id, usarlo; sino usar city (legacy)
+    const params = new URLSearchParams()
+    if (mode === 'roomies') {
+      if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
+      if (locationId) {
+        params.set('location_id', locationId)
+      } else {
+        params.set('city', value)
+      }
+      if ((filters.budget_min ?? '').trim()) params.set('budget_min', (filters.budget_min ?? '').trim())
+      if ((filters.budget_max ?? '').trim()) params.set('budget_max', (filters.budget_max ?? '').trim())
+    } else {
+      if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
+      if (locationId) {
+        params.set('location_id', locationId)
+      } else {
+        params.set('city', value)
+      }
+      if ((filters.zone ?? '').trim()) params.set('zone', (filters.zone ?? '').trim())
+      if (filters.listing_type !== 'all') params.set('listing_type', filters.listing_type)
+      if ((filters.min ?? '').trim()) params.set('min', (filters.min ?? '').trim())
+      if ((filters.max ?? '').trim()) params.set('max', (filters.max ?? '').trim())
+      if (filters.sort !== 'recent') params.set('sort', filters.sort)
+    }
+
+    // Guardar en localStorage
+    if (typeof window !== 'undefined') {
+      if (locationId) {
+        localStorage.setItem('last_location_id', locationId)
+        localStorage.setItem('last_location_label', label)
+      } else {
+        // Legacy: guardar también city para compatibilidad
+        localStorage.setItem('last_city_label', label)
+        localStorage.setItem('last_city_value', value)
+      }
+    }
+
+    router.push(`${targetPath}?${params.toString()}`)
+    setIsOpen(false)
+  }
+
   // Manejar geolocalización
   const handleUseCurrentLocation = async () => {
     setGeoError(null)
@@ -185,26 +273,70 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
           const data = await response.json()
           const cityValue = data.city || data.label || ''
           const cityLabel = data.label || cityValue
+          const placeId = data.place_id
+
+          // Si tenemos place_id, hacer upsert en locations para obtener location_id
+          let locationId: string | undefined = undefined
+          if (placeId) {
+            try {
+              const upsertResponse = await fetch('/api/locations/upsert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  provider: 'mapbox',
+                  place_id: placeId,
+                  label: cityLabel,
+                  city: data.city || null,
+                  region: data.region || null,
+                  country: data.country || null,
+                  lat: data.lat || null,
+                  lng: data.lng || null,
+                }),
+              })
+
+              if (upsertResponse.ok) {
+                const upsertData = await upsertResponse.json()
+                locationId = upsertData.location_id
+              }
+            } catch (error) {
+              console.error('Error al hacer upsert de location:', error)
+              // Continuar con city legacy si falla
+            }
+          }
 
           // Guardar en localStorage
           if (typeof window !== 'undefined') {
-            localStorage.setItem('last_city_label', cityLabel)
-            localStorage.setItem('last_city_value', cityValue)
+            if (locationId) {
+              localStorage.setItem('last_location_id', locationId)
+              localStorage.setItem('last_location_label', cityLabel)
+            } else {
+              // Legacy: guardar también city para compatibilidad
+              localStorage.setItem('last_city_label', cityLabel)
+              localStorage.setItem('last_city_value', cityValue)
+            }
           }
 
-          // Actualizar filtro y aplicar búsqueda
-          setFilters({ ...filters, city: cityValue })
+          // Actualizar filtro con label completo si hay locationId, sino con cityValue (legacy)
+          setFilters({ ...filters, city: locationId ? cityLabel : cityValue })
           
           // Aplicar searchParams inmediatamente
           const params = new URLSearchParams()
           if (mode === 'roomies') {
             if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
-            params.set('city', cityValue)
+            if (locationId) {
+              params.set('location_id', locationId)
+            } else {
+              params.set('city', cityValue)
+            }
             if ((filters.budget_min ?? '').trim()) params.set('budget_min', (filters.budget_min ?? '').trim())
             if ((filters.budget_max ?? '').trim()) params.set('budget_max', (filters.budget_max ?? '').trim())
           } else {
             if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
-            params.set('city', cityValue)
+            if (locationId) {
+              params.set('location_id', locationId)
+            } else {
+              params.set('city', cityValue)
+            }
             if ((filters.zone ?? '').trim()) params.set('zone', (filters.zone ?? '').trim())
             if (filters.listing_type !== 'all') params.set('listing_type', filters.listing_type)
             if ((filters.min ?? '').trim()) params.set('min', (filters.min ?? '').trim())
@@ -408,6 +540,63 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
                   {geoError}
                 </div>
               )}
+
+              {/* Sección: Reciente */}
+              {recentCity && (
+                <div>
+                  <div className="px-2 mb-2">
+                    <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Reciente</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectCity(recentCity.label, recentCity.value, recentCity.location_id)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                    role="button"
+                  >
+                    <svg
+                      className="w-4 h-4 text-neutral-400 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-sm font-medium text-neutral-900">{recentCity.label}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Sección: Sugerencias */}
+              <div>
+                <div className="px-2 mb-2">
+                  <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Sugerencias</h3>
+                </div>
+                <div className="space-y-1">
+                  {citySuggestions.map((city) => (
+                    <button
+                      key={city.value}
+                      type="button"
+                      onClick={() => handleSelectCity(city.label, city.value)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                      role="button"
+                    >
+                      <svg
+                        className="w-4 h-4 text-neutral-400 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-sm font-medium text-neutral-900">{city.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* Row 1: Ciudad */}
               <div>

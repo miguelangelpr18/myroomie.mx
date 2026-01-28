@@ -84,10 +84,13 @@ export async function GET(request: NextRequest) {
     const label = labelParts.length > 0 ? labelParts.join(', ') : feature.place_name || feature.text
 
     return NextResponse.json({
+      place_id: feature.id,
       label,
       city,
       region,
       country,
+      lat: feature.center ? feature.center[1] : null,
+      lng: feature.center ? feature.center[0] : null,
     })
   } catch (error) {
     console.error('Error en reverse geocoding:', error)

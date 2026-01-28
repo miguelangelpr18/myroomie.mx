@@ -15,12 +15,37 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
 
   // Extraer parámetros de búsqueda
   const q = typeof searchParams.q === 'string' ? searchParams.q : ''
-  const city = typeof searchParams.city === 'string' ? searchParams.city : ''
+  const locationId = typeof searchParams.location_id === 'string' ? searchParams.location_id : undefined
+  const cityParam = typeof searchParams.city === 'string' ? searchParams.city : ''
   const zone = typeof searchParams.zone === 'string' ? searchParams.zone : ''
   const listingType = typeof searchParams.listing_type === 'string' ? searchParams.listing_type : 'all'
   const minPrice = typeof searchParams.min === 'string' ? searchParams.min : ''
   const maxPrice = typeof searchParams.max === 'string' ? searchParams.max : ''
   const sort = typeof searchParams.sort === 'string' ? searchParams.sort : 'recent'
+
+  // Resolver location_id a city si existe
+  let city = cityParam
+  if (locationId) {
+    try {
+      const { data: location } = await supabase
+        .from('locations')
+        .select('city, label')
+        .eq('id', locationId)
+        .single()
+
+      if (location) {
+        // Priorizar city, si es null usar label como fallback
+        city = location.city || location.label || cityParam
+      } else {
+        // Si location_id no existe, fallback a city param si existe
+        city = cityParam
+      }
+    } catch (error) {
+      // Si hay error (ej: location_id inválido), fallback a city param
+      console.error('Error al resolver location_id:', error)
+      city = cityParam
+    }
+  }
 
   // Construir query base
   let query = supabase
