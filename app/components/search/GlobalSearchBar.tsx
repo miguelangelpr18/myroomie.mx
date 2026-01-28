@@ -14,6 +14,8 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   const [isOpen, setIsOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState<string | null>(null)
 
   // Determinar mode según pathname si no se pasa como prop
   // Si pathname es /explore, usar mode 'roomies', sino 'listings'
@@ -156,6 +158,80 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
         filters.sort !== 'recent',
       ].filter(Boolean).length
 
+  // Manejar geolocalización
+  const handleUseCurrentLocation = async () => {
+    setGeoError(null)
+    setGeoLoading(true)
+
+    if (!navigator.geolocation) {
+      setGeoError('Tu navegador no soporta geolocalización')
+      setGeoLoading(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          const response = await fetch(`/api/geo/reverse?lat=${latitude}&lng=${longitude}`)
+          
+          if (!response.ok) {
+            const data = await response.json()
+            setGeoError(data.error || 'Error al obtener la ubicación')
+            setGeoLoading(false)
+            return
+          }
+
+          const data = await response.json()
+          const cityValue = data.city || data.label || ''
+          const cityLabel = data.label || cityValue
+
+          // Guardar en localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('last_city_label', cityLabel)
+            localStorage.setItem('last_city_value', cityValue)
+          }
+
+          // Actualizar filtro y aplicar búsqueda
+          setFilters({ ...filters, city: cityValue })
+          
+          // Aplicar searchParams inmediatamente
+          const params = new URLSearchParams()
+          if (mode === 'roomies') {
+            if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
+            params.set('city', cityValue)
+            if ((filters.budget_min ?? '').trim()) params.set('budget_min', (filters.budget_min ?? '').trim())
+            if ((filters.budget_max ?? '').trim()) params.set('budget_max', (filters.budget_max ?? '').trim())
+          } else {
+            if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
+            params.set('city', cityValue)
+            if ((filters.zone ?? '').trim()) params.set('zone', (filters.zone ?? '').trim())
+            if (filters.listing_type !== 'all') params.set('listing_type', filters.listing_type)
+            if ((filters.min ?? '').trim()) params.set('min', (filters.min ?? '').trim())
+            if ((filters.max ?? '').trim()) params.set('max', (filters.max ?? '').trim())
+            if (filters.sort !== 'recent') params.set('sort', filters.sort)
+          }
+
+          router.push(`${targetPath}?${params.toString()}`)
+          setGeoLoading(false)
+        } catch (error) {
+          setGeoError('Error al procesar la ubicación')
+          setGeoLoading(false)
+        }
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setGeoError('Permiso de ubicación denegado')
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          setGeoError('Ubicación no disponible')
+        } else {
+          setGeoError('Error al obtener la ubicación')
+        }
+        setGeoLoading(false)
+      }
+    )
+  }
+
   // Texto resumen para estado collapsed
   const getSummaryText = () => {
     const parts: string[] = []
@@ -294,12 +370,54 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
             }}
           >
             <div className="space-y-3">
+              {/* Opción: Cerca de aquí */}
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={geoLoading}
+                className="w-full flex items-center gap-3 px-4 py-2.5 h-11 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  className="w-5 h-5 text-neutral-600 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-neutral-900">📍 Cerca de aquí</div>
+                  <div className="text-xs text-neutral-500">Usar ubicación actual</div>
+                </div>
+                {geoLoading && (
+                  <svg
+                    className="w-4 h-4 text-neutral-400 animate-spin flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                )}
+              </button>
+              {geoError && (
+                <div className="px-4 py-2 text-xs text-red-600 bg-red-50 rounded-lg border border-red-100">
+                  {geoError}
+                </div>
+              )}
+
               {/* Row 1: Ciudad */}
               <div>
                 <input
                   type="text"
                   value={filters.city || ''}
-                  onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                  onChange={(e) => {
+                    setFilters({ ...filters, city: e.target.value })
+                    setGeoError(null)
+                  }}
                   placeholder="Ciudad"
                   className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
                 />
