@@ -1209,3 +1209,4 @@ const channel = supabase
 **Fin del Project Map Completo**
 
 
+
