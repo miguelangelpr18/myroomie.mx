@@ -12,20 +12,31 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const cityInputRef = useRef<HTMLInputElement>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
   const [recentCity, setRecentCity] = useState<{ label: string; value: string; location_id?: string } | null>(null)
+  const [cityUserEdited, setCityUserEdited] = useState(false)
+  const [cityResultsLoading, setCityResultsLoading] = useState(false)
+  const [cityResultsError, setCityResultsError] = useState<string | null>(null)
+  const [cityResults, setCityResults] = useState<Array<{
+    place_id: string
+    label: string
+    city: string | null
+    region: string | null
+    country?: string | null
+    lat: number | null
+    lng: number | null
+  }>>([])
+  const [citySelectLoading, setCitySelectLoading] = useState(false)
+  const [citySelectError, setCitySelectError] = useState<string | null>(null)
 
-  // Sugerencias de ciudades hardcodeadas
-  const citySuggestions = [
-    { label: 'Monterrey, Nuevo León', value: 'Monterrey' },
-    { label: 'San Nicolás de los Garza, Nuevo León', value: 'San Nicolás de los Garza' },
-    { label: 'San Pedro Garza García, Nuevo León', value: 'San Pedro Garza García' },
-    { label: 'Santa Catarina, Nuevo León', value: 'Santa Catarina' },
-    { label: 'Guadalupe, Nuevo León', value: 'Guadalupe' },
-  ]
+  // Texto del input del header (filters.q) para poder copiarlo a Ciudad al abrir
+  const [inputHeaderQuery, setInputHeaderQuery] = useState(searchParams.get('q') || '')
+  const [headerUserEdited, setHeaderUserEdited] = useState(false)
 
   // Determinar mode según pathname si no se pasa como prop
   // Si pathname es /explore, usar mode 'roomies', sino 'listings'
@@ -53,6 +64,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       }
     }
   })
+  const cityQuery = (filters.city || '').trim()
 
   // Sincronizar con URL params cuando cambian
   useEffect(() => {
@@ -75,11 +87,20 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
         sort: searchParams.get('sort') || 'recent',
       })
     }
+
+    // Si viene de URL/navegación, no lo tratamos como input del usuario
+    setInputHeaderQuery(searchParams.get('q') || '')
+    setHeaderUserEdited(false)
   }, [searchParams, pathname, propMode])
 
   // Leer ciudad reciente de localStorage cuando se abre el dropdown
   useEffect(() => {
     if (isOpen && typeof window !== 'undefined') {
+      setCityUserEdited(false)
+      setCityResults([])
+      setCityResultsError(null)
+      setCityResultsLoading(false)
+      setCitySelectError(null)
       // Priorizar location_id si existe
       const lastLocationId = localStorage.getItem('last_location_id')
       const lastLocationLabel = localStorage.getItem('last_location_label')
@@ -108,33 +129,112 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     }
   }, [isOpen])
 
-  // Auto-focus al abrir
+  // Autocomplete de ciudades (debounced)
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus()
+    if (!isOpen) return
+    if (!cityUserEdited) return
+
+    const q = cityQuery
+    if (q.length < 3) {
+      setCityResults([])
+      setCityResultsError(null)
+      setCityResultsLoading(false)
+      return
     }
+
+    const controller = new AbortController()
+    setCityResultsLoading(true)
+    setCityResultsError(null)
+
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/geo/forward?q=${encodeURIComponent(q)}`, {
+          signal: controller.signal,
+        })
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => null)
+          setCityResults([])
+          setCityResultsError(data?.error || 'No se pudo buscar')
+          setCityResultsLoading(false)
+          return
+        }
+
+        const data = await res.json()
+        const candidates = Array.isArray(data?.candidates) ? data.candidates.slice(0, 5) : []
+        setCityResults(candidates)
+        setCityResultsLoading(false)
+      } catch (e) {
+        if ((e as any)?.name === 'AbortError') return
+        setCityResults([])
+        setCityResultsError('No se pudo buscar')
+        setCityResultsLoading(false)
+      }
+    }, 300)
+
+    return () => {
+      clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [isOpen, cityUserEdited, cityQuery])
+
+  // Auto-focus al abrir: enfocar "Ciudad" para que el usuario pueda escribir inmediatamente
+  useEffect(() => {
+    if (!isOpen) return
+    requestAnimationFrame(() => {
+      cityInputRef.current?.focus()
+    })
   }, [isOpen])
 
   // El overlay maneja el cierre con click fuera, no necesitamos este effect adicional
 
-  // Cerrar con ESC y prevenir scroll cuando está abierto
+  // Cerrar con click afuera / ESC y prevenir scroll cuando está abierto
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    if (!isOpen) return
+
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null
+      if (!target) return
+
+      const insideDropdown = dropdownRef.current?.contains(target) ?? false
+      const insideTrigger = triggerRef.current?.contains(target) ?? false
+
+      if (!insideDropdown && !insideTrigger) {
         setIsOpen(false)
       }
     }
 
-    if (isOpen) {
-      // Prevenir scroll en body cuando search está abierto (especialmente mobile)
-      document.body.style.overflow = 'hidden'
-      document.addEventListener('keydown', handleEsc)
-      return () => {
-        document.body.style.overflow = ''
-        document.removeEventListener('keydown', handleEsc)
-      }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+
+    // Prevenir scroll en body cuando search está abierto (especialmente mobile)
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
+
+  // Unificar escritura header -> ciudad:
+  // Si el usuario ya escribió en el header (q) y Ciudad está vacío al abrir, copiamos para disparar autocomplete sin click extra.
+  useEffect(() => {
+    if (!isOpen) return
+    if (!headerUserEdited) return
+
+    const headerText = (inputHeaderQuery || '').trim()
+    if (!headerText) return
+
+    setFilters((prev: any) => {
+      if ((prev.city || '').trim()) return prev
+      return { ...prev, city: headerText }
+    })
+    setCityUserEdited(true)
+  }, [isOpen, headerUserEdited, inputHeaderQuery])
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -177,6 +277,25 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
         sort: 'recent',
       })
     }
+    // Limpiar UI state del dropdown
+    setRecentCity(null)
+    setGeoError(null)
+    setCitySelectError(null)
+    setCityResultsError(null)
+    setCityResultsLoading(false)
+    setCityResults([])
+    setCityUserEdited(false)
+    setHeaderUserEdited(false)
+    setInputHeaderQuery('')
+
+    // Limpiar persistencia (para que no reaparezca al reabrir)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('last_location_id')
+      localStorage.removeItem('last_location_label')
+      localStorage.removeItem('last_city_label')
+      localStorage.removeItem('last_city_value')
+    }
+
     router.push(targetPath)
     setIsOpen(false)
   }
@@ -204,6 +323,8 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     // Si hay locationId, usar label completo; sino usar value (legacy)
     setFilters({ ...filters, city: locationId ? label : value })
     setGeoError(null)
+    setCitySelectError(null)
+    setCityUserEdited(false)
 
     // Si viene location_id, usarlo; sino usar city (legacy)
     const params = new URLSearchParams()
@@ -246,10 +367,65 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     setIsOpen(false)
   }
 
+  const handleSelectAutocompleteResult = async (candidate: {
+    place_id: string
+    label: string
+    city: string | null
+    region: string | null
+    country?: string | null
+    lat: number | null
+    lng: number | null
+  }) => {
+    setCitySelectError(null)
+    setGeoError(null)
+    setCitySelectLoading(true)
+    setCityUserEdited(false)
+
+    try {
+      const upsertResponse = await fetch('/api/locations/upsert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'mapbox',
+          place_id: candidate.place_id,
+          label: candidate.label,
+          city: candidate.city,
+          region: candidate.region,
+          country: candidate.country ?? null,
+          lat: candidate.lat,
+          lng: candidate.lng,
+        }),
+      })
+
+      if (!upsertResponse.ok) {
+        const data = await upsertResponse.json().catch(() => null)
+        setCitySelectError(data?.error || 'No se pudo guardar la ubicación')
+        setCitySelectLoading(false)
+        return
+      }
+
+      const data = await upsertResponse.json()
+      const locationId = data?.location_id
+      if (!locationId || typeof locationId !== 'string') {
+        setCitySelectError('No se pudo guardar la ubicación')
+        setCitySelectLoading(false)
+        return
+      }
+
+      setCitySelectLoading(false)
+      await handleSelectCity(candidate.label, candidate.city || candidate.label, locationId)
+    } catch {
+      setCitySelectError('No se pudo guardar la ubicación')
+      setCitySelectLoading(false)
+    }
+  }
+
   // Manejar geolocalización
   const handleUseCurrentLocation = async () => {
     setGeoError(null)
+    setCitySelectError(null)
     setGeoLoading(true)
+    setCityUserEdited(false)
 
     if (!navigator.geolocation) {
       setGeoError('Tu navegador no soporta geolocalización')
@@ -384,18 +560,13 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
 
   return (
     <>
-      {/* Overlay para cerrar con click fuera */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/10"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
       <div className="relative flex-1 max-w-2xl mx-auto">
         {/* Barra pill con input cuando está abierto */}
         {isOpen ? (
-          <div className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2.5 h-11 shadow-sm focus-within:ring-2 focus-within:ring-brand/30 ring-1 ring-black/5">
+          <div
+            ref={triggerRef}
+            className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2.5 h-11 shadow-sm focus-within:ring-2 focus-within:ring-brand/30 ring-1 ring-black/5"
+          >
             <svg
               className="w-4 h-4 text-neutral-500 flex-shrink-0"
               fill="none"
@@ -409,7 +580,11 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
               ref={inputRef}
               type="text"
               value={filters.q || ''}
-              onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+              onChange={(e) => {
+                setFilters({ ...filters, q: e.target.value })
+                setInputHeaderQuery(e.target.value)
+                setHeaderUserEdited(true)
+              }}
               placeholder="Buscar..."
               className="flex-1 text-sm text-neutral-700 bg-transparent border-none outline-none"
               onKeyDown={(e) => {
@@ -433,65 +608,67 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className="w-full flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2.5 h-11 shadow-sm hover:shadow-md transition-shadow text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 ring-1 ring-black/5"
-          >
-            <svg
-              className="w-4 h-4 text-neutral-500 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+          <div ref={triggerRef}>
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="w-full flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2.5 h-11 shadow-sm hover:shadow-md transition-shadow text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 ring-1 ring-black/5"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            {activeFiltersCount > 0 ? (
-              <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
-                {(filters.q ?? '').trim() && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[120px]">
-                    "{(filters.q ?? '').trim().slice(0, 15)}{(filters.q ?? '').trim().length > 15 ? '...' : ''}"
-                  </span>
-                )}
-                {(filters.city ?? '').trim() && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
-                    {(filters.city ?? '').trim().slice(0, 12)}{(filters.city ?? '').trim().length > 12 ? '...' : ''}
-                  </span>
-                )}
-                {mode === 'listings' && (filters.zone ?? '').trim() && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
-                    {(filters.zone ?? '').trim().slice(0, 12)}{(filters.zone ?? '').trim().length > 12 ? '...' : ''}
-                  </span>
-                )}
-                {mode === 'listings' && filters.listing_type !== 'all' && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
-                    {filters.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'}
-                  </span>
-                )}
-                {(mode === 'listings' && ((filters.min ?? '').trim() || (filters.max ?? '').trim())) && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
-                    Precio
-                  </span>
-                )}
-                {(mode === 'roomies' && ((filters.budget_min ?? '').trim() || (filters.budget_max ?? '').trim())) && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
-                    Presupuesto
-                  </span>
-                )}
-              </div>
-            ) : (
-              <span className="text-sm text-neutral-700 truncate">
-                {getSummaryText()}
-              </span>
-            )}
-          </button>
+              <svg
+                className="w-4 h-4 text-neutral-500 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              {activeFiltersCount > 0 ? (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
+                  {(filters.q ?? '').trim() && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[120px]">
+                      "{(filters.q ?? '').trim().slice(0, 15)}{(filters.q ?? '').trim().length > 15 ? '...' : ''}"
+                    </span>
+                  )}
+                  {(filters.city ?? '').trim() && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
+                      {(filters.city ?? '').trim().slice(0, 12)}{(filters.city ?? '').trim().length > 12 ? '...' : ''}
+                    </span>
+                  )}
+                  {mode === 'listings' && (filters.zone ?? '').trim() && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[100px]">
+                      {(filters.zone ?? '').trim().slice(0, 12)}{(filters.zone ?? '').trim().length > 12 ? '...' : ''}
+                    </span>
+                  )}
+                  {mode === 'listings' && filters.listing_type !== 'all' && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
+                      {filters.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'}
+                    </span>
+                  )}
+                  {(mode === 'listings' && ((filters.min ?? '').trim() || (filters.max ?? '').trim())) && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
+                      Precio
+                    </span>
+                  )}
+                  {(mode === 'roomies' && ((filters.budget_min ?? '').trim() || (filters.budget_max ?? '').trim())) && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium">
+                      Presupuesto
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="text-sm text-neutral-700 truncate">
+                  {getSummaryText()}
+                </span>
+              )}
+            </button>
+          </div>
         )}
 
         {/* Popover compacto */}
         {isOpen && (
           <div
-            ref={panelRef}
+            ref={dropdownRef}
             className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-3xl border border-neutral-200 bg-white p-3 md:p-4 shadow-xl z-50 w-[calc(100vw-2rem)] max-w-[720px]"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
@@ -540,6 +717,11 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
                   {geoError}
                 </div>
               )}
+              {citySelectError && (
+                <div className="px-4 py-2 text-xs text-red-600 bg-red-50 rounded-lg border border-red-100">
+                  {citySelectError}
+                </div>
+              )}
 
               {/* Sección: Reciente */}
               {recentCity && (
@@ -549,7 +731,10 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleSelectCity(recentCity.label, recentCity.value, recentCity.location_id)}
+                    onClick={() => {
+                      setCityUserEdited(false)
+                      handleSelectCity(recentCity.label, recentCity.value, recentCity.location_id)
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                     role="button"
                   >
@@ -568,44 +753,65 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
                 </div>
               )}
 
-              {/* Sección: Sugerencias */}
-              <div>
-                <div className="px-2 mb-2">
-                  <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Sugerencias</h3>
+              {/* Sección: Resultados (autocomplete) */}
+              {cityUserEdited && cityQuery.length >= 3 && (
+                <div>
+                  <div className="px-2 mb-2">
+                    <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Resultados</h3>
+                  </div>
+
+                  {cityResultsLoading ? (
+                    <div className="px-4 py-2.5 text-xs text-neutral-500">
+                      Buscando...
+                    </div>
+                  ) : cityResultsError ? (
+                    <div className="px-4 py-2.5 text-xs text-neutral-500">
+                      {cityResultsError}
+                    </div>
+                  ) : cityResults.length === 0 ? (
+                    <div className="px-4 py-2.5 text-xs text-neutral-500">
+                      Sin resultados
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {cityResults.map((c) => (
+                        <button
+                          key={c.place_id}
+                          type="button"
+                          onClick={() => handleSelectAutocompleteResult(c)}
+                          disabled={citySelectLoading}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                          role="button"
+                        >
+                          <svg
+                            className="w-4 h-4 text-neutral-400 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="text-sm font-medium text-neutral-900">{c.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  {citySuggestions.map((city) => (
-                    <button
-                      key={city.value}
-                      type="button"
-                      onClick={() => handleSelectCity(city.label, city.value)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
-                      role="button"
-                    >
-                      <svg
-                        className="w-4 h-4 text-neutral-400 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="text-sm font-medium text-neutral-900">{city.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              )}
 
               {/* Row 1: Ciudad */}
               <div>
                 <input
+                  ref={cityInputRef}
                   type="text"
                   value={filters.city || ''}
                   onChange={(e) => {
                     setFilters({ ...filters, city: e.target.value })
                     setGeoError(null)
+                    setCitySelectError(null)
+                    setCityUserEdited(true)
                   }}
                   placeholder="Ciudad"
                   className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"

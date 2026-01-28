@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Llamar Mapbox Geocoding reverse
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lngNum},${latNum}.json?types=place,locality,neighborhood&language=es&limit=1&access_token=${mapboxToken}`
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lngNum},${latNum}.json?types=place,locality,neighborhood&language=es&limit=1&country=mx&access_token=${mapboxToken}`
     
     const response = await fetch(url)
     
@@ -82,6 +82,15 @@ export async function GET(request: NextRequest) {
     // Construir label: "Ciudad, Región" o solo "Ciudad"
     const labelParts = [city, region].filter(Boolean)
     const label = labelParts.length > 0 ? labelParts.join(', ') : feature.place_name || feature.text
+
+    // México-only
+    const ctry = (country || '').toString().trim().toLowerCase()
+    if (!(ctry === 'méxico' || ctry === 'mexico')) {
+      return NextResponse.json(
+        { error: 'Por ahora solo disponible en México' },
+        { status: 404 }
+      )
+    }
 
     return NextResponse.json({
       place_id: feature.id,

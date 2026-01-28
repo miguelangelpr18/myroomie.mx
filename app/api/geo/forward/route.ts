@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   try {
     // Llamar Mapbox Geocoding forward (autocomplete)
     const encodedQuery = encodeURIComponent(query.trim())
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?types=place,locality,neighborhood&language=es&limit=5&access_token=${mapboxToken}`
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?types=place,locality,neighborhood&language=es&limit=5&country=mx&access_token=${mapboxToken}`
     
     const response = await fetch(url)
     
@@ -81,6 +81,9 @@ export async function GET(request: NextRequest) {
         lat: feature.center ? feature.center[1] : null,
         lng: feature.center ? feature.center[0] : null,
       }
+    }).filter((c: any) => {
+      const ctry = (c?.country || '').toString().trim().toLowerCase()
+      return ctry === 'méxico' || ctry === 'mexico'
     })
 
     return NextResponse.json({
