@@ -2,6 +2,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import EmptyState from '../components/ui/EmptyState'
 import ListingCard from '../components/listings/ListingCard'
+import ListingsFilterChips from './ListingsFilterChips'
+import ListingsResultHeader from './ListingsResultHeader'
 
 interface ListingsPageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -19,9 +21,15 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   const cityParam = typeof searchParams.city === 'string' ? searchParams.city : ''
   const zone = typeof searchParams.zone === 'string' ? searchParams.zone : ''
   const listingType = typeof searchParams.listing_type === 'string' ? searchParams.listing_type : 'all'
-  const minPrice = typeof searchParams.min === 'string' ? searchParams.min : ''
-  const maxPrice = typeof searchParams.max === 'string' ? searchParams.max : ''
+  const minPriceParam = typeof searchParams.min === 'string' ? searchParams.min.trim() : ''
+  const maxPriceParam = typeof searchParams.max === 'string' ? searchParams.max.trim() : ''
   const sort = typeof searchParams.sort === 'string' ? searchParams.sort : 'recent'
+
+  // Validación server-side: solo aplicar precio si es número válido en rango razonable (0–999999)
+  const minPriceNum = minPriceParam ? parseInt(minPriceParam, 10) : NaN
+  const maxPriceNum = maxPriceParam ? parseInt(maxPriceParam, 10) : NaN
+  const minPrice = !Number.isNaN(minPriceNum) && minPriceNum >= 0 ? String(minPriceNum) : ''
+  const maxPrice = !Number.isNaN(maxPriceNum) && maxPriceNum >= 0 ? String(maxPriceNum) : ''
 
   // Resolver location_id a city si existe
   let city = cityParam
@@ -72,20 +80,11 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
     query = query.eq('listing_type', listingType)
   }
 
-  // Aplicar filtro de precio mínimo
-  if (minPrice.trim()) {
-    const min = parseInt(minPrice.trim(), 10)
-    if (!isNaN(min) && min >= 0) {
-      query = query.gte('price_mxn', min)
-    }
+  if (minPrice) {
+    query = query.gte('price_mxn', parseInt(minPrice, 10))
   }
-
-  // Aplicar filtro de precio máximo
-  if (maxPrice.trim()) {
-    const max = parseInt(maxPrice.trim(), 10)
-    if (!isNaN(max) && max >= 0) {
-      query = query.lte('price_mxn', max)
-    }
+  if (maxPrice) {
+    query = query.lte('price_mxn', parseInt(maxPrice, 10))
   }
 
   // Ordenar: destacados primero (featured_until > now), luego por sort param
@@ -135,16 +134,15 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   // Calcular número de resultados
   const resultCount = sortedListings?.length || 0
 
-  // Construir resumen de filtros activos
-  const activeFilters: string[] = []
-  if (q.trim()) activeFilters.push(`buscar: "${q.trim()}"`)
-  if (city.trim()) activeFilters.push(`ciudad: ${city.trim()}`)
-  if (zone.trim()) activeFilters.push(`zona: ${zone.trim()}`)
-  if (listingType !== 'all') {
-    activeFilters.push(`tipo: ${listingType === 'room' ? 'Rento cuarto' : 'Busco roomie'}`)
-  }
-  if (minPrice.trim()) activeFilters.push(`min: $${parseInt(minPrice, 10).toLocaleString()}`)
-  if (maxPrice.trim()) activeFilters.push(`max: $${parseInt(maxPrice, 10).toLocaleString()}`)
+  const activeFilterLabels: string[] = []
+  if (q.trim()) activeFilterLabels.push(`Buscar: "${q.trim()}"`)
+  if (city.trim()) activeFilterLabels.push(`Ciudad: ${city.trim()}`)
+  if (zone.trim()) activeFilterLabels.push(`Zona: ${zone.trim()}`)
+  if (listingType === 'room') activeFilterLabels.push('Rento cuarto')
+  if (listingType === 'roommate') activeFilterLabels.push('Busco compartir depa')
+  if (minPrice) activeFilterLabels.push(`Min: $${parseInt(minPrice, 10).toLocaleString()}`)
+  if (maxPrice) activeFilterLabels.push(`Max: $${parseInt(maxPrice, 10).toLocaleString()}`)
+  const hasAnyFilter = activeFilterLabels.length > 0
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-16">
@@ -155,24 +153,16 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
         </div>
         <Link
           href="/listings/new"
-          className="bg-[#FF7A18] text-white px-4 py-2 rounded-lg hover:bg-[#E86F14]"
+          className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brandHover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
         >
           Publicar anuncio
         </Link>
       </div>
 
-      {/* Resumen de resultados y filtros activos */}
-      {(activeFilters.length > 0 || resultCount > 0) && (
-        <div className="mb-6">
-          <p className="text-gray-600 text-sm">
-            Mostrando <strong>{resultCount}</strong> {resultCount === 1 ? 'resultado' : 'resultados'}
-            {activeFilters.length > 0 && (
-              <span className="ml-2">
-                • {activeFilters.join(' • ')}
-              </span>
-            )}
-          </p>
-        </div>
+      <ListingsFilterChips />
+
+      {(hasAnyFilter || resultCount > 0) && (
+        <ListingsResultHeader count={resultCount} activeFilterLabels={activeFilterLabels} />
       )}
 
       {error && (
@@ -182,7 +172,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
       )}
 
       {!listings || listings.length === 0 ? (
-        activeFilters.length > 0 ? (
+        hasAnyFilter ? (
           <EmptyState
             icon="listings"
             title="No hay anuncios con esos filtros"

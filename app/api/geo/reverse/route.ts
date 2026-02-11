@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getClientIp, checkGeoRateLimit } from '@/app/lib/rateLimit'
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request)
+  if (!checkGeoRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+      { status: 429 }
+    )
+  }
+
   const searchParams = request.nextUrl.searchParams
   const lat = searchParams.get('lat')
   const lng = searchParams.get('lng')

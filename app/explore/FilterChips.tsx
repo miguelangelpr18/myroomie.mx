@@ -7,13 +7,17 @@ interface FilterChip {
   id: string
   label: string
   param: string
+  value?: string
 }
 
 const CHIPS: FilterChip[] = [
-  { id: 'featured', label: 'Destacados', param: 'featured' },
-  { id: 'pets', label: 'Con mascotas', param: 'pets' },
-  { id: 'no_smoker', label: 'No fuma', param: 'no_smoker' },
-  { id: 'calm', label: 'Tranquilo', param: 'calm' },
+  { id: 'featured', label: 'Destacados', param: 'featured', value: '1' },
+  { id: 'pets', label: 'Mascotas', param: 'pets', value: '1' },
+  { id: 'no_smoker', label: 'No fumador', param: 'no_smoker', value: '1' },
+  { id: 'calm', label: 'Sin fiestas', param: 'calm', value: '1' },
+  { id: 'schedule_day', label: 'Horario día', param: 'schedule', value: 'day' },
+  { id: 'schedule_night', label: 'Horario noche', param: 'schedule', value: 'night' },
+  { id: 'cleanliness_3', label: 'Muy ordenado', param: 'cleanliness', value: '3' },
 ]
 
 export default function FilterChips() {
@@ -21,18 +25,14 @@ export default function FilterChips() {
   const searchParams = useSearchParams()
 
   const toggleFilter = useCallback(
-    (param: string) => {
+    (param: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString())
-      
-      // Toggle: si existe y es '1', quitarlo; si no existe o es otro valor, ponerlo en '1'
       const currentValue = params.get(param)
-      if (currentValue === '1') {
+      if (currentValue === value) {
         params.delete(param)
       } else {
-        params.set(param, '1')
+        params.set(param, value)
       }
-
-      // Actualizar URL sin recargar página
       const queryString = params.toString()
       router.push(queryString ? `/explore?${queryString}` : '/explore', { scroll: false })
     },
@@ -43,13 +43,14 @@ export default function FilterChips() {
     <div className="mb-4">
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
         {CHIPS.map((chip) => {
-          const isActive = searchParams.get(chip.param) === '1'
-          
+          const value = chip.value ?? '1'
+          const isActive = searchParams.get(chip.param) === value
+
           return (
             <button
               key={chip.id}
               type="button"
-              onClick={() => toggleFilter(chip.param)}
+              onClick={() => toggleFilter(chip.param, value)}
               aria-pressed={isActive}
               className={`
                 flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors

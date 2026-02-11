@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { validateProfileLifestyleInput } from '@/app/lib/validation/profile'
 
 export interface LifestyleData {
   pets: boolean
@@ -36,45 +37,27 @@ export async function getMyLifestyle() {
 }
 
 export async function saveMyLifestyle(formData: LifestyleData) {
+  const validated = validateProfileLifestyleInput(formData)
+  if (!validated.ok) {
+    return { error: validated.error }
+  }
+  const { pets, smoker, cleanliness, parties, schedule } = validated.data
+
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
   const { data: { session }, error: sessionError } = await supabase.auth.getSession()
   if (!session || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  // Validaciones server-side
-  const { pets, smoker, cleanliness, parties, schedule } = formData
-
-  // cleanliness es requerido (1-3)
-  if (cleanliness === null || cleanliness === undefined) {
-    return { error: 'El nivel de limpieza es requerido' }
-  }
-
-  if (cleanliness < 1 || cleanliness > 3) {
-    return { error: 'El nivel de limpieza debe ser 1, 2 o 3' }
-  }
-
-  // schedule es requerido ('day'|'night')
-  if (!schedule || (schedule !== 'day' && schedule !== 'night')) {
-    return { error: 'El horario es requerido (día o noche)' }
-  }
-
-  // Asegurar que pets, smoker, parties son boolean
-  const petsBool = Boolean(pets)
-  const smokerBool = Boolean(smoker)
-  const partiesBool = Boolean(parties)
-
-  // Update perfil
   const { data, error } = await supabase
     .from('profiles')
     .update({
-      pets: petsBool,
-      smoker: smokerBool,
-      cleanliness: cleanliness,
-      parties: partiesBool,
-      schedule: schedule,
+      pets,
+      smoker,
+      cleanliness,
+      parties,
+      schedule,
     })
     .eq('user_id', session.user.id)
     .select()

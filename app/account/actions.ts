@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { validateProfileInput } from '@/app/lib/validation/profile'
 
 export interface AccountProfileData {
   display_name: string
@@ -9,27 +10,24 @@ export interface AccountProfileData {
 }
 
 export async function updateProfile(formData: AccountProfileData) {
+  const validated = validateProfileInput(formData, { requireCityZone: false })
+  if (!validated.ok) {
+    return { error: validated.error }
+  }
+  const { display_name, avatar_url } = validated.data
+
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
   const { data: { session }, error: sessionError } = await supabase.auth.getSession()
   if (!session || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  // Validaciones server-side
-  const { display_name, avatar_url } = formData
-
-  if (!display_name || display_name.trim().length < 2 || display_name.trim().length > 40) {
-    return { error: 'Display name debe tener entre 2 y 40 caracteres' }
-  }
-
-  // Update perfil (solo display_name y avatar_url)
   const { data, error } = await supabase
     .from('profiles')
     .update({
-      display_name: display_name.trim(),
-      avatar_url: avatar_url?.trim() || null,
+      display_name,
+      avatar_url,
     })
     .eq('user_id', session.user.id)
     .select()

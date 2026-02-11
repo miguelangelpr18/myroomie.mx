@@ -139,9 +139,7 @@ export async function markThreadAsRead(threadId: string) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  const currentUserId = session.user.id
-
-  // Obtener perfil del usuario actual (profile.user_id = auth.uid())
+  const currentUserId = session.user.id  // Obtener perfil del usuario actual (profile.user_id = auth.uid())
   const { data: currentProfile, error: profileError } = await supabase
     .from('profiles')
     .select('user_id')
@@ -189,4 +187,3 @@ export async function markThreadAsRead(threadId: string) {
 
   return { data: null, error: null }
 }
-

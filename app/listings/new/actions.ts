@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { validateListingInput } from '@/app/lib/validation/listing'
 
 export interface ListingData {
   title: string
@@ -10,60 +11,37 @@ export interface ListingData {
   zone: string
   price_mxn: number | null
   listing_type: 'room' | 'roommate'
+  location_id?: string | null
 }
 
 export async function createListing(formData: ListingData) {
+  const validated = validateListingInput(formData)
+  if (!validated.ok) {
+    return { error: validated.error }
+  }
+  const { title, description, city, zone, price_mxn, listing_type, location_id } = validated.data
+
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
   const { data: { session }, error: sessionError } = await supabase.auth.getSession()
   if (!session || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  // Validaciones server-side
-  const { title, description, city, zone, price_mxn, listing_type } = formData
-
-  if (!title || title.trim().length < 6) {
-    return { error: 'El título debe tener al menos 6 caracteres' }
+  const insertPayload: Record<string, unknown> = {
+    user_id: session.user.id,
+    title,
+    description,
+    city,
+    zone,
+    price_mxn,
+    listing_type,
   }
+  if (location_id) insertPayload.location_id = location_id
 
-  if (!description || description.trim().length < 30) {
-    return { error: 'La descripción debe tener al menos 30 caracteres' }
-  }
-
-  if (!city || city.trim().length < 2) {
-    return { error: 'La ciudad debe tener al menos 2 caracteres' }
-  }
-
-  if (!zone || zone.trim().length < 2) {
-    return { error: 'La zona debe tener al menos 2 caracteres' }
-  }
-
-  if (listing_type !== 'room' && listing_type !== 'roommate') {
-    return { error: 'Tipo de listing inválido' }
-  }
-
-  // Validar price_mxn si viene
-  if (price_mxn !== null && price_mxn !== undefined) {
-    const price = typeof price_mxn === 'string' ? parseInt(price_mxn, 10) : price_mxn
-    if (isNaN(price) || price < 0) {
-      return { error: 'El precio debe ser un número entero mayor o igual a 0' }
-    }
-  }
-
-  // Insertar listing
   const { data, error } = await supabase
     .from('listings')
-    .insert({
-      user_id: session.user.id,
-      title: title.trim(),
-      description: description.trim(),
-      city: city.trim(),
-      zone: zone.trim(),
-      price_mxn: price_mxn !== null && price_mxn !== undefined ? (typeof price_mxn === 'string' ? parseInt(price_mxn, 10) : price_mxn) : null,
-      listing_type: listing_type,
-    })
+    .insert(insertPayload)
     .select('id')
     .single()
 

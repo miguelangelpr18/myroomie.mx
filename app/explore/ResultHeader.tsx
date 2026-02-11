@@ -9,6 +9,9 @@ interface ResultHeaderProps {
     pets?: boolean
     no_smoker?: boolean
     calm?: boolean
+    schedule_day?: boolean
+    schedule_night?: boolean
+    cleanliness_3?: boolean
   }
   hasSearch: boolean
   searchQuery?: string
@@ -18,9 +21,12 @@ interface ResultHeaderProps {
 
 const FILTER_LABELS: Record<string, string> = {
   featured: 'Destacados',
-  pets: 'Con mascotas',
-  no_smoker: 'No fuma',
-  calm: 'Tranquilo',
+  pets: 'Mascotas',
+  no_smoker: 'No fumador',
+  calm: 'Sin fiestas',
+  schedule_day: 'Horario día',
+  schedule_night: 'Horario noche',
+  cleanliness_3: 'Muy ordenado',
 }
 
 export default function ResultHeader({

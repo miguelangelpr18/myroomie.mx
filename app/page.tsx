@@ -13,7 +13,7 @@ export default function Home() {
               Tu roomie ideal y tu próximo hogar, en un solo lugar.
             </h1>
             <p className="mt-4 text-base md:text-lg font-medium text-neutral-700 max-w-2xl mx-auto text-center">
-              Publica, busca y conecta con roomies reales, con total seguridad.
+              Publica, busca y conecta con roomies reales, con claridad.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link
@@ -122,7 +122,7 @@ export default function Home() {
                   Decide con tranquilidad
                 </h3>
                 <p className="text-sm text-neutral-600">
-                  Toma tu decisión con confianza, respaldado por perfiles verificados y reviews.
+                  Mensajería directa para coordinar y conocerte antes de decidir.
                 </p>
               </div>
             </div>
@@ -151,9 +151,9 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-medium text-neutral-900 mb-1">Verificación</h3>
+                  <h3 className="text-base font-medium text-neutral-900 mb-1">Perfiles completos</h3>
                   <p className="text-sm text-neutral-600">
-                    Perfiles verificados para mayor seguridad y confianza en cada conexión.
+                    Información clara y preferencias para encontrar mejor match.
                   </p>
                 </div>
               </div>
@@ -170,14 +170,20 @@ export default function Home() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                     />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-medium text-neutral-900 mb-1">Reviews</h3>
+                  <h3 className="text-base font-medium text-neutral-900 mb-1">Búsqueda por ubicación</h3>
                   <p className="text-sm text-neutral-600">
-                    Evaluaciones de usuarios reales para ayudarte a tomar decisiones informadas.
+                    Filtra por zona y ubicación para ver opciones cerca de ti.
                   </p>
                 </div>
               </div>
@@ -199,9 +205,9 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-medium text-neutral-900 mb-1">Seguridad</h3>
+                  <h3 className="text-base font-medium text-neutral-900 mb-1">Buenas prácticas</h3>
                   <p className="text-sm text-neutral-600">
-                    Protección de datos y transacciones seguras en toda la plataforma.
+                    Recomendamos videollamada y conocer en persona antes de acordar.
                   </p>
                 </div>
               </div>

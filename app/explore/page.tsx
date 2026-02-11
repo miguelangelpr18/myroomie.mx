@@ -177,6 +177,9 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
     pets: petsChipParam === '1',
     no_smoker: noSmokerParam === '1',
     calm: calmParam === '1',
+    schedule_day: scheduleParam === 'day',
+    schedule_night: scheduleParam === 'night',
+    cleanliness_3: cleanlinessParam === '3',
   }
 
   return (

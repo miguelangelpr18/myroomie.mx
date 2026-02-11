@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { validateProfileInput } from '@/app/lib/validation/profile'
 
 export interface ProfileData {
   display_name: string
@@ -35,39 +36,28 @@ export async function getMyProfile() {
 }
 
 export async function saveMyProfile(formData: ProfileData) {
+  const validated = validateProfileInput(formData, { requireCityZone: true })
+  if (!validated.ok) {
+    return { error: validated.error }
+  }
+  const { display_name, city, zone, avatar_url } = validated.data
+
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
   const { data: { session }, error: sessionError } = await supabase.auth.getSession()
   if (!session || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  // Validaciones server-side
-  const { display_name, city, zone, avatar_url } = formData
-
-  if (!display_name || display_name.trim().length < 2 || display_name.trim().length > 40) {
-    return { error: 'Display name debe tener entre 2 y 40 caracteres' }
-  }
-
-  if (!city || city.trim().length < 2 || city.trim().length > 60) {
-    return { error: 'City debe tener entre 2 y 60 caracteres' }
-  }
-
-  if (!zone || zone.trim().length < 2 || zone.trim().length > 80) {
-    return { error: 'Zone debe tener entre 2 y 80 caracteres' }
-  }
-
-  // Upsert perfil
   const { data, error } = await supabase
     .from('profiles')
     .upsert(
       {
         user_id: session.user.id,
-        display_name: display_name.trim(),
-        city: city.trim(),
-        zone: zone.trim(),
-        avatar_url: avatar_url?.trim() || null,
+        display_name,
+        city,
+        zone,
+        avatar_url,
       },
       {
         onConflict: 'user_id',
