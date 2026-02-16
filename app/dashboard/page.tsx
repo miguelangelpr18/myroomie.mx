@@ -58,7 +58,7 @@ export default async function DashboardPage() {
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-2xl font-semibold">
+                  <div className="w-16 h-16 rounded-full bg-brand text-white flex items-center justify-center text-2xl font-semibold">
                     {initial}
                   </div>
                 )}

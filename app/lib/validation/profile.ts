@@ -4,6 +4,7 @@ const CITY_MIN = 2
 const CITY_MAX = 60
 const ZONE_MIN = 2
 const ZONE_MAX = 80
+const LOCATION_ID_MIN = 10
 const BIO_MIN = 30
 const BIO_MAX = 400
 const AGE_MIN = 18
@@ -15,6 +16,7 @@ export type ProfileBaseInput = {
   display_name: string
   city?: string
   zone?: string
+  location_id?: string | null
   avatar_url?: string | null
   bio?: string | null
   age?: number | null
@@ -24,6 +26,7 @@ export type ProfileBaseNormalized = {
   display_name: string
   city: string
   zone: string
+  location_id: string | null
   avatar_url: string | null
   bio: string | null
   age: number | null
@@ -58,6 +61,7 @@ function toInt(v: unknown): number | null {
 
 export type ValidateProfileBaseOptions = {
   requireCityZone?: boolean
+  requireLocationId?: boolean
 }
 
 /**
@@ -72,10 +76,11 @@ export function validateProfileInput(
   input: Partial<Record<keyof ProfileBaseInput, unknown>>,
   options: ValidateProfileBaseOptions = {}
 ): { ok: true; data: ProfileBaseNormalized } | { ok: false; error: string } {
-  const { requireCityZone = false } = options
+  const { requireCityZone = false, requireLocationId = false } = options
   const display_name = trim(input?.display_name)
   const city = trim(input?.city)
   const zone = trim(input?.zone)
+  const location_id = trim(input?.location_id)
   const avatar_url = input?.avatar_url != null && trim(input.avatar_url) !== '' ? trim(input.avatar_url) : null
   const bioRaw = trim(input?.bio)
   const bio = bioRaw === '' ? null : bioRaw
@@ -85,7 +90,12 @@ export function validateProfileInput(
   if (display_name.length < DISPLAY_NAME_MIN) return { ok: false, error: `El nombre debe tener entre ${DISPLAY_NAME_MIN} y ${DISPLAY_NAME_MAX} caracteres.` }
   if (display_name.length > DISPLAY_NAME_MAX) return { ok: false, error: `El nombre debe tener entre ${DISPLAY_NAME_MIN} y ${DISPLAY_NAME_MAX} caracteres.` }
 
-  if (requireCityZone) {
+  if (requireLocationId) {
+    if (!location_id || location_id.length < LOCATION_ID_MIN) return { ok: false, error: 'Selecciona una ubicación de la lista.' }
+    // city/zone no obligatorios cuando hay location_id; zone siempre opcional
+    if (city.length > 0 && (city.length < CITY_MIN || city.length > CITY_MAX)) return { ok: false, error: `La ciudad debe tener entre ${CITY_MIN} y ${CITY_MAX} caracteres.` }
+    if (zone.length > 0 && (zone.length < ZONE_MIN || zone.length > ZONE_MAX)) return { ok: false, error: `La zona debe tener entre ${ZONE_MIN} y ${ZONE_MAX} caracteres.` }
+  } else if (requireCityZone) {
     if (!city) return { ok: false, error: 'La ciudad es requerida.' }
     if (city.length < CITY_MIN) return { ok: false, error: `La ciudad debe tener entre ${CITY_MIN} y ${CITY_MAX} caracteres.` }
     if (city.length > CITY_MAX) return { ok: false, error: `La ciudad debe tener entre ${CITY_MIN} y ${CITY_MAX} caracteres.` }
@@ -112,6 +122,7 @@ export function validateProfileInput(
       display_name,
       city: city || '',
       zone: zone || '',
+      location_id: location_id && location_id.length >= LOCATION_ID_MIN ? location_id : null,
       avatar_url,
       bio,
       age: ageRaw,

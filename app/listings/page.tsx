@@ -4,6 +4,7 @@ import EmptyState from '../components/ui/EmptyState'
 import ListingCard from '../components/listings/ListingCard'
 import ListingsFilterChips from './ListingsFilterChips'
 import ListingsResultHeader from './ListingsResultHeader'
+import CanonicalLocationParams from '../components/CanonicalLocationParams'
 
 interface ListingsPageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -17,22 +18,32 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
 
   // Extraer parámetros de búsqueda
   const q = typeof searchParams.q === 'string' ? searchParams.q : ''
-  const locationId = typeof searchParams.location_id === 'string' ? searchParams.location_id : undefined
+  const locationIdParam = typeof searchParams.location_id === 'string' ? searchParams.location_id.trim() : ''
+  const locationId = locationIdParam.length >= 10 ? locationIdParam : ''
   const cityParam = typeof searchParams.city === 'string' ? searchParams.city : ''
   const zone = typeof searchParams.zone === 'string' ? searchParams.zone : ''
   const listingType = typeof searchParams.listing_type === 'string' ? searchParams.listing_type : 'all'
-  const minPriceParam = typeof searchParams.min === 'string' ? searchParams.min.trim() : ''
-  const maxPriceParam = typeof searchParams.max === 'string' ? searchParams.max.trim() : ''
+  // Precio: preferir price_min/price_max; compatibilidad con min/max
+  const minPriceRaw = typeof searchParams.price_min === 'string' ? searchParams.price_min.trim() : (typeof searchParams.min === 'string' ? searchParams.min.trim() : '')
+  const maxPriceRaw = typeof searchParams.price_max === 'string' ? searchParams.price_max.trim() : (typeof searchParams.max === 'string' ? searchParams.max.trim() : '')
   const sort = typeof searchParams.sort === 'string' ? searchParams.sort : 'recent'
 
-  // Validación server-side: solo aplicar precio si es número válido en rango razonable (0–999999)
-  const minPriceNum = minPriceParam ? parseInt(minPriceParam, 10) : NaN
-  const maxPriceNum = maxPriceParam ? parseInt(maxPriceParam, 10) : NaN
-  const minPrice = !Number.isNaN(minPriceNum) && minPriceNum >= 0 ? String(minPriceNum) : ''
-  const maxPrice = !Number.isNaN(maxPriceNum) && maxPriceNum >= 0 ? String(maxPriceNum) : ''
+  const PRICE_CLAMP_MIN = 500
+  const PRICE_CLAMP_MAX = 80_000
+  let minPriceNum = minPriceRaw ? parseInt(minPriceRaw, 10) : NaN
+  let maxPriceNum = maxPriceRaw ? parseInt(maxPriceRaw, 10) : NaN
+  if (!Number.isNaN(minPriceNum)) minPriceNum = Math.max(PRICE_CLAMP_MIN, Math.min(PRICE_CLAMP_MAX, minPriceNum))
+  if (!Number.isNaN(maxPriceNum)) maxPriceNum = Math.max(PRICE_CLAMP_MIN, Math.min(PRICE_CLAMP_MAX, maxPriceNum))
+  // Si min > max: intercambiar (evita resultado vacío; el rango queda [max, min] como [min, max])
+  if (!Number.isNaN(minPriceNum) && !Number.isNaN(maxPriceNum) && minPriceNum > maxPriceNum) {
+    ;[minPriceNum, maxPriceNum] = [maxPriceNum, minPriceNum]
+  }
+  const minPrice = !Number.isNaN(minPriceNum) ? String(minPriceNum) : ''
+  const maxPrice = !Number.isNaN(maxPriceNum) ? String(maxPriceNum) : ''
 
-  // Resolver location_id a city si existe
+  // Resolver location_id a label (y city para compat) cuando exista
   let city = cityParam
+  let locationLabel = ''
   if (locationId) {
     try {
       const { data: location } = await supabase
@@ -42,14 +53,12 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
         .single()
 
       if (location) {
-        // Priorizar city, si es null usar label como fallback
+        locationLabel = typeof location.label === 'string' ? location.label.trim() : ''
         city = location.city || location.label || cityParam
       } else {
-        // Si location_id no existe, fallback a city param si existe
         city = cityParam
       }
     } catch (error) {
-      // Si hay error (ej: location_id inválido), fallback a city param
       console.error('Error al resolver location_id:', error)
       city = cityParam
     }
@@ -65,14 +74,16 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
     query = query.or(`title.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%`)
   }
 
-  // Aplicar filtro de ciudad
-  if (city.trim()) {
-    query = query.ilike('city', `%${city.trim()}%`)
-  }
-
-  // Aplicar filtro de zona
-  if (zone.trim()) {
-    query = query.ilike('zone', `%${zone.trim()}%`)
+  // Filtro por ubicación: location_id (exacto) o city/zone legacy (solo cuando no hay locationId)
+  if (locationId) {
+    query = query.eq('location_id', locationId)
+  } else {
+    if (city.trim()) {
+      query = query.ilike('city', `%${city.trim()}%`)
+    }
+    if (zone.trim()) {
+      query = query.ilike('zone', `%${zone.trim()}%`)
+    }
   }
 
   // Aplicar filtro de tipo
@@ -136,8 +147,12 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
 
   const activeFilterLabels: string[] = []
   if (q.trim()) activeFilterLabels.push(`Buscar: "${q.trim()}"`)
-  if (city.trim()) activeFilterLabels.push(`Ciudad: ${city.trim()}`)
-  if (zone.trim()) activeFilterLabels.push(`Zona: ${zone.trim()}`)
+  if (locationId && locationLabel) {
+    activeFilterLabels.push(`Ubicación: ${locationLabel}`)
+  } else {
+    if (city.trim()) activeFilterLabels.push(`Ciudad: ${city.trim()}`)
+    if (zone.trim()) activeFilterLabels.push(`Zona: ${zone.trim()}`)
+  }
   if (listingType === 'room') activeFilterLabels.push('Rento cuarto')
   if (listingType === 'roommate') activeFilterLabels.push('Busco compartir depa')
   if (minPrice) activeFilterLabels.push(`Min: $${parseInt(minPrice, 10).toLocaleString()}`)
@@ -145,7 +160,9 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   const hasAnyFilter = activeFilterLabels.length > 0
 
   return (
-    <div className="container mx-auto px-4 md:px-8 py-16">
+    <>
+      <CanonicalLocationParams mode="listings" />
+      <div className="container mx-auto px-4 md:px-8 py-16">
       <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight mb-2">Anuncios</h1>
@@ -203,5 +220,6 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
         </div>
       )}
     </div>
+    </>
   )
 }

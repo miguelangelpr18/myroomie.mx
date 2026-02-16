@@ -66,7 +66,7 @@ export default function UserMenu({ displayName, avatarUrl, userId, initial }: Us
             className="w-8 h-8 rounded-full object-cover ring-1 ring-neutral-200 hover:ring-neutral-300 transition"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-sm font-semibold ring-1 ring-neutral-200 hover:ring-neutral-300 transition">
+          <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-sm font-semibold ring-1 ring-neutral-200 hover:ring-neutral-300 transition">
             {initial}
           </div>
         )}

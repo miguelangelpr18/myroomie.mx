@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createListing, ListingData, attachListingImages } from './actions'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import ImageUploader from '@/app/components/listings/ImageUploader'
+import LocationPickerField from './LocationPickerField'
+import ZoneAutocompleteField from './ZoneAutocompleteField'
 
 export default function ListingForm() {
   const [loading, setLoading] = useState(false)
@@ -15,6 +17,7 @@ export default function ListingForm() {
     title?: string
     description?: string
     photos?: string
+    location?: string
   }>({})
   const router = useRouter()
 
@@ -23,6 +26,7 @@ export default function ListingForm() {
     description: '',
     city: '',
     zone: '',
+    location_id: null,
     price_mxn: null,
     listing_type: 'room',
   })
@@ -69,11 +73,11 @@ export default function ListingForm() {
   const hasErrors = () => {
     const titleValid = formData.title.trim().length >= 6
     const descriptionValid = formData.description.trim().length >= 30
-    const cityValid = formData.city.trim().length >= 2
+    const locationValid = !!(formData.location_id && String(formData.location_id).trim())
     const zoneValid = formData.zone.trim().length >= 2
     const photosValid = files.length === 0 || files.length >= 2
     
-    return !titleValid || !descriptionValid || !cityValid || !zoneValid || !photosValid
+    return !titleValid || !descriptionValid || !locationValid || !zoneValid || !photosValid
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -97,14 +101,14 @@ export default function ListingForm() {
         return
       }
 
-      if (!formData.city.trim()) {
-        setErrorMsg('La ciudad es requerida')
+      if (!formData.location_id || !String(formData.location_id).trim()) {
+        setFieldErrors((prev) => ({ ...prev, location: 'Selecciona una ubicación de la lista' }))
         setLoading(false)
         return
       }
 
-      if (!formData.zone.trim()) {
-        setErrorMsg('La zona es requerida')
+      if (!formData.zone || formData.zone.trim().length < 2) {
+        setErrorMsg('La zona / colonia es obligatoria')
         setLoading(false)
         return
       }
@@ -122,7 +126,7 @@ export default function ListingForm() {
         : null
 
       // Paso 1: Crear listing
-      const { error, listingId } = await createListing({
+      const { error, listingId, locationId } = await createListing({
         ...formData,
         price_mxn: priceValue,
       })
@@ -203,8 +207,8 @@ export default function ListingForm() {
         }
       }
 
-      // Paso 4: Redirigir al listing creado
-      router.push(`/listings/${listingId}`)
+      // Paso 4: Redirigir a listado (con location_id si existe)
+      router.push(locationId ? `/listings?location_id=${locationId}` : '/listings')
       router.refresh()
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Error al crear listing')
@@ -284,35 +288,37 @@ export default function ListingForm() {
         )}
       </div>
 
-      <div>
-        <label htmlFor="city" className="block mb-2 font-medium">
-          Ciudad <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          id="city"
-          value={formData.city}
-          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-          required
-          minLength={2}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
-          placeholder="Ej: Ciudad de México"
-        />
-      </div>
+      <LocationPickerField
+        onSelect={(payload) => {
+          setFormData((prev) => ({
+            ...prev,
+            location_id: payload.location_id,
+            city: payload.city,
+            zone: payload.zone,
+          }))
+          setFieldErrors((prev) => {
+            const next = { ...prev }
+            delete next.location
+            return next
+          })
+        }}
+        onClear={() => {
+          setFormData((prev) => ({
+            ...prev,
+            location_id: null,
+            city: '',
+            zone: '',
+          }))
+        }}
+        error={fieldErrors.location}
+      />
 
-      <div>
-        <label htmlFor="zone" className="block mb-2 font-medium">
-          Zona/Colonia <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          id="zone"
+      <div className="mt-4">
+        <ZoneAutocompleteField
+          locationId={formData.location_id ?? null}
           value={formData.zone}
-          onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
-          required
-          minLength={2}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
-          placeholder="Ej: Roma Norte, Polanco, etc."
+          onChange={(next) => setFormData((prev) => ({ ...prev, zone: next }))}
+          error={errorMsg === 'La zona / colonia es obligatoria' ? errorMsg : undefined}
         />
       </div>
 

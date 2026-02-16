@@ -8,6 +8,7 @@ export interface ProfileData {
   display_name: string
   city: string
   zone: string
+  location_id?: string | null
   avatar_url: string | null
 }
 
@@ -36,11 +37,11 @@ export async function getMyProfile() {
 }
 
 export async function saveMyProfile(formData: ProfileData) {
-  const validated = validateProfileInput(formData, { requireCityZone: true })
+  const validated = validateProfileInput(formData, { requireLocationId: true, requireCityZone: false })
   if (!validated.ok) {
     return { error: validated.error }
   }
-  const { display_name, city, zone, avatar_url } = validated.data
+  const { display_name, city, zone, location_id, avatar_url } = validated.data
 
   const supabase = createServerSupabaseClient()
 
@@ -49,20 +50,18 @@ export async function saveMyProfile(formData: ProfileData) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
+  const upsertPayload: Record<string, unknown> = {
+    user_id: session.user.id,
+    display_name,
+    city,
+    zone,
+    avatar_url,
+  }
+  if (location_id) upsertPayload.location_id = location_id
+
   const { data, error } = await supabase
     .from('profiles')
-    .upsert(
-      {
-        user_id: session.user.id,
-        display_name,
-        city,
-        zone,
-        avatar_url,
-      },
-      {
-        onConflict: 'user_id',
-      }
-    )
+    .upsert(upsertPayload, { onConflict: 'user_id' })
     .select()
     .single()
 

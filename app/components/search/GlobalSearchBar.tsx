@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { clearLocationPersistence, clearLocationFromUrlParams } from '@/app/lib/search/clearLocation'
+import SearchInput from './SearchInput'
+import LocationPicker from './LocationPicker'
+import { ListingsFilters, RoomiesFilters } from './FilterPopovers'
+import { listingsFiltersSchema, roomiesFiltersSchema } from './validation'
 
 interface GlobalSearchBarProps {
   mode?: 'listings' | 'roomies'
@@ -15,30 +19,10 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   const [isOpen, setIsOpen] = useState(false)
   const triggerRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [geoLoading, setGeoLoading] = useState(false)
-  const [geoError, setGeoError] = useState<string | null>(null)
-  const [recentCity, setRecentCity] = useState<{ label: string; value: string; location_id?: string } | null>(null)
-  const [cityUserEdited, setCityUserEdited] = useState(false)
-  const [cityResultsLoading, setCityResultsLoading] = useState(false)
-  const [cityResultsError, setCityResultsError] = useState<string | null>(null)
-  const [cityResults, setCityResults] = useState<Array<{
-    place_id: string
-    label: string
-    city: string | null
-    region: string | null
-    country?: string | null
-    lat: number | null
-    lng: number | null
-  }>>([])
-  const [citySelectLoading, setCitySelectLoading] = useState(false)
-  const [citySelectError, setCitySelectError] = useState<string | null>(null)
-
-  // Location selection (cuando el usuario selecciona un resultado/cerca de aquí/reciente)
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   // Determinar mode según pathname si no se pasa como prop
-  // Si pathname es /explore, usar mode 'roomies', sino 'listings'
   const mode = propMode || (pathname?.startsWith('/explore') ? 'roomies' : 'listings')
   const targetPath = mode === 'roomies' ? '/explore' : '/listings'
 
@@ -63,6 +47,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       }
     }
   })
+
   const cityQuery = (filters.city || '').trim()
 
   // Sincronizar con URL params cuando cambian
@@ -87,103 +72,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       })
     }
     setSelectedLocationId(searchParams.get('location_id') || null)
-    setCityUserEdited(false)
   }, [searchParams, pathname, propMode])
-
-  // Leer ciudad reciente de localStorage cuando se abre el dropdown
-  useEffect(() => {
-    if (isOpen && typeof window !== 'undefined') {
-      setCityUserEdited(false)
-      setCityResults([])
-      setCityResultsError(null)
-      setCityResultsLoading(false)
-      setCitySelectError(null)
-      // Priorizar location_id si existe
-      const lastLocationId = localStorage.getItem('last_location_id')
-      const lastLocationLabel = localStorage.getItem('last_location_label')
-      if (lastLocationId && lastLocationLabel) {
-        setRecentCity({ label: lastLocationLabel, value: lastLocationLabel, location_id: lastLocationId })
-        // Poblar input de ciudad con el label completo solo si está vacío
-        setFilters((prevFilters: any) => ({
-          ...prevFilters,
-          city: prevFilters.city || lastLocationLabel,
-        }))
-      } else {
-        // Fallback a city legacy
-        const lastLabel = localStorage.getItem('last_city_label')
-        const lastValue = localStorage.getItem('last_city_value')
-        if (lastLabel && lastValue) {
-          setRecentCity({ label: lastLabel, value: lastValue })
-          // Poblar input de ciudad con el label legacy solo si está vacío
-          setFilters((prevFilters: any) => ({
-            ...prevFilters,
-            city: prevFilters.city || lastLabel,
-          }))
-        } else {
-          setRecentCity(null)
-        }
-      }
-    }
-  }, [isOpen])
-
-  // Autocomplete de ciudades (debounced)
-  useEffect(() => {
-    if (!isOpen) return
-    if (!cityUserEdited) return
-
-    const q = cityQuery
-    if (q.length < 3) {
-      setCityResults([])
-      setCityResultsError(null)
-      setCityResultsLoading(false)
-      return
-    }
-
-    const controller = new AbortController()
-    setCityResultsLoading(true)
-    setCityResultsError(null)
-
-    const timeout = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/geo/forward?q=${encodeURIComponent(q)}`, {
-          signal: controller.signal,
-        })
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => null)
-          setCityResults([])
-          setCityResultsError(data?.error || 'No se pudo buscar')
-          setCityResultsLoading(false)
-          return
-        }
-
-        const data = await res.json()
-        const candidates = Array.isArray(data?.candidates) ? data.candidates.slice(0, 5) : []
-        setCityResults(candidates)
-        setCityResultsLoading(false)
-      } catch (e) {
-        if ((e as any)?.name === 'AbortError') return
-        setCityResults([])
-        setCityResultsError('No se pudo buscar')
-        setCityResultsLoading(false)
-      }
-    }, 300)
-
-    return () => {
-      clearTimeout(timeout)
-      controller.abort()
-    }
-  }, [isOpen, cityUserEdited, cityQuery])
-
-  // Auto-focus al abrir: enfocar el input principal (header) para que el usuario pueda escribir inmediatamente
-  useEffect(() => {
-    if (!isOpen) return
-    requestAnimationFrame(() => {
-      inputRef.current?.focus()
-    })
-  }, [isOpen])
-
-  // El overlay maneja el cierre con click fuera, no necesitamos este effect adicional
 
   // Cerrar con click afuera / ESC y prevenir scroll cuando está abierto
   useEffect(() => {
@@ -205,7 +94,6 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       if (e.key === 'Escape') setIsOpen(false)
     }
 
-    // Prevenir scroll en body cuando search está abierto (especialmente mobile)
     document.body.style.overflow = 'hidden'
     document.addEventListener('pointerdown', handlePointerDown)
     document.addEventListener('keydown', handleKeyDown)
@@ -218,6 +106,23 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   }, [isOpen])
 
   const handleSearch = () => {
+    setValidationError(null)
+
+    // Validar con Zod según el mode
+    if (mode === 'roomies') {
+      const result = roomiesFiltersSchema.safeParse(filters)
+      if (!result.success) {
+        setValidationError(result.error.issues[0]?.message || 'Error de validación')
+        return
+      }
+    } else {
+      const result = listingsFiltersSchema.safeParse(filters)
+      if (!result.success) {
+        setValidationError(result.error.issues[0]?.message || 'Error de validación')
+        return
+      }
+    }
+
     const params = new URLSearchParams()
 
     if (mode === 'roomies') {
@@ -225,7 +130,6 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       if (selectedLocationId) {
         params.set('location_id', selectedLocationId)
       } else if ((filters.city ?? '').trim()) {
-        // Legacy fallback
         params.set('city', (filters.city ?? '').trim())
       }
       if ((filters.budget_min ?? '').trim()) params.set('budget_min', (filters.budget_min ?? '').trim())
@@ -235,7 +139,6 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       if (selectedLocationId) {
         params.set('location_id', selectedLocationId)
       } else if ((filters.city ?? '').trim()) {
-        // Legacy fallback
         params.set('city', (filters.city ?? '').trim())
       }
       if ((filters.zone ?? '').trim()) params.set('zone', (filters.zone ?? '').trim())
@@ -250,30 +153,17 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   }
 
   const clearLocationFromUIAndPersistence = () => {
-    // Limpiar SOLO ubicación (input principal) + estado asociado
     setFilters((prev: any) => ({ ...prev, city: '' }))
     setSelectedLocationId(null)
-
-    // Limpiar estados UI relacionados a ubicación
-    setRecentCity(null)
-    setGeoError(null)
-    setCitySelectError(null)
-    setCityResultsError(null)
-    setCityResultsLoading(false)
-    setCityResults([])
-    setCityUserEdited(false)
-
-    // Limpiar persistencia usando helper compartido
+    setValidationError(null)
     clearLocationPersistence()
 
-    // Actualizar URL removiendo location/city/q pero manteniendo la ruta actual
     const cleanedParams = clearLocationFromUrlParams(searchParams.toString())
     const nextUrl = cleanedParams ? `${pathname}?${cleanedParams}` : pathname
     router.push(nextUrl)
   }
 
-  // Escuchar evento de limpieza de ubicación desde LogoLink (cuando se hace click en logo)
-  // Debe estar después de la definición de clearLocationFromUIAndPersistence
+  // Escuchar evento de limpieza de ubicación desde LogoLink
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -286,7 +176,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
     return () => {
       window.removeEventListener('myroomie:clear-location', handleClearLocationEvent)
     }
-  }, []) // Solo al montar, clearLocationFromUIAndPersistence usa closures de los hooks del componente
+  }, [])
 
   const handleClear = () => {
     if (mode === 'roomies') {
@@ -307,20 +197,13 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
         sort: 'recent',
       })
     }
-    // Limpiar UI state del dropdown
-    setRecentCity(null)
-    setGeoError(null)
-    setCitySelectError(null)
-    setCityResultsError(null)
-    setCityResultsLoading(false)
-    setCityResults([])
-    setCityUserEdited(false)
     setSelectedLocationId(null)
+    setValidationError(null)
 
-    // Limpiar persistencia (para que no reaparezca al reabrir)
     if (typeof window !== 'undefined') {
       localStorage.removeItem('last_location_id')
       localStorage.removeItem('last_location_label')
+      localStorage.removeItem('last_location_zone')
       localStorage.removeItem('last_city_label')
       localStorage.removeItem('last_city_value')
     }
@@ -347,21 +230,20 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
         filters.sort !== 'recent',
       ].filter(Boolean).length
 
-  // Manejar selección de ciudad (reciente o sugerencia)
-  const handleSelectCity = async (label: string, value: string, locationId?: string) => {
-    // Si hay locationId, usar label completo; sino usar value (legacy)
-    setFilters({ ...filters, city: locationId ? label : value })
-    setGeoError(null)
-    setCitySelectError(null)
-    setCityUserEdited(false)
+  // Manejar selección de ciudad
+  const handleSelectCity = async (label: string, value: string, locationId?: string, zone?: string) => {
+    const zoneTrimmed = (zone != null ? String(zone).trim() : (filters.zone ?? '').trim()) || ''
+    setFilters({ ...filters, city: locationId ? label : value, zone: zoneTrimmed })
     setSelectedLocationId(locationId || null)
+    setValidationError(null)
 
-    // Si viene location_id, usarlo; sino usar city (legacy)
     const params = new URLSearchParams()
     if (mode === 'roomies') {
       if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
       if (locationId) {
         params.set('location_id', locationId)
+        params.set('city', value)
+        if (zoneTrimmed.length >= 2) params.set('zone', zoneTrimmed)
       } else {
         params.set('city', value)
       }
@@ -371,23 +253,24 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
       if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
       if (locationId) {
         params.set('location_id', locationId)
+        params.set('city', value)
+        if (zoneTrimmed.length >= 2) params.set('zone', zoneTrimmed)
       } else {
         params.set('city', value)
       }
-      if ((filters.zone ?? '').trim()) params.set('zone', (filters.zone ?? '').trim())
+      if (zoneTrimmed.length >= 2) params.set('zone', zoneTrimmed)
       if (filters.listing_type !== 'all') params.set('listing_type', filters.listing_type)
       if ((filters.min ?? '').trim()) params.set('min', (filters.min ?? '').trim())
       if ((filters.max ?? '').trim()) params.set('max', (filters.max ?? '').trim())
       if (filters.sort !== 'recent') params.set('sort', filters.sort)
     }
 
-    // Guardar en localStorage
     if (typeof window !== 'undefined') {
       if (locationId) {
         localStorage.setItem('last_location_id', locationId)
         localStorage.setItem('last_location_label', label)
+        if (zoneTrimmed) localStorage.setItem('last_location_zone', zoneTrimmed)
       } else {
-        // Legacy: guardar también city para compatibilidad
         localStorage.setItem('last_city_label', label)
         localStorage.setItem('last_city_value', value)
       }
@@ -395,180 +278,6 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
 
     router.push(`${targetPath}?${params.toString()}`)
     setIsOpen(false)
-  }
-
-  const handleSelectAutocompleteResult = async (candidate: {
-    place_id: string
-    label: string
-    city: string | null
-    region: string | null
-    country?: string | null
-    lat: number | null
-    lng: number | null
-  }) => {
-    setCitySelectError(null)
-    setGeoError(null)
-    setCitySelectLoading(true)
-    setCityUserEdited(false)
-
-    try {
-      const upsertResponse = await fetch('/api/locations/upsert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider: 'mapbox',
-          place_id: candidate.place_id,
-          label: candidate.label,
-          city: candidate.city,
-          region: candidate.region,
-          country: candidate.country ?? null,
-          lat: candidate.lat,
-          lng: candidate.lng,
-        }),
-      })
-
-      if (!upsertResponse.ok) {
-        const data = await upsertResponse.json().catch(() => null)
-        setCitySelectError(data?.error || 'No se pudo guardar la ubicación')
-        setCitySelectLoading(false)
-        return
-      }
-
-      const data = await upsertResponse.json()
-      const locationId = data?.location_id
-      if (!locationId || typeof locationId !== 'string') {
-        setCitySelectError('No se pudo guardar la ubicación')
-        setCitySelectLoading(false)
-        return
-      }
-
-      setCitySelectLoading(false)
-      await handleSelectCity(candidate.label, candidate.city || candidate.label, locationId)
-    } catch {
-      setCitySelectError('No se pudo guardar la ubicación')
-      setCitySelectLoading(false)
-    }
-  }
-
-  // Manejar geolocalización
-  const handleUseCurrentLocation = async () => {
-    setGeoError(null)
-    setCitySelectError(null)
-    setGeoLoading(true)
-    setCityUserEdited(false)
-
-    if (!navigator.geolocation) {
-      setGeoError('Tu navegador no soporta geolocalización')
-      setGeoLoading(false)
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords
-          const response = await fetch(`/api/geo/reverse?lat=${latitude}&lng=${longitude}`)
-          
-          if (!response.ok) {
-            const data = await response.json()
-            setGeoError(data.error || 'Error al obtener la ubicación')
-            setGeoLoading(false)
-            return
-          }
-
-          const data = await response.json()
-          const cityValue = data.city || data.label || ''
-          const cityLabel = data.label || cityValue
-          const placeId = data.place_id
-
-          // Si tenemos place_id, hacer upsert en locations para obtener location_id
-          let locationId: string | undefined = undefined
-          if (placeId) {
-            try {
-              const upsertResponse = await fetch('/api/locations/upsert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  provider: 'mapbox',
-                  place_id: placeId,
-                  label: cityLabel,
-                  city: data.city || null,
-                  region: data.region || null,
-                  country: data.country || null,
-                  lat: data.lat || null,
-                  lng: data.lng || null,
-                }),
-              })
-
-              if (upsertResponse.ok) {
-                const upsertData = await upsertResponse.json()
-                locationId = upsertData.location_id
-              }
-            } catch (error) {
-              console.error('Error al hacer upsert de location:', error)
-              // Continuar con city legacy si falla
-            }
-          }
-
-          // Guardar en localStorage
-          if (typeof window !== 'undefined') {
-            if (locationId) {
-              localStorage.setItem('last_location_id', locationId)
-              localStorage.setItem('last_location_label', cityLabel)
-            } else {
-              // Legacy: guardar también city para compatibilidad
-              localStorage.setItem('last_city_label', cityLabel)
-              localStorage.setItem('last_city_value', cityValue)
-            }
-          }
-
-          // Actualizar filtro con label completo si hay locationId, sino con cityValue (legacy)
-          setFilters({ ...filters, city: locationId ? cityLabel : cityValue })
-          setSelectedLocationId(locationId || null)
-          
-          // Aplicar searchParams inmediatamente
-          const params = new URLSearchParams()
-          if (mode === 'roomies') {
-            if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
-            if (locationId) {
-              params.set('location_id', locationId)
-            } else {
-              params.set('city', cityValue)
-            }
-            if ((filters.budget_min ?? '').trim()) params.set('budget_min', (filters.budget_min ?? '').trim())
-            if ((filters.budget_max ?? '').trim()) params.set('budget_max', (filters.budget_max ?? '').trim())
-          } else {
-            if ((filters.q ?? '').trim()) params.set('q', (filters.q ?? '').trim())
-            if (locationId) {
-              params.set('location_id', locationId)
-            } else {
-              params.set('city', cityValue)
-            }
-            if ((filters.zone ?? '').trim()) params.set('zone', (filters.zone ?? '').trim())
-            if (filters.listing_type !== 'all') params.set('listing_type', filters.listing_type)
-            if ((filters.min ?? '').trim()) params.set('min', (filters.min ?? '').trim())
-            if ((filters.max ?? '').trim()) params.set('max', (filters.max ?? '').trim())
-            if (filters.sort !== 'recent') params.set('sort', filters.sort)
-          }
-
-          router.push(`${targetPath}?${params.toString()}`)
-          setGeoLoading(false)
-        } catch (error) {
-          setGeoError('Error al procesar la ubicación')
-          setGeoLoading(false)
-        }
-      },
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          setGeoError('Permiso de ubicación denegado')
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          setGeoError('Ubicación no disponible')
-        } else {
-          setGeoError('Error al obtener la ubicación')
-        }
-        setGeoLoading(false)
-      }
-    )
   }
 
   // Texto resumen para estado collapsed
@@ -592,54 +301,21 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
   return (
     <>
       <div className="relative flex-1 max-w-2xl mx-auto">
-        {/* Barra pill con input cuando está abierto */}
+        {/* Barra pill */}
         {isOpen ? (
-          <div
-            ref={triggerRef}
-            className="flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2.5 h-11 shadow-sm focus-within:ring-2 focus-within:ring-brand/30 ring-1 ring-black/5"
-          >
-            <svg
-              className="w-4 h-4 text-neutral-500 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              ref={inputRef}
-              type="text"
+          <div ref={triggerRef}>
+            <SearchInput
               value={filters.city || ''}
-              onChange={(e) => {
-                // Input principal = ubicación
-                setFilters({ ...filters, city: e.target.value })
-                setGeoError(null)
-                setCitySelectError(null)
+              onChange={(value) => {
+                setFilters({ ...filters, city: value })
                 setSelectedLocationId(null)
-                setCityUserEdited(true)
+                setValidationError(null)
               }}
-              placeholder="Buscar..."
-              className="flex-1 text-sm text-neutral-700 bg-transparent border-none outline-none"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch()
-                }
-              }}
+              onEnter={handleSearch}
+              onClear={clearLocationFromUIAndPersistence}
+              activeFiltersCount={activeFiltersCount}
+              autoFocus
             />
-            {activeFiltersCount > 0 && (
-              <span className="flex-shrink-0 text-xs bg-brand/10 text-brand px-2 py-0.5 rounded-full font-medium">
-                {activeFiltersCount}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={clearLocationFromUIAndPersistence}
-              className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
-              aria-label="Limpiar ubicación"
-            >
-              ✕
-            </button>
           </div>
         ) : (
           <div ref={triggerRef}>
@@ -705,184 +381,42 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
             ref={dropdownRef}
             className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-3xl border border-neutral-200 bg-white p-3 md:p-4 shadow-xl z-50 w-[calc(100vw-2rem)] max-w-[720px]"
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              // Prevenir que ESC cierre el popover si está dentro (ya se maneja en el effect)
-              if (e.key === 'Escape') {
-                e.stopPropagation()
-              }
-            }}
           >
             <div className="space-y-3">
-              {/* Opción: Cerca de aquí */}
-              <button
-                type="button"
-                onClick={handleUseCurrentLocation}
-                disabled={geoLoading}
-                className="w-full flex items-center gap-3 px-4 py-2.5 h-11 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg
-                  className="w-5 h-5 text-neutral-600 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-neutral-900">📍 Cerca de aquí</div>
-                  <div className="text-xs text-neutral-500">Usar ubicación actual</div>
-                </div>
-                {geoLoading && (
-                  <svg
-                    className="w-4 h-4 text-neutral-400 animate-spin flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                )}
-              </button>
-              {geoError && (
+              <LocationPicker
+                cityQuery={cityQuery}
+                onCityChange={(value) => {
+                  setFilters({ ...filters, city: value })
+                  setSelectedLocationId(null)
+                  setValidationError(null)
+                }}
+                onSelectCity={handleSelectCity}
+                isOpen={isOpen}
+              />
+
+              {validationError && (
                 <div className="px-4 py-2 text-xs text-red-600 bg-red-50 rounded-lg border border-red-100">
-                  {geoError}
-                </div>
-              )}
-              {citySelectError && (
-                <div className="px-4 py-2 text-xs text-red-600 bg-red-50 rounded-lg border border-red-100">
-                  {citySelectError}
+                  {validationError}
                 </div>
               )}
 
-              {/* Sección: Reciente */}
-              {recentCity && (
-                <div>
-                  <div className="px-2 mb-2">
-                    <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Reciente</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCityUserEdited(false)
-                      handleSelectCity(recentCity.label, recentCity.value, recentCity.location_id)
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
-                    role="button"
-                  >
-                    <svg
-                      className="w-4 h-4 text-neutral-400 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-sm font-medium text-neutral-900">{recentCity.label}</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Sección: Resultados (autocomplete) */}
-              {cityUserEdited && cityQuery.length >= 3 && (
-                <div>
-                  <div className="px-2 mb-2">
-                    <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Resultados</h3>
-                  </div>
-
-                  {cityResultsLoading ? (
-                    <div className="px-4 py-2.5 text-xs text-neutral-500">
-                      Buscando...
-                    </div>
-                  ) : cityResultsError ? (
-                    <div className="px-4 py-2.5 text-xs text-neutral-500">
-                      {cityResultsError}
-                    </div>
-                  ) : cityResults.length === 0 ? (
-                    <div className="px-4 py-2.5 text-xs text-neutral-500">
-                      Sin resultados
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {cityResults.map((c) => (
-                        <button
-                          key={c.place_id}
-                          type="button"
-                          onClick={() => handleSelectAutocompleteResult(c)}
-                          disabled={citySelectLoading}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                          role="button"
-                        >
-                          <svg
-                            className="w-4 h-4 text-neutral-400 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="text-sm font-medium text-neutral-900">{c.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Row 2: Tipo (solo listings) y Precio/Presupuesto */}
+              {/* Filtros según mode */}
               {mode === 'listings' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <select
-                    value={filters.listing_type || 'all'}
-                    onChange={(e) => setFilters({ ...filters, listing_type: e.target.value })}
-                    className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="room">Rento cuarto</option>
-                    <option value="roommate">Busco roomie</option>
-                  </select>
-                  <input
-                    type="number"
-                    value={filters.min || ''}
-                    onChange={(e) => setFilters({ ...filters, min: e.target.value })}
-                    placeholder="Precio min"
-                    min="0"
-                    className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
-                  />
-                  <input
-                    type="number"
-                    value={filters.max || ''}
-                    onChange={(e) => setFilters({ ...filters, max: e.target.value })}
-                    placeholder="Precio max"
-                    min="0"
-                    className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
-                  />
-                </div>
+                <ListingsFilters
+                  listing_type={filters.listing_type || 'all'}
+                  min={filters.min || ''}
+                  max={filters.max || ''}
+                  onListingTypeChange={(value) => setFilters({ ...filters, listing_type: value })}
+                  onMinChange={(value) => setFilters({ ...filters, min: value })}
+                  onMaxChange={(value) => setFilters({ ...filters, max: value })}
+                />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    type="number"
-                    value={filters.budget_min || ''}
-                    onChange={(e) => setFilters({ ...filters, budget_min: e.target.value })}
-                    placeholder="Presupuesto min"
-                    min="0"
-                    className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
-                  />
-                  <input
-                    type="number"
-                    value={filters.budget_max || ''}
-                    onChange={(e) => setFilters({ ...filters, budget_max: e.target.value })}
-                    placeholder="Presupuesto max"
-                    min="0"
-                    className="w-full px-4 py-2.5 h-11 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
-                  />
-                </div>
+                <RoomiesFilters
+                  budget_min={filters.budget_min || ''}
+                  budget_max={filters.budget_max || ''}
+                  onBudgetMinChange={(value) => setFilters({ ...filters, budget_min: value })}
+                  onBudgetMaxChange={(value) => setFilters({ ...filters, budget_max: value })}
+                />
               )}
 
               {/* Footer: Limpiar + Buscar */}

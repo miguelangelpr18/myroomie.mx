@@ -22,7 +22,7 @@ export default async function SignupIntentPage() {
             </p>
             <Link
               href="/login?intent=roomies"
-              className="block w-full bg-[#FF7A18] text-white px-4 py-3 rounded-lg hover:bg-[#E86F14] text-center font-medium"
+              className="block w-full bg-brand text-white px-4 py-3 rounded-lg hover:bg-brandHover text-center font-medium"
             >
               Continuar
             </Link>
@@ -36,7 +36,7 @@ export default async function SignupIntentPage() {
             </p>
             <Link
               href="/login?intent=listings"
-              className="block w-full bg-[#FF7A18] text-white px-4 py-3 rounded-lg hover:bg-[#E86F14] text-center font-medium"
+              className="block w-full bg-brand text-white px-4 py-3 rounded-lg hover:bg-brandHover text-center font-medium"
             >
               Continuar
             </Link>
@@ -55,7 +55,7 @@ export default async function SignupIntentPage() {
             </Link>
             <Link
               href="/signup"
-              className="bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] font-medium"
+              className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-brandHover font-medium"
             >
               Crear cuenta
             </Link>
@@ -79,7 +79,7 @@ export default async function SignupIntentPage() {
           </p>
           <Link
             href="/onboarding/step-1?intent=roomies"
-            className="block w-full bg-[#FF7A18] text-white px-4 py-3 rounded-lg hover:bg-[#E86F14] text-center font-medium"
+            className="block w-full bg-brand text-white px-4 py-3 rounded-lg hover:bg-brandHover text-center font-medium"
           >
             Continuar
           </Link>
@@ -93,7 +93,7 @@ export default async function SignupIntentPage() {
           </p>
           <Link
             href="/listings/new"
-            className="block w-full bg-[#FF7A18] text-white px-4 py-3 rounded-lg hover:bg-[#E86F14] text-center font-medium"
+            className="block w-full bg-brand text-white px-4 py-3 rounded-lg hover:bg-brandHover text-center font-medium"
           >
             Continuar
           </Link>

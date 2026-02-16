@@ -97,7 +97,7 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
               className="w-12 h-12 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-lg font-semibold flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-brand text-white flex items-center justify-center text-lg font-semibold flex-shrink-0">
               {initial}
             </div>
           )}
@@ -111,7 +111,7 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
             {thread.listing_id && (
               <Link
                 href={`/listings/${thread.listing_id}`}
-                className="mt-1 inline-flex text-xs text-neutral-500 hover:text-[#FF7A18] hover:underline underline-offset-4 transition-colors"
+                className="mt-1 inline-flex text-xs text-neutral-500 hover:text-brand hover:underline underline-offset-4 transition-colors"
               >
                 Ver listing relacionado
               </Link>
@@ -155,7 +155,7 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
                   <div
                     className={`max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-3 overflow-hidden min-w-0 ${
                       isOwn
-                        ? 'bg-[#FF7A18] text-white'
+                        ? 'bg-brand text-white'
                         : 'bg-neutral-100 text-neutral-900'
                     }`}
                   >

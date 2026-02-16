@@ -64,7 +64,7 @@ export default function MessageForm({ threadId }: MessageFormProps) {
           placeholder="Escribe un mensaje..."
           rows={2}
           maxLength={5000}
-          className="flex-1 resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#FF7A18]/30 focus:border-[#FF7A18]"
+          className="flex-1 resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
           disabled={loading}
         />
         <button
@@ -73,7 +73,7 @@ export default function MessageForm({ threadId }: MessageFormProps) {
           className={`h-12 px-5 rounded-2xl font-medium transition whitespace-nowrap ${
             isDisabled
               ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
-              : 'bg-[#FF7A18] text-white hover:opacity-90'
+              : 'bg-brand text-white hover:opacity-90'
           }`}
           aria-label={loading ? 'Enviando mensaje...' : 'Enviar mensaje'}
         >

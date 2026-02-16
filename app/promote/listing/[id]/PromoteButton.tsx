@@ -48,7 +48,7 @@ export default function PromoteButton({ listingId, planName, planDays }: Promote
       <button
         onClick={handleClick}
         disabled={loading}
-        className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? 'Activando...' : 'Promocionar ahora'}
       </button>

@@ -42,15 +42,14 @@ export async function createListing(formData: ListingData) {
   const { data, error } = await supabase
     .from('listings')
     .insert(insertPayload)
-    .select('id')
+    .select('id, location_id')
     .single()
 
   if (error) {
     return { error: error.message, listingId: null }
   }
 
-  // Retornar listingId en lugar de redirect (el cliente manejará el redirect después de subir imágenes)
-  return { error: null, listingId: data.id }
+  return { error: null, listingId: data.id, locationId: data.location_id ?? null }
 }
 
 /**

@@ -5,6 +5,7 @@ const DESC_MAX = 2_000
 const PRICE_MIN = 500
 const PRICE_MAX = 80_000
 const CITY_ZONE_MIN = 2
+const ZONE_MAX = 80
 const LOCATION_ID_MIN_LEN = 10
 
 export type ListingInput = {
@@ -40,7 +41,7 @@ export function validateListingInput(
   const zone = trim(input?.zone)
   const location_id = trim(input?.location_id)
   const listing_type = input?.listing_type
-  const hasLocationId = location_id.length > 0
+  const hasLocationId = location_id.length >= LOCATION_ID_MIN_LEN
 
   if (!title) return { ok: false, error: 'El título es requerido.' }
   if (title.length < TITLE_MIN) return { ok: false, error: `El título debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.` }
@@ -51,14 +52,22 @@ export function validateListingInput(
   if (description.length > DESC_MAX) return { ok: false, error: `La descripción debe tener entre ${DESC_MIN} y ${DESC_MAX} caracteres.` }
 
   if (hasLocationId) {
-    if (location_id.length < LOCATION_ID_MIN_LEN) {
-      return { ok: false, error: 'El ID de ubicación no es válido.' }
+    // Con location_id válido: zone obligatoria (2–80 chars); city opcional pero si viene >= 2
+    if (!zone || zone.length < CITY_ZONE_MIN) {
+      return { ok: false, error: 'La zona / colonia es obligatoria.' }
+    }
+    if (zone.length > ZONE_MAX) {
+      return { ok: false, error: 'La zona / colonia debe tener entre 2 y 80 caracteres.' }
+    }
+    if (city.length > 0 && city.length < CITY_ZONE_MIN) {
+      return { ok: false, error: 'La ciudad debe tener al menos 2 caracteres.' }
     }
   } else {
     if (!city) return { ok: false, error: 'La ciudad es requerida.' }
     if (city.length < CITY_ZONE_MIN) return { ok: false, error: 'La ciudad debe tener al menos 2 caracteres.' }
     if (!zone) return { ok: false, error: 'La zona es requerida.' }
     if (zone.length < CITY_ZONE_MIN) return { ok: false, error: 'La zona debe tener al menos 2 caracteres.' }
+    if (zone.length > ZONE_MAX) return { ok: false, error: 'La zona / colonia debe tener entre 2 y 80 caracteres.' }
   }
 
   if (listing_type !== 'room' && listing_type !== 'roommate') {
@@ -84,8 +93,8 @@ export function validateListingInput(
     data: {
       title,
       description,
-      city,
-      zone,
+      city: city || '',
+      zone: zone || '',
       price_mxn: priceFinal,
       listing_type,
       location_id: hasLocationId ? location_id : null,

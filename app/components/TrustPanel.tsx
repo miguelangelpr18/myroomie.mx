@@ -124,7 +124,7 @@ export default function TrustPanel({ isOwner = false }: TrustPanelProps) {
           <div className="mt-4 pt-4 border-t border-gray-200">
             <Link
               href="/account"
-              className="inline-flex items-center gap-2 text-sm text-[#FF7A18] hover:text-[#E86F14] hover:underline"
+              className="inline-flex items-center gap-2 text-sm text-brand hover:text-brandHover hover:underline"
             >
               <span>Completar verificaciones (próximamente)</span>
               <svg

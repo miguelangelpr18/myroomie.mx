@@ -4,6 +4,7 @@ import { useState, FormEvent, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveMyProfile, ProfileData } from './actions'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import LocationPickerField from './LocationPickerField'
 
 interface OnboardingFormProps {
   initialData: ProfileData | null
@@ -24,6 +25,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
     display_name: initialData?.display_name || '',
     city: initialData?.city || '',
     zone: initialData?.zone || '',
+    location_id: initialData?.location_id ?? null,
     avatar_url: initialData?.avatar_url || null,
   })
 
@@ -82,14 +84,8 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         return
       }
 
-      if (!formData.city.trim()) {
-        setErrorMsg('City es requerido')
-        setLoading(false)
-        return
-      }
-
-      if (!formData.zone.trim()) {
-        setErrorMsg('Zone es requerido')
+      if (!formData.location_id || !String(formData.location_id).trim()) {
+        setErrorMsg('Selecciona una ubicación de la lista')
         setLoading(false)
         return
       }
@@ -137,6 +133,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         display_name: formData.display_name,
         city: formData.city,
         zone: formData.zone,
+        location_id: formData.location_id ?? undefined,
         avatar_url: avatarUrl,
       })
 
@@ -168,46 +165,48 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           required
           minLength={2}
           maxLength={40}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
           placeholder="Tu nombre público"
         />
         <p className="mt-1 text-sm text-gray-500">Entre 2 y 40 caracteres</p>
       </div>
 
-      <div>
-        <label htmlFor="city" className="block mb-2 font-medium">
-          Ciudad <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          id="city"
-          value={formData.city}
-          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-          required
-          minLength={2}
-          maxLength={60}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
-          placeholder="Ej: Ciudad de México"
-        />
-        <p className="mt-1 text-sm text-gray-500">Entre 2 y 60 caracteres</p>
-      </div>
+      <LocationPickerField
+        onSelect={(payload) => {
+          setFormData((prev) => ({
+            ...prev,
+            location_id: payload.location_id,
+            city: payload.city,
+            zone: payload.zone || prev.zone,
+          }))
+          setErrorMsg('')
+        }}
+        onClear={() => {
+          setFormData((prev) => ({
+            ...prev,
+            location_id: null,
+            city: '',
+            zone: '',
+          }))
+        }}
+        error={errorMsg === 'Selecciona una ubicación de la lista' ? errorMsg : undefined}
+      />
 
       <div>
         <label htmlFor="zone" className="block mb-2 font-medium">
-          Zona/Colonia <span className="text-red-500">*</span>
+          Zona/Colonia (opcional)
         </label>
         <input
           type="text"
           id="zone"
+          name="zone"
           value={formData.zone}
           onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
-          required
-          minLength={2}
           maxLength={80}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
           placeholder="Ej: Roma Norte, Polanco, etc."
         />
-        <p className="mt-1 text-sm text-gray-500">Entre 2 y 80 caracteres</p>
+        <p className="mt-1 text-sm text-gray-500">Opcional, hasta 80 caracteres</p>
       </div>
 
       <div>
@@ -220,7 +219,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           id="avatar"
           accept="image/*"
           onChange={handleFileChange}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
         <p className="mt-1 text-sm text-gray-500">
           Solo imágenes, máximo 2MB
@@ -252,7 +251,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? 'Guardando...' : 'Guardar perfil'}
       </button>

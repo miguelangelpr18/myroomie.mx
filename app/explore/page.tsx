@@ -4,6 +4,7 @@ import EmptyState from '../components/ui/EmptyState'
 import RoomieCard from '../components/roomies/RoomieCard'
 import FilterChips from './FilterChips'
 import ResultHeader from './ResultHeader'
+import CanonicalLocationParams from '../components/CanonicalLocationParams'
 
 interface ExplorePageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -28,11 +29,14 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
 
   // Extraer parámetros de búsqueda (del GlobalSearchBar mode roomies)
   const q = typeof searchParams.q === 'string' ? searchParams.q : ''
-  const locationId = typeof searchParams.location_id === 'string' ? searchParams.location_id : undefined
+  const locationIdParam = typeof searchParams.location_id === 'string' ? searchParams.location_id.trim() : ''
   const cityParam = typeof searchParams.city === 'string' ? searchParams.city : ''
   // Nota: budget_min/budget_max no existen en profiles table, se ignoran silenciosamente
 
-  // Resolver location_id a city si existe
+  // location_id válido solo si length >= 10 (length guard, no asumir UUID)
+  const locationId = locationIdParam.length >= 10 ? locationIdParam : ''
+
+  // Resolver location_id a city si existe (para display en ResultHeader)
   let city = cityParam
   if (locationId) {
     try {
@@ -80,8 +84,10 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
     query = query.ilike('display_name', `%${q.trim()}%`)
   }
 
-  // Aplicar filtro de ciudad
-  if (city.trim()) {
+  // Filtro por ubicación: location_id (exacto) o city legacy (ilike)
+  if (locationId) {
+    query = query.eq('location_id', locationId)
+  } else if (city.trim()) {
     query = query.ilike('city', `%${city.trim()}%`)
   }
 
@@ -183,7 +189,9 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 py-10 md:py-12">
+    <>
+      <CanonicalLocationParams mode="explore" />
+      <div className="mx-auto max-w-7xl px-4 md:px-6 py-10 md:py-12">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-3">
         <div className="max-w-2xl">
           <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.01em] text-neutral-900">Explora perfiles</h1>
@@ -192,7 +200,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
         {!hasMyProfile && (
           <Link
             href="/onboarding/step-1"
-            className="inline-flex items-center justify-center bg-brand text-white h-10 px-4 rounded-lg text-sm font-medium leading-none hover:bg-brandHover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A18]/30 focus-visible:ring-offset-2"
+            className="inline-flex items-center justify-center bg-brand text-white h-10 px-4 rounded-lg text-sm font-medium leading-none hover:bg-brandHover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2"
           >
             Crear mi perfil
           </Link>
@@ -224,7 +232,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
       )}
 
       {!profiles || profiles.length === 0 ? (
-        (Object.values(activeFilters).some(Boolean) || q.trim() || city.trim()) ? (
+        (Object.values(activeFilters).some(Boolean) || q.trim() || city.trim() || locationId) ? (
           <div className="py-12">
             <EmptyState
               icon="search"
@@ -261,5 +269,6 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
         </div>
       )}
     </div>
+    </>
   )
 }

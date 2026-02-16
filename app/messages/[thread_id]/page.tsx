@@ -44,7 +44,7 @@ export default async function ThreadPage({
           </p>
           <Link
             href="/messages"
-            className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
+            className="inline-block bg-brand text-white px-6 py-2 rounded-lg hover:bg-brandHover text-sm font-medium"
           >
             Volver a mensajes
           </Link>
@@ -83,7 +83,7 @@ export default async function ThreadPage({
       <div className="mb-6">
         <Link
           href="/messages"
-          className="text-[#FF7A18] hover:underline text-sm"
+          className="text-brand hover:underline text-sm"
         >
           ← Volver a mensajes
         </Link>
@@ -98,7 +98,7 @@ export default async function ThreadPage({
               className="w-16 h-16 rounded-full object-cover"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-xl font-semibold">
+            <div className="w-16 h-16 rounded-full bg-brand text-white flex items-center justify-center text-xl font-semibold">
               {initial}
             </div>
           )}
@@ -108,7 +108,7 @@ export default async function ThreadPage({
             {thread.listing_id && (
               <Link
                 href={`/listings/${thread.listing_id}`}
-                className="text-sm text-[#FF7A18] hover:underline mt-2 block"
+                className="text-sm text-brand hover:underline mt-2 block"
               >
                 Ver listing relacionado
               </Link>
@@ -142,7 +142,7 @@ export default async function ThreadPage({
                   <div
                     className={`max-w-[75%] md:max-w-[65%] rounded-lg px-4 py-2 overflow-hidden min-w-0 ${
                       isOwn
-                        ? 'bg-[#FF7A18] text-white'
+                        ? 'bg-brand text-white'
                         : 'bg-gray-100 text-gray-900'
                     }`}
                   >

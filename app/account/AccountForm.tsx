@@ -171,7 +171,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
           required
           minLength={2}
           maxLength={40}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A18]/30"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
           placeholder="Tu nombre de perfil"
         />
       </div>
@@ -187,7 +187,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
               className="w-20 h-20 rounded-full object-cover"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-2xl font-semibold">
+            <div className="w-20 h-20 rounded-full bg-brand text-white flex items-center justify-center text-2xl font-semibold">
               {formData.display_name.charAt(0).toUpperCase() || '?'}
             </div>
           )}
@@ -207,7 +207,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#FF7A18] text-white px-6 py-3 rounded-lg hover:bg-[#E86F14] disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? 'Guardando...' : 'Guardar cambios'}
       </button>

@@ -175,48 +175,78 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
   // Leer thread seleccionado desde query param
   const selectedThreadId = searchParams?.thread ?? null
 
-  // Obtener threads del usuario (donde es user1_id o user2_id)
-  const { data: threads, error } = await supabase
+  // Obtener threads del usuario con datos relacionados en una sola query
+  // Usamos RPC o construimos la query manualmente para optimizar
+  const { data: rawThreads, error } = await supabase
     .from('threads')
-    .select('id, user1_id, user2_id, listing_id, created_at')
+    .select(`
+      id, 
+      user1_id, 
+      user2_id, 
+      listing_id, 
+      created_at
+    `)
     .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
     .order('created_at', { ascending: false })
     .limit(50)
 
-  // Obtener último mensaje de cada thread y perfil del otro usuario
-  const threadsWithData = await Promise.all(
-    (threads || []).map(async (thread) => {
-      // Identificar el otro usuario
-      const otherUserId = thread.user1_id === session.user.id 
-        ? thread.user2_id 
-        : thread.user1_id
+  let threadsWithData: any[] = []
 
-      // Obtener perfil del otro usuario
-      const { data: otherProfile } = await supabase
-        .from('profiles')
-        .select('display_name, avatar_url, pets, smoker, cleanliness, parties, schedule')
-        .eq('user_id', otherUserId)
-        .single()
+  if (rawThreads && rawThreads.length > 0) {
+    // Extraer IDs únicos
+    const threadIds = rawThreads.map((t) => t.id)
+    const otherUserIds = rawThreads.map((t) =>
+      t.user1_id === session.user.id ? t.user2_id : t.user1_id
+    )
 
-      // Obtener último mensaje
-      const { data: lastMessage } = await supabase
-        .from('messages')
-        .select('body, created_at, sender_id')
-        .eq('thread_id', thread.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+    // Batch fetch: perfiles de otros usuarios
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, pets, smoker, cleanliness, parties, schedule')
+      .in('user_id', otherUserIds)
 
-      // Obtener last_read_at del participante actual usando profile_id
-      const { data: participant } = await supabase
-        .from('thread_participants')
-        .select('last_read_at')
-        .eq('thread_id', thread.id)
-        .eq('profile_id', currentProfileId)
-        .maybeSingle()
+    // Batch fetch: últimos mensajes por thread (subconsulta lateral)
+    // Como Supabase no soporta LATERAL directamente, usamos un truco:
+    // Obtener TODOS los mensajes de estos threads y luego filtrar en JS
+    const { data: allMessages } = await supabase
+      .from('messages')
+      .select('thread_id, body, created_at, sender_id')
+      .in('thread_id', threadIds)
+      .order('created_at', { ascending: false })
 
-      // Calcular isUnread usando profile_id
-      const lastReadAt = participant?.last_read_at ? new Date(participant.last_read_at) : null
+    // Batch fetch: participantes
+    const { data: participants } = await supabase
+      .from('thread_participants')
+      .select('thread_id, last_read_at')
+      .in('thread_id', threadIds)
+      .eq('profile_id', currentProfileId)
+
+    // Crear maps para lookup O(1)
+    const profilesMap = new Map(
+      (profiles || []).map((p) => [p.user_id, p])
+    )
+    const participantsMap = new Map(
+      (participants || []).map((p) => [p.thread_id, p])
+    )
+
+    // Agrupar mensajes por thread y tomar el más reciente
+    const lastMessagesMap = new Map<string, any>()
+    for (const msg of allMessages || []) {
+      if (!lastMessagesMap.has(msg.thread_id)) {
+        lastMessagesMap.set(msg.thread_id, msg)
+      }
+    }
+
+    threadsWithData = rawThreads.map((thread) => {
+      const otherUserId =
+        thread.user1_id === session.user.id ? thread.user2_id : thread.user1_id
+      const otherProfile = profilesMap.get(otherUserId) || null
+      const lastMessage = lastMessagesMap.get(thread.id) || null
+      const participant = participantsMap.get(thread.id)
+
+      const lastReadAt = participant?.last_read_at
+        ? new Date(participant.last_read_at)
+        : null
       const lastMsgAt = lastMessage ? new Date(lastMessage.created_at) : null
       const isUnread =
         !!lastMsgAt &&
@@ -227,11 +257,11 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
       return {
         ...thread,
         otherUser: otherProfile,
-        lastMessage: lastMessage || null,
+        lastMessage,
         isUnread,
       }
     })
-  )
+  }
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl">
@@ -262,7 +292,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
             </div>
           )}
 
-          {!threads || threads.length === 0 ? (
+          {!rawThreads || rawThreads.length === 0 ? (
             <div className="p-4">
               <EmptyState
                 icon="messages"

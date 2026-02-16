@@ -8,27 +8,42 @@ const LISTING_TYPE_CHIPS = [
   { id: 'roommate', label: 'Busco compartir depa', value: 'roommate' as const },
 ]
 
+const PRICE_DISPLAY_MIN = 500
+const PRICE_DISPLAY_MAX = 80_000
+
+/** Normaliza valor de URL para mostrar en input: NaN/vacío => ''; <500 => '500'; >80000 => '80000'. */
+function normalizePriceDisplay(value: string): string {
+  if (!value.trim()) return ''
+  const num = parseInt(value.trim(), 10)
+  if (Number.isNaN(num)) return ''
+  if (num < PRICE_DISPLAY_MIN) return String(PRICE_DISPLAY_MIN)
+  if (num > PRICE_DISPLAY_MAX) return String(PRICE_DISPLAY_MAX)
+  return String(num)
+}
+
 export default function ListingsFilterChips() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentType = searchParams.get('listing_type') || 'all'
-  const currentMin = searchParams.get('min') || ''
-  const currentMax = searchParams.get('max') || ''
+  const currentMin = searchParams.get('price_min') || searchParams.get('min') || ''
+  const currentMax = searchParams.get('price_max') || searchParams.get('max') || ''
 
-  const [minInput, setMinInput] = useState(currentMin)
-  const [maxInput, setMaxInput] = useState(currentMax)
+  const [minInput, setMinInput] = useState(() => normalizePriceDisplay(currentMin))
+  const [maxInput, setMaxInput] = useState(() => normalizePriceDisplay(currentMax))
 
   useEffect(() => {
-    setMinInput(currentMin)
-    setMaxInput(currentMax)
+    setMinInput(normalizePriceDisplay(currentMin))
+    setMaxInput(normalizePriceDisplay(currentMax))
   }, [currentMin, currentMax])
 
   const applyPrice = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
-    if (minInput.trim()) params.set('min', minInput.trim())
-    else params.delete('min')
-    if (maxInput.trim()) params.set('max', maxInput.trim())
-    else params.delete('max')
+    params.delete('min')
+    params.delete('max')
+    if (minInput.trim()) params.set('price_min', minInput.trim())
+    else params.delete('price_min')
+    if (maxInput.trim()) params.set('price_max', maxInput.trim())
+    else params.delete('price_max')
     const queryString = params.toString()
     router.push(queryString ? `/listings?${queryString}` : '/listings', { scroll: false })
   }, [router, searchParams, minInput, maxInput])

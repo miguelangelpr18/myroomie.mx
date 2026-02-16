@@ -36,7 +36,7 @@ export default async function ProfilePage({
           </p>
           <Link
             href="/explore"
-            className="inline-block bg-[#FF7A18] text-white px-6 py-2 rounded-lg hover:bg-[#E86F14] text-sm font-medium"
+            className="inline-block bg-brand text-white px-6 py-2 rounded-lg hover:bg-brandHover text-sm font-medium"
           >
             Volver a explorar
           </Link>
@@ -62,7 +62,7 @@ export default async function ProfilePage({
       <div className="mb-6">
         <Link
           href="/explore"
-          className="text-[#FF7A18] hover:underline text-sm"
+          className="text-brand hover:underline text-sm"
         >
           ← Volver
         </Link>
@@ -77,7 +77,7 @@ export default async function ProfilePage({
               className="w-24 h-24 rounded-full object-cover"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-[#FF7A18] text-white flex items-center justify-center text-3xl font-semibold">
+            <div className="w-24 h-24 rounded-full bg-brand text-white flex items-center justify-center text-3xl font-semibold">
               {initial}
             </div>
           )}
@@ -85,7 +85,7 @@ export default async function ProfilePage({
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">{profile.display_name}</h1>
               {isFeatured && (
-                <span className="inline-block px-3 py-1 bg-[#FF7A18] text-white rounded-full text-sm font-semibold">
+                <span className="inline-block px-3 py-1 bg-brand text-white rounded-full text-sm font-semibold">
                   Destacado
                 </span>
               )}
@@ -120,7 +120,7 @@ export default async function ProfilePage({
                 <Link key={listing.id} href={`/listings/${listing.id}`}>
                   <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer">
                     <div className="mb-3">
-                      <span className="inline-block px-3 py-1 bg-[#FF7A18]/10 text-[#FF7A18] rounded-full text-sm font-medium">
+                      <span className="inline-block px-3 py-1 bg-brand/10 text-brand rounded-full text-sm font-medium">
                         {typeLabel}
                       </span>
                     </div>
