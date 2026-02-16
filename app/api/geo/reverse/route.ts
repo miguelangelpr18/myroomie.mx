@@ -40,10 +40,12 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const mapboxToken = process.env.MAPBOX_TOKEN
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+  console.log('[REVERSE API] Token detectado:', !!mapboxToken)
+  
   if (!mapboxToken) {
     return NextResponse.json(
-      { error: 'MAPBOX_TOKEN no configurado' },
+      { error: 'NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN no configurado' },
       { status: 500 }
     )
   }

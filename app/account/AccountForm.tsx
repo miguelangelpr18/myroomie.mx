@@ -17,6 +17,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
@@ -46,9 +47,9 @@ export default function AccountForm({ initialData }: AccountFormProps) {
       return
     }
 
-    // Validar tamaño (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setErrorMsg('La imagen debe ser menor a 2MB')
+    // Validar tamaño (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('La imagen debe ser menor a 5MB')
       setAvatarFile(null)
       setAvatarPreview(null)
       if (fileInputRef.current) {
@@ -85,6 +86,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
 
       // Si hay un archivo nuevo, subirlo a Supabase Storage
       if (avatarFile) {
+        setUploading(true)
         const supabase = createBrowserSupabaseClient()
 
         // Obtener sesión para user_id
@@ -92,6 +94,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
         if (!session || sessionError) {
           setErrorMsg('No autorizado. Por favor inicia sesión.')
           setLoading(false)
+          setUploading(false)
           return
         }
 
@@ -109,6 +112,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
         if (uploadError) {
           setErrorMsg(`Error al subir imagen: ${uploadError.message}`)
           setLoading(false)
+          setUploading(false)
           return
         }
 
@@ -118,6 +122,7 @@ export default function AccountForm({ initialData }: AccountFormProps) {
           .getPublicUrl(filePath)
 
         avatarUrl = urlData.publicUrl
+        setUploading(false)
       }
 
       const { error } = await updateProfile({
@@ -199,17 +204,26 @@ export default function AccountForm({ initialData }: AccountFormProps) {
               onChange={handleFileChange}
               className="text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">Máximo 2MB. Formatos: JPG, PNG</p>
+            <p className="text-xs text-gray-500 mt-1">Máximo 5MB. Formatos: JPG, PNG</p>
+            {uploading && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-brand">
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Estamos optimizando tu imagen...</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || uploading}
         className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        {loading ? 'Guardando...' : 'Guardar cambios'}
+        {uploading ? 'Subiendo imagen...' : loading ? 'Guardando...' : 'Guardar cambios'}
       </button>
 
       {errorMsg && (

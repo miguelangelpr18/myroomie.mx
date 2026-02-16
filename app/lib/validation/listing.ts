@@ -16,6 +16,9 @@ export type ListingInput = {
   price_mxn: number | null
   listing_type: 'room' | 'roommate'
   location_id?: string | null
+  listing_subtype?: 'solo_renta' | 'buscar_roomie'
+  lifestyle_prefs?: Record<string, unknown> | null
+  amenities?: string[]
 }
 
 export type ListingNormalized = ListingInput
@@ -41,6 +44,9 @@ export function validateListingInput(
   const zone = trim(input?.zone)
   const location_id = trim(input?.location_id)
   const listing_type = input?.listing_type
+  const listing_subtype = input?.listing_subtype
+  const lifestyle_prefs = input?.lifestyle_prefs
+  const amenities = input?.amenities
   const hasLocationId = location_id.length >= LOCATION_ID_MIN_LEN
 
   if (!title) return { ok: false, error: 'El título es requerido.' }
@@ -98,6 +104,9 @@ export function validateListingInput(
       price_mxn: priceFinal,
       listing_type,
       location_id: hasLocationId ? location_id : null,
+      listing_subtype: listing_subtype as 'solo_renta' | 'buscar_roomie' | undefined,
+      lifestyle_prefs: lifestyle_prefs as Record<string, unknown> | null | undefined,
+      amenities: Array.isArray(amenities) ? amenities : undefined,
     },
   }
 }

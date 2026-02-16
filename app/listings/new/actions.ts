@@ -12,6 +12,9 @@ export interface ListingData {
   price_mxn: number | null
   listing_type: 'room' | 'roommate'
   location_id?: string | null
+  listing_subtype?: 'solo_renta' | 'buscar_roomie'
+  lifestyle_prefs?: Record<string, unknown> | null
+  amenities?: string[]
 }
 
 export async function createListing(formData: ListingData) {
@@ -19,7 +22,7 @@ export async function createListing(formData: ListingData) {
   if (!validated.ok) {
     return { error: validated.error }
   }
-  const { title, description, city, zone, price_mxn, listing_type, location_id } = validated.data
+  const { title, description, city, zone, price_mxn, listing_type, location_id, listing_subtype, lifestyle_prefs, amenities } = validated.data
 
   const supabase = createServerSupabaseClient()
 
@@ -38,6 +41,9 @@ export async function createListing(formData: ListingData) {
     listing_type,
   }
   if (location_id) insertPayload.location_id = location_id
+  if (listing_subtype) insertPayload.listing_subtype = listing_subtype
+  if (lifestyle_prefs) insertPayload.lifestyle_prefs = lifestyle_prefs
+  if (amenities && amenities.length > 0) insertPayload.amenities = amenities
 
   const { data, error } = await supabase
     .from('listings')

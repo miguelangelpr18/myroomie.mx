@@ -165,7 +165,7 @@ export default function ZoneAutocompleteField({ locationId, value, onChange, err
           ))}
         </ul>
       )}
-      {!loading && !disabled && zones.length === 0 && value.trim().length >= 2 && !displayError && (
+      {!loading && !disabled && zones.length === 0 && value.trim().length >= 2 && (
         <p className="mt-1.5 text-xs text-neutral-500">
           No encontramos colonias oficiales, pero puedes escribir la tuya
         </p>
@@ -175,7 +175,7 @@ export default function ZoneAutocompleteField({ locationId, value, onChange, err
           {displayError}
         </p>
       )}
-      {!disabled && !displayError && !(!loading && zones.length === 0 && value.trim().length >= 2) && (
+      {!disabled && !displayError && (
         <p className="mt-1 text-sm text-muted-foreground">
           Indica la colonia o zona exacta del inmueble.
         </p>

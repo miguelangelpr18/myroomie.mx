@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { saveMyProfile, ProfileData } from './actions'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import LocationPickerField from './LocationPickerField'
+import ZoneAutocompleteField from './ZoneAutocompleteField'
 
 interface OnboardingFormProps {
   initialData: ProfileData | null
@@ -14,6 +15,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -48,9 +50,9 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
       return
     }
 
-    // Validar tamaño (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setErrorMsg('La imagen debe ser menor a 2MB')
+    // Validar tamaño (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('La imagen debe ser menor a 5MB')
       setAvatarFile(null)
       setAvatarPreview(null)
       if (fileInputRef.current) {
@@ -94,6 +96,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
 
       // Si hay un archivo nuevo, subirlo a Supabase Storage
       if (avatarFile) {
+        setUploading(true)
         const supabase = createBrowserSupabaseClient()
 
         // Obtener sesión para user_id
@@ -101,6 +104,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         if (!session || sessionError) {
           setErrorMsg('No autorizado. Por favor inicia sesión.')
           setLoading(false)
+          setUploading(false)
           return
         }
 
@@ -118,6 +122,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         if (uploadError) {
           setErrorMsg(`Error al subir imagen: ${uploadError.message}`)
           setLoading(false)
+          setUploading(false)
           return
         }
 
@@ -127,6 +132,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           .getPublicUrl(filePath)
 
         avatarUrl = urlData.publicUrl
+        setUploading(false)
       }
 
       const { error } = await saveMyProfile({
@@ -177,7 +183,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
             ...prev,
             location_id: payload.location_id,
             city: payload.city,
-            zone: payload.zone || prev.zone,
+            zone: '', // Limpiar zona al cambiar ciudad
           }))
           setErrorMsg('')
         }}
@@ -192,21 +198,13 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         error={errorMsg === 'Selecciona una ubicación de la lista' ? errorMsg : undefined}
       />
 
-      <div>
-        <label htmlFor="zone" className="block mb-2 font-medium">
-          Zona/Colonia (opcional)
-        </label>
-        <input
-          type="text"
-          id="zone"
-          name="zone"
+      <div className="mt-4">
+        <ZoneAutocompleteField
+          locationId={formData.location_id ?? null}
           value={formData.zone}
-          onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
-          maxLength={80}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
-          placeholder="Ej: Roma Norte, Polanco, etc."
+          onChange={(zone) => setFormData({ ...formData, zone })}
+          error={undefined}
         />
-        <p className="mt-1 text-sm text-gray-500">Opcional, hasta 80 caracteres</p>
       </div>
 
       <div>
@@ -222,8 +220,17 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
         <p className="mt-1 text-sm text-gray-500">
-          Solo imágenes, máximo 2MB
+          Solo imágenes, máximo 5MB
         </p>
+        {uploading && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-brand">
+            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Estamos optimizando tu imagen...</span>
+          </div>
+        )}
 
         {avatarPreview && (
           <div className="mt-4">
@@ -250,10 +257,10 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || uploading}
         className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        {loading ? 'Guardando...' : 'Guardar perfil'}
+        {uploading ? 'Subiendo imagen...' : loading ? 'Guardando...' : 'Guardar perfil'}
       </button>
     </form>
   )

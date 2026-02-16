@@ -28,6 +28,9 @@ export async function GET(request: NextRequest) {
   const q = typeof qRaw === 'string' ? qRaw.trim() : ''
   const locationId = typeof locationIdRaw === 'string' ? locationIdRaw.trim() : ''
 
+  // LOG 1: Request recibido
+  console.log('[ZONES API] Request:', { q, locationId })
+
   if (q.length < 2) {
     return NextResponse.json({ zones: [] }, { status: 200 })
   }
@@ -39,10 +42,12 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const mapboxToken = process.env.MAPBOX_TOKEN
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+  console.log('[ZONES API] Token detectado:', !!mapboxToken)
+  
   if (!mapboxToken) {
     return NextResponse.json(
-      { error: 'MAPBOX_TOKEN no configurado' },
+      { error: 'NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN no configurado' },
       { status: 500 }
     )
   }
@@ -66,6 +71,15 @@ export async function GET(request: NextRequest) {
     .eq('id', locationId)
     .single()
 
+  // LOG 2: Datos de DB
+  console.log('[ZONES API] DB location:', { 
+    found: !!location, 
+    city: location?.city, 
+    lat: location?.lat, 
+    lng: location?.lng,
+    error: locationError?.message 
+  })
+
   if (locationError || !location) {
     return NextResponse.json(
       { error: 'Ubicación no encontrada' },
@@ -75,17 +89,44 @@ export async function GET(request: NextRequest) {
 
   const lat = location.lat != null ? Number(location.lat) : NaN
   const lng = location.lng != null ? Number(location.lng) : NaN
-  if (Number.isNaN(lat) || Number.isNaN(lng)) {
-    return NextResponse.json(
-      { error: 'Ubicación incompleta' },
-      { status: 500 }
-    )
-  }
+  
+  // FALLBACK NACIONAL: Si no hay coordenadas, buscar en todo México
+  const useFallback = Number.isNaN(lat) || Number.isNaN(lng)
+  console.log('[ZONES API] Coordinates:', { lat, lng, useFallback })
 
   const locCityNorm = normalizeText(location.city ?? '')
 
+  let bbox = ''
+  let proximity = ''
+
+  if (!useFallback) {
+    // Calcular bounding box (~20km radius alrededor del punto)
+    const latOffset = 0.18
+    const lngOffset = 0.18 / Math.cos((lat * Math.PI) / 180)
+    bbox = [
+      lng - lngOffset,
+      lat - latOffset,
+      lng + lngOffset,
+      lat + latOffset,
+    ].join(',')
+    proximity = `${lng},${lat}`
+  }
+  // Si useFallback, bbox y proximity quedan vacíos (búsqueda nacional)
+
   try {
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?autocomplete=true&limit=12&types=neighborhood,locality,district,place&language=es&country=mx&proximity=${lng},${lat}&access_token=${mapboxToken}`
+    // Construir URL de Mapbox con o sin bbox
+    let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?autocomplete=true&limit=12&types=neighborhood,locality,district&language=es&country=mx`
+    
+    if (bbox) {
+      url += `&bbox=${bbox}`
+    }
+    if (proximity) {
+      url += `&proximity=${proximity}`
+    }
+    url += `&access_token=${mapboxToken}`
+
+    // LOG 3: URL de Mapbox
+    console.log('[ZONES API] Mapbox URL:', url.replace(mapboxToken, 'TOKEN_HIDDEN'))
 
     const res = await fetch(url)
 
@@ -106,41 +147,33 @@ export async function GET(request: NextRequest) {
     const data = (await res.json()) as { features?: Array<{ text?: string; place_type?: string[]; context?: Array<{ id?: string; text?: string }> }> }
     const features = Array.isArray(data?.features) ? data.features : []
 
+    // LOG 4: Resultados de Mapbox
+    console.log('[ZONES API] Mapbox results:', { 
+      total: features.length,
+      names: features.map(f => f.text).slice(0, 5) 
+    })
+
     const seen = new Set<string>()
     const zones: string[] = []
 
     for (const feature of features) {
       const nameTrim = (feature.text ?? '').trim()
       if (!nameTrim || nameTrim.length < 2) continue
+      
+      // Evitar sugerir la ciudad misma
       if (normalizeText(nameTrim) === locCityNorm) continue
 
       const pt = Array.isArray(feature.place_type) ? feature.place_type : []
-      const isPlaceOnly =
-        pt.includes('place') &&
-        !pt.includes('neighborhood') &&
-        !pt.includes('locality') &&
-        !pt.includes('district')
-      if (isPlaceOnly && q.trim().length < 3) continue
+      
+      // Solo permitir neighborhood, locality, district
+      const isValidType = 
+        pt.includes('neighborhood') || 
+        pt.includes('locality') || 
+        pt.includes('district')
+      if (!isValidType) continue
 
-      const context = Array.isArray(feature.context) ? feature.context : []
-      let featureCity: string | null = null
-      for (const ctx of context) {
-        const id = ctx?.id ?? ''
-        if (String(id).startsWith('place.')) {
-          featureCity = typeof ctx.text === 'string' ? ctx.text.trim() : null
-          break
-        }
-      }
-
-      const featCityNorm = featureCity ? normalizeText(featureCity) : ''
-      let cityOk = true
-      if (featCityNorm && locCityNorm) {
-        cityOk =
-          featCityNorm === locCityNorm ||
-          featCityNorm.includes(locCityNorm) ||
-          locCityNorm.includes(featCityNorm)
-      }
-      if (!cityOk) continue
+      // SIN FILTRO DE CIUDAD - Confiar 100% en Mapbox y bbox
+      // Si Mapbox lo devuelve y está en el área (bbox), mostrarlo
 
       const key = nameTrim.toLowerCase()
       if (seen.has(key)) continue
@@ -148,8 +181,12 @@ export async function GET(request: NextRequest) {
       zones.push(nameTrim)
     }
 
+    // LOG 5: Resultados finales
+    console.log('[ZONES API] Final zones:', { count: zones.length, zones: zones.slice(0, 5) })
+
     return NextResponse.json({ zones })
-  } catch {
+  } catch (err) {
+    console.error('[ZONES API] Error:', err)
     return NextResponse.json(
       { error: 'No se pudieron cargar zonas.' },
       { status: 500 }
