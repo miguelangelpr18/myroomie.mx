@@ -5,6 +5,11 @@ import { Card, CardHeader, CardContent } from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Mi Panel',
+}
 
 export default async function DashboardPage() {
   await requireAuthOrRedirect()
@@ -38,13 +43,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-16 max-w-6xl">
-      <h1 className="text-2xl font-semibold tracking-tight mb-8">Dashboard</h1>
+      <h1 className="text-2xl font-semibold tracking-tight mb-8">Mi Panel</h1>
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         {/* Card: Your profile */}
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-medium mb-4">Your profile</h2>
+            <h2 className="text-lg font-medium mb-4">Tu perfil</h2>
           </CardHeader>
           <CardContent>
           
@@ -64,7 +69,7 @@ export default async function DashboardPage() {
                 )}
                 <div>
                   <p className="font-medium text-lg">{profile.display_name}</p>
-                  <Badge variant="subtle" className="mt-1">Active</Badge>
+                  <Badge variant="subtle" className="mt-1">Activo</Badge>
                 </div>
               </div>
               {isFeatured && profile.featured_until && (
@@ -114,7 +119,7 @@ export default async function DashboardPage() {
         {/* Card: Your listings */}
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-medium mb-4">Your listings</h2>
+            <h2 className="text-lg font-medium mb-4">Tus anuncios</h2>
           </CardHeader>
           <CardContent>
           {!listings || listings.length === 0 ? (
@@ -181,37 +186,37 @@ export default async function DashboardPage() {
       {/* Card: Verifications */}
       <Card className="mt-4 md:mt-6">
         <CardHeader>
-          <h2 className="text-lg font-medium mb-4">Verifications</h2>
+          <h2 className="text-lg font-medium mb-4">Verificaciones</h2>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
               <div>
-                <p className="font-medium text-sm">Verify phone</p>
-                <p className="text-xs text-neutral-500">Coming soon</p>
+                <p className="font-medium text-sm">Verificar teléfono</p>
+                <p className="text-xs text-neutral-500">Próximamente</p>
               </div>
-              <Button disabled variant="secondary" size="sm">Verify</Button>
+              <Button disabled variant="secondary" size="sm">Verificar</Button>
             </div>
             <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
               <div>
-                <p className="font-medium text-sm">Verify ID</p>
-                <p className="text-xs text-neutral-500">Coming soon</p>
+                <p className="font-medium text-sm">Verificar identificación</p>
+                <p className="text-xs text-neutral-500">Próximamente</p>
               </div>
-              <Button disabled variant="secondary" size="sm">Verify</Button>
+              <Button disabled variant="secondary" size="sm">Verificar</Button>
             </div>
             <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
               <div>
-                <p className="font-medium text-sm">Social media</p>
-                <p className="text-xs text-neutral-500">Coming soon</p>
+                <p className="font-medium text-sm">Redes sociales</p>
+                <p className="text-xs text-neutral-500">Próximamente</p>
               </div>
-              <Button disabled variant="secondary" size="sm">Verify</Button>
+              <Button disabled variant="secondary" size="sm">Verificar</Button>
             </div>
             <div className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg opacity-50">
               <div>
-                <p className="font-medium text-sm">Credit check</p>
-                <p className="text-xs text-neutral-500">Coming soon</p>
+                <p className="font-medium text-sm">Reporte de crédito</p>
+                <p className="text-xs text-neutral-500">Próximamente</p>
               </div>
-              <Button disabled variant="secondary" size="sm">Verify</Button>
+              <Button disabled variant="secondary" size="sm">Verificar</Button>
             </div>
           </div>
         </CardContent>

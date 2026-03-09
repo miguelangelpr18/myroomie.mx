@@ -140,6 +140,12 @@ export default function Login() {
           Regístrate
         </a>
       </div>
+
+      <div className="mt-3 text-center">
+        <a href="/forgot-password" className="text-sm text-brand hover:underline">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
     </div>
   )
 }

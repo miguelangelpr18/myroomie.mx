@@ -5,6 +5,42 @@ import ListingImage from '../../components/listings/ListingImage'
 import { getOrCreateListingThread } from './actions'
 import ContactForm from './ContactForm'
 import SaveButton from './SaveButton'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string }
+}): Promise<Metadata> {
+  const supabase = createServerSupabaseClient()
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('title, city, description, image_urls')
+    .eq('id', params.id)
+    .single()
+
+  if (!listing) {
+    return { title: 'Anuncio no encontrado' }
+  }
+
+  const title = `${listing.title} en ${listing.city}`
+  const description = listing.description?.slice(0, 160) ?? `Habitación en renta en ${listing.city} — MyRoomie.mx`
+  const imageUrl = Array.isArray(listing.image_urls) && listing.image_urls[0]
+    ? listing.image_urls[0]
+    : undefined
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: imageUrl ? [{ url: imageUrl }] : [],
+      url: `https://www.myroomie.mx/listings/${params.id}`,
+      type: 'website',
+    },
+  }
+}
 
 export default async function ListingDetailPage({
   params,

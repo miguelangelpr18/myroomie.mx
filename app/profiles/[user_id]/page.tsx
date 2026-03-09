@@ -4,6 +4,38 @@ import Link from 'next/link'
 import LifestyleBadges from '../../components/LifestyleBadges'
 import ContactButton from './ContactButton'
 import TrustPanel from '../../components/TrustPanel'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { user_id: string }
+}): Promise<Metadata> {
+  const supabase = createServerSupabaseClient()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name, city, bio, avatar_url')
+    .eq('user_id', params.user_id)
+    .single()
+
+  if (!profile) {
+    return { title: 'Perfil no encontrado' }
+  }
+
+  const title = `Perfil de ${profile.display_name} en ${profile.city}`
+  const description = profile.bio?.slice(0, 160) ?? 'Busca roomie en MyRoomie.mx'
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: profile.avatar_url ? [{ url: profile.avatar_url }] : [],
+      type: 'profile',
+    },
+  }
+}
 
 export default async function ProfilePage({
   params,

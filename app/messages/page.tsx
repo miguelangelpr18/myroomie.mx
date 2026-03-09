@@ -4,6 +4,11 @@ import Link from 'next/link'
 import EmptyState from '../components/ui/EmptyState'
 import ThreadPanel from './ThreadPanel'
 import InboxSearch from './InboxSearch'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Mensajes',
+}
 
 interface MessagesPageProps {
   searchParams?: { thread?: string }

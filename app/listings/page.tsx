@@ -5,6 +5,12 @@ import ListingCard from '../components/listings/ListingCard'
 import ListingsFilterChips from './ListingsFilterChips'
 import ListingsResultHeader from './ListingsResultHeader'
 import CanonicalLocationParams from '../components/CanonicalLocationParams'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Cuartos en Renta',
+  description: 'Busca cuartos y habitaciones en renta en México. Filtra por ciudad, precio y tipo de espacio.',
+}
 
 interface ListingsPageProps {
   searchParams: { [key: string]: string | string[] | undefined }

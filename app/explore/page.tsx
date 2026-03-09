@@ -5,6 +5,12 @@ import RoomieCard from '../components/roomies/RoomieCard'
 import FilterChips from './FilterChips'
 import ResultHeader from './ResultHeader'
 import CanonicalLocationParams from '../components/CanonicalLocationParams'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Explorar Roomies',
+  description: 'Encuentra roommates compatibles en México. Filtra por ciudad, presupuesto y estilo de vida.',
+}
 
 interface ExplorePageProps {
   searchParams: { [key: string]: string | string[] | undefined }

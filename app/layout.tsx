@@ -3,8 +3,21 @@ import './globals.css'
 import Header from './Header'
 
 export const metadata: Metadata = {
-  title: 'myroomie.mx',
-  description: 'Encuentra roomie/depa con confianza',
+  title: {
+    default: 'MyRoomie.mx — Encuentra tu roomie ideal',
+    template: '%s — MyRoomie.mx',
+  },
+  description: 'La plataforma para encontrar roommates y habitaciones en renta en México.',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    siteName: 'MyRoomie.mx',
+    locale: 'es_MX',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({

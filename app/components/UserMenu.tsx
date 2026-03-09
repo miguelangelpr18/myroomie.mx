@@ -81,35 +81,35 @@ export default function UserMenu({ displayName, avatarUrl, userId, initial }: Us
               onClick={() => setIsOpen(false)}
               className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
             >
-              Dashboard
+              Panel
             </Link>
             <Link
               href="/messages"
               onClick={() => setIsOpen(false)}
               className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
             >
-              Inbox
+              Mensajes
             </Link>
             <Link
               href="/shortlist"
               onClick={() => setIsOpen(false)}
               className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
             >
-              Shortlist
+              Guardados
             </Link>
             <Link
               href="/matches"
               onClick={() => setIsOpen(false)}
               className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
             >
-              Matches
+              Compatibles
             </Link>
             <Link
               href="/account"
               onClick={() => setIsOpen(false)}
               className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
             >
-              Account
+              Mi cuenta
             </Link>
             <div className="my-1 border-t border-neutral-200"></div>
             <button
@@ -117,7 +117,7 @@ export default function UserMenu({ displayName, avatarUrl, userId, initial }: Us
               disabled={loading}
               className="w-full text-left rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Saliendo...' : 'Log out'}
+              {loading ? 'Saliendo...' : 'Cerrar sesión'}
             </button>
           </div>
         </div>
