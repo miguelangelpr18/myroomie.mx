@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Card, CardHeader, CardContent } from '../ui/Card'
 import Badge from '../ui/Badge'
 import ListingImage from './ListingImage'
+import { formatDate } from '@/lib/utils/formatDate'
 
 interface ListingCardProps {
   listing: {
@@ -69,7 +70,7 @@ export default function ListingCard({ listing, href }: ListingCardProps) {
         <CardContent className="mt-auto">
           <p className="text-sm text-neutral-700 line-clamp-2 mb-3">{listing.description}</p>
           <p className="text-xs text-neutral-400">
-            {new Date(listing.created_at).toLocaleDateString('es-MX')}
+            {formatDate(listing.created_at)}
           </p>
         </CardContent>
       </Card>

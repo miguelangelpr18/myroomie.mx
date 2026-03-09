@@ -7,30 +7,41 @@ export default async function HomeFeaturedListings() {
   const supabase = createServerSupabaseClient()
   const now = new Date().toISOString()
 
-  // Solo traer destacados: featured_until IS NOT NULL AND featured_until > now()
-  const { data: listings, error } = await supabase
+  // 1. Intentar destacados: featured_until > now
+  const { data: featured, error } = await supabase
     .from('listings')
     .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until, image_urls')
     .gt('featured_until', now)
     .order('featured_until', { ascending: false })
     .limit(12)
 
-  // Opción A: Ocultar sección completa si no hay destacados
-  if (error || !listings || listings.length === 0) {
-    return null
+  let listings = featured
+  let isFallback = false
+
+  // 2. Fallback: si no hay destacados, traer recientes (activos)
+  if (error || !featured || featured.length === 0) {
+    const { data: recent } = await supabase
+      .from('listings')
+      .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until, image_urls')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(6)
+    listings = recent
+    isFallback = true
   }
+
+  if (!listings || listings.length === 0) return null
 
   return (
     <section className="mt-12">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        {/* Header */}
         <div className="flex justify-between items-end gap-4 mb-6">
           <div>
             <h2 className="text-lg md:text-xl font-semibold tracking-[-0.01em] text-neutral-900">
-              Anuncios destacados
+              {isFallback ? 'Anuncios recientes' : 'Anuncios destacados'}
             </h2>
             <p className="text-sm text-neutral-600 mt-1">
-              Cuartos, depas y casas promovidos
+              {isFallback ? 'Espacios disponibles ahora mismo' : 'Cuartos, depas y casas promovidos'}
             </p>
           </div>
           <Link

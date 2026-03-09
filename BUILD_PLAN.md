@@ -6,6 +6,34 @@
 
 ---
 
+## AUDITORÍA DE PRODUCCIÓN (feb 2026)
+
+**Origen:** Análisis del sitio en vivo https://www.myroomie.mx/, codebase, Supabase MCP y métricas de UX/UI.
+
+### Estado actual post-Sprint 1–3
+
+| Área | Estado | Detalles |
+|------|--------|----------|
+| Sprint 1 | ✅ Mayormente | Traducciones, favicon, metadata, Seguridad, forgot-password, colores brand |
+| Sprint 2 | ✅ Mayormente | Guardados, editar/eliminar anuncio, editar perfil, carousel, amenidades, filtro ciudad, paginación, owner actions |
+| Sprint 3 | ✅ Mayormente | Landing mejorada, footer, QuickSearchDropdown, Login Google, Reportar |
+| Datos | ⚠️ Pendiente | 1 listing con city/zone basura aún visible |
+| UX/UI | ⚠️ Detalles | Ver sección UX/UI abajo |
+| Optimización | ⚠️ Pendiente | Ver sección Optimización |
+| SEO | ⚠️ Pendiente | Sin sitemap ni robots.txt |
+
+### Hallazgos críticos de la auditoría
+
+1. **Dato basura visible:** Listing `cuarto` (id `e31f1d22-...`) con `city: "nfkjvnjdsanfkjdasnfk"`, `zone: "jgnfsjgnksnksln"` — eliminar o corregir.
+2. **Footer links rotos:** Footer apunta a `/terms` y `/privacy`; las rutas reales son `/legal/terms` y `/legal/privacy`.
+3. **Landing vacía si no hay destacados:** `HomeFeaturedListings` y `HomeFeaturedProfiles` retornan `null` cuando no hay `featured_until`. La landing muestra headers "Anuncios recientes" y "Roomies disponibles" pero no contenido.
+4. **Formato de fecha inconsistente:** `ListingCard` usa `toLocaleDateString('es-MX')` → "21/1/2026"; el detalle usa `formatDate()` → "21 ene 2026".
+5. **Imágenes sin optimizar:** `ListingImage` usa `<img>` directo; no usa `next/image` para Supabase Storage.
+6. **GlobalSearchBar no visible:** El Header usa `QuickSearchDropdown`; `GlobalSearchBar` con filtros avanzados no está expuesto en la UI.
+7. **Sin sitemap ni robots.txt:** Falta `app/sitemap.ts` y `app/robots.ts`.
+
+---
+
 ## CONTEXTO DEL PROYECTO
 
 MyRoomie.mx es una plataforma para encontrar roommates y habitaciones en renta en México. Alternativa moderna a grupos de Facebook y sitios con UX vieja. Enfocada en UX startup, matching por estilo de vida y búsqueda por ubicación.
@@ -34,13 +62,18 @@ MyRoomie.mx es una plataforma para encontrar roommates y habitaciones en renta e
 | `/dashboard` | ✅ Funciona | Panel del usuario autenticado |
 | `/messages` | ✅ Funciona | Chat interno (lista + conversación) |
 | `/account` | ✅ Funciona | Configuración de cuenta |
-| `/shortlist` | ❌ Placeholder | Solo muestra "Coming soon" |
-| `/matches` | ❌ Placeholder | Solo muestra "Coming soon" |
+| `/shortlist` | ✅ Redirect | Redirige a `/saved` |
+| `/saved` | ✅ Funciona | Listings guardados por el usuario |
+| `/matches` | ⚠️ Placeholder | "Próximamente" |
 | `/promote/profile` | ✅ Funciona | Planes de promoción de perfil |
 | `/promote/listing/[id]` | ✅ Funciona | Planes de promoción de anuncio |
 | `/legal/terms` | ✅ Funciona | Términos y condiciones |
 | `/legal/privacy` | ✅ Funciona | Política de privacidad |
-| `/security` | ❌ Placeholder | Solo dice "(placeholder)" |
+| `/security` | ✅ Funciona | Contenido real de seguridad |
+| `/forgot-password` | ✅ Funciona | Recuperar contraseña |
+| `/reset-password` | ✅ Funciona | Nueva contraseña tras link de email |
+| `/listings/[id]/edit` | ✅ Funciona | Editar anuncio propio |
+| `/profiles/edit` | ✅ Funciona | Editar perfil roomie |
 
 ### Componentes y funcionalidades ya implementadas
 
@@ -62,11 +95,12 @@ MyRoomie.mx es una plataforma para encontrar roommates y habitaciones en renta e
 
 Estos bloquean que la app se vea profesional. Resolver ANTES de cualquier feature nueva.
 
-### P0-1: Datos de prueba en producción
-**Problema:** Hay listings con nombres basura ("fdsjbfnabnb", "adsfadfkdnfjnfjd") y precios irreales ($7,723,762 MXN/mes) visibles en producción.  
-**Solución:** Ejecutar queries de limpieza en Supabase para eliminar registros de prueba. Identificarlos por precios > 100,000 o títulos con patrones aleatorios.
+### P0-1: Datos de prueba en producción ✅ (parcial)
+**Estado:** Limpieza inicial hecha (precios > 100k, títulos basura).  
+**Pendiente:** Listing con `city: "nfkjvnjdsanfkjdasnfk"`, `zone: "jgnfsjgnksnksln"` (id `e31f1d22-c6d8-44ae-8d75-7759e04f5106`) aún visible.  
+**Solución:** `DELETE FROM listings WHERE id = 'e31f1d22-c6d8-44ae-8d75-7759e04f5106'` o regex más amplia para city/zone.
 
-### P0-2: Favicon faltante (404)
+### P0-2: Favicon faltante (404) ✅
 **Problema:** `GET /favicon.ico` retorna 404. El browser lo muestra en consola como error.  
 **Solución:** Agregar `/public/favicon.ico`, `/public/favicon.svg` y meta tags en `app/layout.tsx`:
 ```tsx
@@ -78,13 +112,11 @@ icons: {
 }
 ```
 
-### P0-3: Shortlist y Matches en el menú con "Coming soon"
-**Problema:** Dos rutas del menú principal llevan a páginas vacías.  
-**Solución:** Opción A (inmediata): quitar del menú. Opción B (recomendada): implementar Guardados funcional (ver Sprint 2).
+### P0-3: Shortlist y Matches en el menú ✅
+**Estado:** Shortlist → redirect a `/saved`. Menú apunta a Guardados (`/saved`). Matches sigue como placeholder "Próximamente".
 
-### P0-4: Página de Seguridad con texto "(placeholder)"
-**Problema:** `/security` está en el footer de TODAS las páginas y muestra contenido placeholder.  
-**Solución:** Escribir contenido real con consejos de seguridad para conocer roomies.
+### P0-4: Página de Seguridad ✅
+**Estado:** Contenido real implementado.
 
 ### P0-5: Mezcla sistemática inglés/español
 **Problema:** Más de 20 strings en inglés en una app completamente en español.  
@@ -111,13 +143,19 @@ icons: {
 | `/onboarding/step-1` | Display Name | Nombre de perfil |
 | `/profiles/[id]` | Messages | Mensajes |
 
-### P0-6: Sin "Olvidé mi contraseña"
-**Problema:** No hay forma de recuperar acceso.  
-**Solución:** Agregar link en `/login` y crear página `/forgot-password` usando `supabase.auth.resetPasswordForEmail()`.
+### P0-6: Sin "Olvidé mi contraseña" ✅
+**Estado:** Link en login, `/forgot-password` y `/reset-password` implementados.
 
-### P0-7: Title de página siempre "myroomie.mx"
-**Problema:** Todas las páginas tienen el mismo `<title>`, malo para SEO y UX.  
-**Solución:** Implementar `generateMetadata()` en cada page.tsx con títulos dinámicos.
+### P0-7: Title de página ✅
+**Estado:** `generateMetadata` en páginas principales; títulos dinámicos en listings y profiles.
+
+### P0-8: Footer links rotos (NUEVO)
+**Problema:** Footer apunta a `/terms` y `/privacy`; rutas reales son `/legal/terms` y `/legal/privacy`.  
+**Solución:** Cambiar en `app/components/Footer.tsx`: `href="/terms"` → `href="/legal/terms"`, `href="/privacy"` → `href="/legal/privacy"`.
+
+### P0-9: Landing vacía sin destacados (NUEVO)
+**Problema:** `HomeFeaturedListings` y `HomeFeaturedProfiles` retornan `null` cuando no hay featured; secciones "Anuncios recientes" y "Roomies disponibles" quedan vacías.  
+**Solución:** En cada componente, si `featured` está vacío: hacer segunda query sin filtro `featured_until`, ordenar por `created_at DESC`, limit 4. Mostrar "Recientes" en vez de "Destacados" cuando se use fallback.
 
 ---
 
@@ -528,6 +566,132 @@ Notificaciones a implementar:
 
 ---
 
+## DETALLE UX/UI (auditoría producción)
+
+### Componentes y flujos
+
+| Elemento | Estado | Detalle |
+|----------|--------|---------|
+| Header | ✅ | Sticky, QuickSearchDropdown, UserMenu, links traducidos |
+| QuickSearchDropdown | ✅ | Debounce 300ms, resultados Anuncios/Roomies, navegación directa |
+| GlobalSearchBar | ⚠️ | No visible en Header; filtros avanzados (location, precio) solo en páginas con popover |
+| Footer | ⚠️ | Links `/terms` y `/privacy` rotos → deben ser `/legal/terms`, `/legal/privacy` |
+| ListingCard | ⚠️ | Fecha con `toLocaleDateString` ("21/1/2026") — inconsistente con `formatDate` ("21 ene 2026") |
+| ListingGallery | ✅ | Carousel, lightbox, thumbnails, teclado |
+| ListingImage | ⚠️ | Usa `<img>`; no `next/image` — sin optimización automática |
+| CityPills | ✅ | Todas, Monterrey, CDMX, Guadalajara en explore y listings |
+| Pagination | ✅ | Prev/next, números, `.range()` en Supabase |
+| OwnerActions | ✅ | Editar, Marcar rentado, Promocionar, Eliminar con modal |
+| ReportButton | ✅ | Modal razones, envía a tabla `reports` |
+
+### Inconsistencias visuales
+
+- **Fechas:** Unificar en `formatDate()` en ListingCard, mensajes, dashboard.
+- **Placeholder "Sin foto":** Algunos perfiles muestran "Sin foto" en explore — asegurar alt text y fallback consistente.
+- **Loading states:** `/listings` muestra "Cargando anuncios..." brevemente — considerar skeleton cards en lugar de texto.
+- **Redes sociales:** Footer enlaza a `instagram.com` y `tiktok.com` genéricos — actualizar a perfiles reales de MyRoomie.mx cuando existan.
+
+### Accesibilidad
+
+- `aria-label` en iconos (Mensajes, Publicar).
+- Focus visible en botones (`focus-visible:ring-brand/30`).
+- Modal de eliminar con escape y focus trap — verificar.
+
+### Mobile
+
+- Header con QuickSearch debajo en móvil.
+- Carousel con flechas; lightbox fullscreen.
+- Footer en grid responsivo.
+
+---
+
+## OPTIMIZACIÓN (checklist producción)
+
+### Imágenes
+
+- [ ] Configurar `next.config.js` con `images.domains` para `*.supabase.co`.
+- [ ] Evaluar `next/image` para ListingImage (prioridad alta en cards y galería).
+- [ ] Comprobar si Supabase Storage ofrece transformaciones (resize) vía URL params.
+
+### Next.js
+
+- [ ] `next.config.js` vacío — considerar `compiler.removeConsole` en producción.
+- [ ] Verificar que no haya `console.log` en código de producción.
+- [ ] Revisar bundles con `next/build` — code splitting de rutas dinámicas.
+
+### Supabase
+
+- [ ] Índices: `listings(city)`, `listings(created_at)`, `profiles(city)`, `listings(is_active)`.
+- [ ] RLS policies revisadas para todas las tablas.
+- [ ] Rate limiting en `/api/geo/zones` y `/api/search` (si aplica).
+
+### Performance
+
+- [ ] Lazy load de imágenes (`loading="lazy"` ya en ListingImage).
+- [ ] Prefetch de links críticos (explore, listings).
+- [ ] Evitar waterfalls: queries paralelas donde sea posible.
+
+---
+
+## BASE DE DATOS — Esquema actual (Supabase)
+
+**Tablas:** `profiles`, `listings`, `threads`, `messages`, `listing_saves`, `locations`, `reports`
+
+### listings
+
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| id, user_id | UUID | PK, FK auth.users |
+| listing_type | text | room \| roommate |
+| title, description, city, zone | text | Requeridos |
+| price_mxn | integer | Nullable |
+| image_urls | ARRAY | Requerido |
+| location_id | uuid | FK locations, nullable |
+| amenities | ARRAY | Nullable |
+| lifestyle_prefs | jsonb | Nullable |
+| listing_subtype | text | solo_renta \| buscar_roomie |
+| is_active | boolean | Default true |
+| featured_until | timestamptz | Nullable |
+
+**Faltan para mapa:** `lat`, `lng` — se pueden obtener vía `location_id` → `locations.lat`, `locations.lng`.
+
+### profiles
+
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| user_id | UUID | PK, FK auth.users |
+| display_name, city, zone | text | Requeridos |
+| avatar_url | text | Nullable |
+| bio | text | Nullable |
+| budget_min, budget_max | numeric | Nullable |
+| location_id | uuid | FK locations |
+| pets, smoker, parties | boolean | Nullable |
+| cleanliness | smallint | Nullable |
+| schedule | text | Nullable |
+| featured_until | timestamptz | Nullable |
+
+### Índices recomendados
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_listings_city ON listings(city);
+CREATE INDEX IF NOT EXISTS idx_listings_created_at ON listings(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_listings_is_active ON listings(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_profiles_city ON profiles(city);
+CREATE INDEX IF NOT EXISTS idx_listing_saves_user ON listing_saves(user_id);
+```
+
+---
+
+## SEO — Pendientes para producción
+
+- [ ] **`app/sitemap.ts`** — Sitemap dinámico con `/`, `/explore`, `/listings`, `/listings/[id]`, `/profiles/[id]`.
+- [ ] **`app/robots.ts`** — Permitir crawlers, apuntar a sitemap.
+- [ ] **JSON-LD** — Schema `ListingPage` en detalle de listing para rich snippets.
+- [ ] **Canonical URLs** — En páginas con query params (listings, explore).
+- [ ] **Meta description** — En todas las páginas; ya en layout base.
+
+---
+
 ## ESQUEMA DE BASE DE DATOS (referencia)
 
 ```sql
@@ -685,7 +849,22 @@ Cuando trabajes en este proyecto, sigue estas reglas:
 8. **Pensar en mobile-first** para todos los nuevos componentes
 9. **No agregar comentarios obvios** en el código — solo los que explican lógica no evidente
 10. **Priorizar UX sobre features** — menos cosas pero que funcionen perfecto
+11. **Usar Supabase MCP** cuando esté disponible para consultas, migraciones y limpieza de datos (proyecto `urispaxtwquqoqsiyedf`)
 
 ---
 
-*MyRoomie.mx Build Plan v1.0 — Generado el 8 de marzo de 2026*
+## ORDEN DE EJECUCIÓN PARA CIERRE PRODUCCIÓN
+
+Prioridad inmediata (P0 restantes):
+
+1. **P0-1** — Eliminar listing con city/zone basura (Supabase MCP o SQL)
+2. **P0-8** — Corregir links del Footer (`/legal/terms`, `/legal/privacy`)
+3. **P0-9** — Fallback en HomeFeaturedListings/HomeFeaturedProfiles cuando no hay destacados
+4. **UX** — Unificar fechas con `formatDate()` en ListingCard
+5. **SEO** — Crear `app/sitemap.ts` y `app/robots.ts`
+6. **Optimización** — Configurar `images.domains` en next.config.js para Supabase
+7. **DB** — Índices recomendados para listings y profiles
+
+---
+
+*MyRoomie.mx Build Plan v1.1 — Actualizado tras auditoría de producción (feb 2026)*
