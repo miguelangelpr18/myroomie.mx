@@ -2,6 +2,12 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { requireAuthOrRedirect } from '@/lib/requireAuth'
 import EmptyState from '../components/ui/EmptyState'
 import ListingCard from '../components/listings/ListingCard'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Guardados',
+  description: 'Tus anuncios guardados para comparar y contactar después.',
+}
 
 export default async function SavedPage() {
   // Requerir autenticación (wishlist es privada)

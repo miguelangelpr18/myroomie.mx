@@ -1,11 +1,14 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import LifestyleBadges from '../../components/LifestyleBadges'
-import ListingImage from '../../components/listings/ListingImage'
+import ListingGallery from '../../components/listings/ListingGallery'
 import { getOrCreateListingThread } from './actions'
 import ContactForm from './ContactForm'
 import SaveButton from './SaveButton'
+import OwnerActions from './OwnerActions'
+import ReportButton from '../../components/ReportButton'
 import type { Metadata } from 'next'
+import { formatDate } from '@/lib/utils/formatDate'
 
 export async function generateMetadata({
   params,
@@ -120,7 +123,7 @@ export default async function ListingDetailPage({
           href="/listings"
           className="text-brand hover:underline text-sm"
         >
-          ← Volver a listings
+          ← Volver a anuncios
         </Link>
       </div>
 
@@ -153,99 +156,16 @@ export default async function ListingDetailPage({
             </p>
           )}
           <p className="text-sm text-neutral-500">
-            Publicado el {new Date(listing.created_at).toLocaleDateString('es-MX', {
-              year: 'numeric',
-              month: 'numeric',
-              day: 'numeric'
-            })}
+            Publicado el {formatDate(listing.created_at)}
           </p>
         </div>
       </div>
 
-      {/* Galería de imágenes */}
-      {listing.image_urls && listing.image_urls.length > 0 ? (
-        <div className="mb-6">
-          {/* Desktop: grid principal + thumbs lateral */}
-          <div className="hidden md:grid md:grid-cols-4 gap-3">
-            {/* Imagen principal */}
-            <div className="md:col-span-3 aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
-              <ListingImage
-                src={listing.image_urls[0]}
-                alt={listing.title}
-                className="h-full w-full object-cover"
-                wrapperClassName="h-full"
-              />
-            </div>
-            {/* Thumbnails */}
-            <div className="md:col-span-1 grid grid-cols-1 gap-3">
-              {((listing.image_urls as string[] | null) ?? []).slice(1, 4).map((url: string, index: number) => (
-                <div key={index} className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
-                  <ListingImage
-                    src={url}
-                    alt={`${listing.title} - Foto ${index + 2}`}
-                    className="h-full w-full object-cover"
-                    wrapperClassName="h-full"
-                  />
-                </div>
-              ))}
-              {listing.image_urls.length > 4 && (
-                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
-                  <ListingImage
-                    src={listing.image_urls[4]}
-                    alt={`${listing.title} - Foto 5`}
-                    className="h-full w-full object-cover opacity-60"
-                    wrapperClassName="h-full"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/40">
-                    <span className="text-white text-sm font-medium">
-                      +{listing.image_urls.length - 4} fotos
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          {/* Mobile: principal + thumbs en grid debajo */}
-          <div className="grid md:hidden grid-cols-1 gap-3">
-            {/* Imagen principal */}
-            <div className="aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
-              <ListingImage
-                src={listing.image_urls[0]}
-                alt={listing.title}
-                className="h-full w-full object-cover"
-                wrapperClassName="h-full"
-              />
-            </div>
-            {/* Thumbnails en grid 2 columnas */}
-            {listing.image_urls.length > 1 && (
-              <div className="grid grid-cols-2 gap-3">
-                {((listing.image_urls as string[] | null) ?? []).slice(1, 5).map((url: string, index: number) => (
-                  <div key={index} className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
-                    <ListingImage
-                      src={url}
-                      alt={`${listing.title} - Foto ${index + 2}`}
-                      className="h-full w-full object-cover"
-                      wrapperClassName="h-full"
-                    />
-                    {index === 3 && listing.image_urls.length > 5 && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/40">
-                        <span className="text-white text-sm font-medium">
-                          +{listing.image_urls.length - 5} fotos
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="mb-6 aspect-[16/10] w-full rounded-xl border border-neutral-200 bg-neutral-100 flex flex-col items-center justify-center text-neutral-400">
-          <div className="text-4xl mb-2">🖼️</div>
-          <p className="text-sm text-neutral-500">Este anuncio aún no tiene fotos</p>
-        </div>
-      )}
+      {/* Galería de imágenes con carousel y lightbox */}
+      <ListingGallery
+        photos={Array.isArray(listing.image_urls) ? listing.image_urls : []}
+        title={listing.title}
+      />
 
       {/* Layout: main + side panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -257,6 +177,28 @@ export default async function ListingDetailPage({
               <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
             </div>
           </div>
+
+          {/* Amenidades */}
+          {Array.isArray(listing.amenities) && listing.amenities.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4">Lo que incluye este espacio</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {(listing.amenities as string[]).map((amenity: string) => (
+                  <div
+                    key={amenity}
+                    className="flex items-center gap-2 p-3 rounded-xl border border-neutral-200 bg-neutral-50"
+                  >
+                    <span className="text-brand">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-neutral-700">{amenity}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Side panel */}
@@ -264,28 +206,37 @@ export default async function ListingDetailPage({
           <div className="bg-white p-6 rounded-lg shadow lg:sticky lg:top-6">
             {/* CTA Stack */}
             <div className="space-y-3 mb-6">
-              {/* Botón Primary: Contactar */}
-              <ContactForm 
-                listingId={listing.id}
-                isOwner={isOwner}
-                hasSession={!!session}
-              />
-              
-              {/* Botón Secondary: Guardar */}
-              {!isOwner && (
-                <SaveButton
+              {isOwner ? (
+                <OwnerActions
                   listingId={listing.id}
-                  isSaved={isSaved}
-                  hasSession={!!session}
+                  isActive={listing.is_active !== false}
                 />
+              ) : (
+                <>
+                  {/* Botón Primary: Contactar */}
+                  <ContactForm 
+                    listingId={listing.id}
+                    isOwner={isOwner}
+                    hasSession={!!session}
+                  />
+                  
+                  {/* Botón Secondary: Guardar */}
+                  <SaveButton
+                    listingId={listing.id}
+                    isSaved={isSaved}
+                    hasSession={!!session}
+                  />
+                </>
               )}
             </div>
 
-            {/* Microcopy de confianza */}
+            {/* Microcopy de confianza (solo para no-owner) */}
+            {!isOwner && (
             <div className="pt-4 border-t space-y-1 mb-6">
               <p className="text-xs text-neutral-600">Respuesta típica: &lt; 1 hora</p>
               <p className="text-xs text-neutral-600">Verificación: en proceso</p>
             </div>
+            )}
 
             {/* Publicado por */}
             <div>
@@ -338,6 +289,13 @@ export default async function ListingDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Reportar */}
+      {!isOwner && (
+        <div className="mt-6 flex justify-center">
+          <ReportButton reportedType="listing" reportedId={listing.id} />
+        </div>
+      )}
     </div>
   )
 }

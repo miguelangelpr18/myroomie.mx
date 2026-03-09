@@ -5,7 +5,11 @@ import RoomieCard from '../components/roomies/RoomieCard'
 import FilterChips from './FilterChips'
 import ResultHeader from './ResultHeader'
 import CanonicalLocationParams from '../components/CanonicalLocationParams'
+import CityPills from '../components/CityPills'
+import Pagination from '../components/ui/Pagination'
 import type { Metadata } from 'next'
+
+const PAGE_LIMIT = 24
 
 export const metadata: Metadata = {
   title: 'Explorar Roomies',
@@ -37,6 +41,8 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   const q = typeof searchParams.q === 'string' ? searchParams.q : ''
   const locationIdParam = typeof searchParams.location_id === 'string' ? searchParams.location_id.trim() : ''
   const cityParam = typeof searchParams.city === 'string' ? searchParams.city : ''
+  const pageParam = typeof searchParams.page === 'string' ? parseInt(searchParams.page, 10) : 1
+  const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
   // Nota: budget_min/budget_max no existen en profiles table, se ignoran silenciosamente
 
   // location_id válido solo si length >= 10 (length guard, no asumir UUID)
@@ -83,7 +89,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   // Construir query base (sin budget_min/budget_max - no existen en profiles table)
   let query = supabase
     .from('profiles')
-    .select('user_id, display_name, city, zone, avatar_url, featured_until, pets, smoker, cleanliness, parties, schedule')
+    .select('user_id, display_name, city, zone, avatar_url, featured_until, pets, smoker, cleanliness, parties, schedule', { count: 'exact' })
 
   // Aplicar filtro de búsqueda por nombre (q)
   if (q.trim()) {
@@ -151,11 +157,13 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   query = query.order('featured_until', { ascending: false, nullsFirst: false })
   query = query.order('created_at', { ascending: false })
 
-  // Limitar resultados
-  query = query.limit(50)
+  // Paginación
+  const from = (page - 1) * PAGE_LIMIT
+  const to = from + PAGE_LIMIT - 1
+  query = query.range(from, to)
 
   // Ejecutar query
-  const { data: profiles, error } = await query
+  const { data: profiles, count: totalCount, error } = await query
 
   // Ordenar perfiles: featured primero (featured_until > now), luego mantener orden de Supabase
   const now = new Date()
@@ -216,6 +224,9 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
       {/* Divider */}
       <div className="mt-5 mb-4 h-px w-full bg-black/5" />
 
+      {/* Pills de ciudad */}
+      <CityPills targetPath="/explore" />
+
       {/* Chips de filtros */}
       <FilterChips />
 
@@ -274,6 +285,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
           ))}
         </div>
       )}
+      <Pagination page={page} total={totalCount ?? 0} limit={PAGE_LIMIT} />
     </div>
     </>
   )

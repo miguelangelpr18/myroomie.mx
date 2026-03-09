@@ -161,7 +161,7 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="display_name" className="block mb-2 font-medium">
-          Display Name <span className="text-red-500">*</span>
+          Nombre de perfil <span className="text-red-500">*</span>
         </label>
         <input
           type="text"

@@ -91,7 +91,7 @@ export default function UserMenu({ displayName, avatarUrl, userId, initial }: Us
               Mensajes
             </Link>
             <Link
-              href="/shortlist"
+              href="/saved"
               onClick={() => setIsOpen(false)}
               className="rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
             >

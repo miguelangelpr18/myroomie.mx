@@ -93,8 +93,9 @@ export default function ListingsFilterChips() {
           <span>Min</span>
           <input
             type="number"
-            min={0}
-            placeholder="0"
+            min={500}
+            max={80000}
+            placeholder="500"
             value={minInput}
             onChange={(e) => setMinInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), applyPrice())}
@@ -106,8 +107,9 @@ export default function ListingsFilterChips() {
           <span>Max</span>
           <input
             type="number"
-            min={0}
-            placeholder="—"
+            min={500}
+            max={80000}
+            placeholder="80,000"
             value={maxInput}
             onChange={(e) => setMaxInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), applyPrice())}

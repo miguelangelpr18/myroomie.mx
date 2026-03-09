@@ -2,8 +2,10 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
 import LifestyleBadges from '../../components/LifestyleBadges'
+import ListingImage from '../../components/listings/ListingImage'
 import ContactButton from './ContactButton'
 import TrustPanel from '../../components/TrustPanel'
+import ReportButton from '../../components/ReportButton'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({
@@ -80,7 +82,7 @@ export default async function ProfilePage({
   // Obtener listings del usuario
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, title, city, zone, price_mxn, listing_type, created_at')
+    .select('id, title, city, zone, price_mxn, listing_type, created_at, image_urls')
     .eq('user_id', params.user_id)
     .order('created_at', { ascending: false })
     .limit(20)
@@ -128,7 +130,19 @@ export default async function ProfilePage({
             <LifestyleBadges profile={profile} />
           </div>
         </div>
-        {!isOwnProfile && <ContactButton userId={profile.user_id} />}
+        {isOwnProfile ? (
+        <Link
+          href="/profiles/edit"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Editar perfil
+        </Link>
+      ) : (
+        <ContactButton userId={profile.user_id} />
+      )}
       </div>
 
       {/* Trust Panel: Ratings + Verifications */}
@@ -150,29 +164,39 @@ export default async function ProfilePage({
 
               return (
                 <Link key={listing.id} href={`/listings/${listing.id}`}>
-                  <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">
+                    {/* Foto principal */}
+                    {Array.isArray(listing.image_urls) && listing.image_urls.length > 0 ? (
+                      <div className="aspect-[4/3] w-full overflow-hidden bg-neutral-100">
+                        <ListingImage
+                          src={listing.image_urls[0]}
+                          alt={listing.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          wrapperClassName="h-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-[4/3] w-full bg-neutral-100 flex items-center justify-center text-neutral-300">
+                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="p-5">
                     <div className="mb-3">
                       <span className="inline-block px-3 py-1 bg-brand/10 text-brand rounded-full text-sm font-medium">
                         {typeLabel}
                       </span>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{listing.title}</h3>
-                    <div className="space-y-1 text-sm text-gray-600 mb-3">
-                      <p>
-                        <strong>Ciudad:</strong> {listing.city}
-                      </p>
-                      <p>
-                        <strong>Zona:</strong> {listing.zone}
-                      </p>
-                      {listing.price_mxn && (
-                        <p>
-                          <strong>Precio:</strong> ${listing.price_mxn.toLocaleString()} MXN/mes
-                        </p>
-                      )}
-                    </div>
+                    <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
+                    <p className="text-sm text-gray-500 mb-1">{listing.city}{listing.zone ? ` · ${listing.zone}` : ''}</p>
+                    {listing.price_mxn && (
+                      <p className="text-sm font-semibold text-neutral-800 mb-3">${listing.price_mxn.toLocaleString()} MXN/mes</p>
+                    )}
                     <p className="text-xs text-gray-400">
                       {new Date(listing.created_at).toLocaleDateString('es-MX')}
                     </p>
+                    </div>{/* /p-5 */}
                   </div>
                 </Link>
               )
@@ -180,6 +204,13 @@ export default async function ProfilePage({
           </div>
         )}
       </div>
+
+      {/* Reportar perfil */}
+      {!isOwnProfile && (
+        <div className="mt-6 flex justify-center">
+          <ReportButton reportedType="profile" reportedId={params.user_id} />
+        </div>
+      )}
     </div>
   )
 }

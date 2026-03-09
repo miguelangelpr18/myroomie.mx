@@ -5,7 +5,11 @@ import ListingCard from '../components/listings/ListingCard'
 import ListingsFilterChips from './ListingsFilterChips'
 import ListingsResultHeader from './ListingsResultHeader'
 import CanonicalLocationParams from '../components/CanonicalLocationParams'
+import CityPills from '../components/CityPills'
+import Pagination from '../components/ui/Pagination'
 import type { Metadata } from 'next'
+
+const PAGE_LIMIT = 24
 
 export const metadata: Metadata = {
   title: 'Cuartos en Renta',
@@ -33,6 +37,8 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   const minPriceRaw = typeof searchParams.price_min === 'string' ? searchParams.price_min.trim() : (typeof searchParams.min === 'string' ? searchParams.min.trim() : '')
   const maxPriceRaw = typeof searchParams.price_max === 'string' ? searchParams.price_max.trim() : (typeof searchParams.max === 'string' ? searchParams.max.trim() : '')
   const sort = typeof searchParams.sort === 'string' ? searchParams.sort : 'recent'
+  const pageParam = typeof searchParams.page === 'string' ? parseInt(searchParams.page, 10) : 1
+  const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
   const PRICE_CLAMP_MIN = 500
   const PRICE_CLAMP_MAX = 80_000
@@ -73,7 +79,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   // Construir query base
   let query = supabase
     .from('listings')
-    .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until, image_urls')
+    .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until, image_urls', { count: 'exact' })
 
   // Aplicar filtro de búsqueda por texto (q)
   if (q.trim()) {
@@ -118,11 +124,13 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
     query = query.order('created_at', { ascending: false })
   }
 
-  // Limitar resultados
-  query = query.limit(50)
+  // Paginación
+  const from = (page - 1) * PAGE_LIMIT
+  const to = from + PAGE_LIMIT - 1
+  query = query.range(from, to)
 
   // Ejecutar query
-  const { data: listings, error } = await query
+  const { data: listings, count: totalCount, error } = await query
 
   // Ordenar listings: destacados primero (featured_until > now), luego mantener orden de Supabase
   const now = new Date()
@@ -181,6 +189,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
           Publicar anuncio
         </Link>
       </div>
+      <CityPills targetPath="/listings" />
 
       <ListingsFilterChips />
 
@@ -225,6 +234,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
           ))}
         </div>
       )}
+      <Pagination page={page} total={totalCount ?? 0} limit={PAGE_LIMIT} />
     </div>
     </>
   )

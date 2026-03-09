@@ -4,6 +4,98 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
+export interface UpdateListingData {
+  title: string
+  description: string
+  city: string
+  zone: string
+  price_mxn: number | null
+  listing_type: 'room' | 'roommate'
+  location_id?: string | null
+  listing_subtype?: 'solo_renta' | 'buscar_roomie' | null
+  lifestyle_prefs?: Record<string, unknown> | null
+  amenities?: string[]
+  is_active?: boolean
+}
+
+export async function updateListing(listingId: string, data: UpdateListingData) {
+  const supabase = createServerSupabaseClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return { error: 'No autorizado.' }
+
+  const { data: existing } = await supabase
+    .from('listings')
+    .select('user_id')
+    .eq('id', listingId)
+    .single()
+
+  if (!existing || existing.user_id !== session.user.id) {
+    return { error: 'No tienes permiso para editar este anuncio.' }
+  }
+
+  const { error } = await supabase
+    .from('listings')
+    .update({
+      title: data.title,
+      description: data.description,
+      city: data.city,
+      zone: data.zone,
+      price_mxn: data.price_mxn,
+      listing_type: data.listing_type,
+      ...(data.location_id !== undefined && { location_id: data.location_id }),
+      ...(data.listing_subtype !== undefined && { listing_subtype: data.listing_subtype }),
+      ...(data.lifestyle_prefs !== undefined && { lifestyle_prefs: data.lifestyle_prefs }),
+      ...(data.amenities !== undefined && { amenities: data.amenities }),
+      ...(data.is_active !== undefined && { is_active: data.is_active }),
+    })
+    .eq('id', listingId)
+    .eq('user_id', session.user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/listings/${listingId}`)
+  revalidatePath('/listings')
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
+export async function deleteListing(listingId: string) {
+  const supabase = createServerSupabaseClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return { error: 'No autorizado.' }
+
+  const { error } = await supabase
+    .from('listings')
+    .delete()
+    .eq('id', listingId)
+    .eq('user_id', session.user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/listings')
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
+export async function toggleListingActive(listingId: string, isActive: boolean) {
+  const supabase = createServerSupabaseClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return { error: 'No autorizado.' }
+
+  const { error } = await supabase
+    .from('listings')
+    .update({ is_active: isActive })
+    .eq('id', listingId)
+    .eq('user_id', session.user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/listings/${listingId}`)
+  revalidatePath('/listings')
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
 /**
  * Crear o encontrar thread para un listing y redirigir a /messages/[thread_id]
  */

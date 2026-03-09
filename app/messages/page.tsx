@@ -51,7 +51,7 @@ function ThreadRow({
       <Link
         href={`/messages/${thread.id}`}
         className={`lg:hidden block px-4 py-3 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand/30 focus:ring-offset-2 rounded-lg ${
-          isSelected ? 'bg-orange-50' : ''
+          isSelected ? 'bg-brand/5' : ''
         }`}
       >
         <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ function ThreadRow({
       <Link
         href={`/messages?thread=${thread.id}`}
         className={`hidden lg:block px-4 py-3 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand/30 focus:ring-offset-2 rounded-lg ${
-          isSelected ? 'bg-orange-50' : ''
+          isSelected ? 'bg-brand/5' : ''
         }`}
       >
         <div className="flex items-center gap-3">

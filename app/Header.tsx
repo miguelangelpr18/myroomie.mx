@@ -3,6 +3,7 @@ import Link from 'next/link'
 import HeaderModeTabs from './components/HeaderModeTabs'
 import UserMenu from './components/UserMenu'
 import GlobalSearchBar from './components/search/GlobalSearchBar'
+import QuickSearchDropdown from './components/search/QuickSearchDropdown'
 import LogoLink from './components/LogoLink'
 
 export default async function Header() {
@@ -19,10 +20,10 @@ export default async function Header() {
           {/* Left: Logo */}
           <LogoLink />
           
-          {/* Center: Search + Create Button */}
+          {/* Center: Quick Search + Create Button */}
           <div className="flex-1 flex items-center justify-center gap-2 max-w-xl mx-4 hidden md:flex">
             <div className="flex-1">
-              <GlobalSearchBar />
+              <QuickSearchDropdown />
             </div>
             <Link
               href="/listings/new"
@@ -37,16 +38,16 @@ export default async function Header() {
           <nav className="flex gap-4 items-center flex-shrink-0">
             <HeaderModeTabs userId={undefined} hasProfile={undefined} />
             <Link href="/login" className="hover:underline">
-              Login
+              Iniciar sesión
             </Link>
             <Link href="/signup" className="hover:underline">
-              Signup
+              Registrarse
             </Link>
           </nav>
         </div>
         {/* Mobile: Search bar below */}
         <div className="md:hidden px-4 pb-3">
-          <GlobalSearchBar />
+          <QuickSearchDropdown />
         </div>
       </header>
     )
@@ -68,10 +69,10 @@ export default async function Header() {
         {/* Left: Logo */}
         <LogoLink />
         
-        {/* Center: Search + Create Button */}
+        {/* Center: Quick Search + Create Button */}
         <div className="flex-1 flex items-center justify-center gap-2 max-w-xl mx-4 hidden md:flex">
           <div className="flex-1">
-            <GlobalSearchBar />
+            <QuickSearchDropdown />
           </div>
           <Link
             href="/listings/new"
@@ -90,7 +91,7 @@ export default async function Header() {
             <Link
               href="/messages"
               className="w-10 h-10 rounded-full bg-white ring-1 ring-black/5 hover:bg-neutral-50 transition-colors flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
-              aria-label="Messages"
+              aria-label="Mensajes"
             >
               <svg
                 className="w-5 h-5 text-neutral-700"
@@ -118,9 +119,9 @@ export default async function Header() {
           </div>
         </nav>
       </div>
-      {/* Mobile: Search bar below */}
+      {/* Mobile: Quick Search below */}
       <div className="md:hidden px-4 pb-3">
-        <GlobalSearchBar />
+        <QuickSearchDropdown />
       </div>
     </header>
   )

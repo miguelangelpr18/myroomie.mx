@@ -6,6 +6,7 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
 import type { Metadata } from 'next'
+import { formatDate } from '@/lib/utils/formatDate'
 
 export const metadata: Metadata = {
   title: 'Mi Panel',
@@ -73,9 +74,9 @@ export default async function DashboardPage() {
                 </div>
               </div>
               {isFeatured && profile.featured_until && (
-                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="mb-4 p-3 bg-brand/5 border border-brand/20 rounded-lg">
                   <p className="text-sm text-neutral-700">
-                    <strong className="text-orange-700">Promoción activa hasta:</strong>{' '}
+                    <strong className="text-brand">Promoción activa hasta:</strong>{' '}
                     {new Date(profile.featured_until).toLocaleDateString('es-MX', {
                       year: 'numeric',
                       month: 'long',
@@ -92,13 +93,19 @@ export default async function DashboardPage() {
               <div className="flex gap-2">
                 <Link
                   href={`/profiles/${session.user.id}`}
-                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors bg-orange-600 text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors bg-brand text-white hover:bg-brandHover focus:outline-none focus:ring-2 focus:ring-brand/30"
                 >
                   Ver mi perfil
                 </Link>
                 <Link
+                  href="/profiles/edit"
+                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand/30"
+                >
+                  Editar perfil
+                </Link>
+                <Link
                   href="/promote/profile"
-                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand/30"
                 >
                   Promocionar perfil (Roomies)
                 </Link>
@@ -141,37 +148,44 @@ export default async function DashboardPage() {
                     key={listing.id}
                     className="p-4 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <Link href={`/listings/${listing.id}`} className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="subtle">{typeLabel}</Badge>
-                          {isFeatured && <Badge variant="featured">Destacado</Badge>}
-                        </div>
-                        <h3 className="font-medium mb-1">{listing.title}</h3>
-                        <p className="text-sm text-neutral-600">
-                          {listing.city}, {listing.zone}
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="subtle">{typeLabel}</Badge>
+                        {isFeatured && <Badge variant="featured">Destacado</Badge>}
+                      </div>
+                      <h3 className="font-medium mb-1">{listing.title}</h3>
+                      <p className="text-sm text-neutral-600">
+                        {listing.city}{listing.zone ? `, ${listing.zone}` : ''}
+                      </p>
+                      {listing.price_mxn && (
+                        <p className="text-sm font-medium text-neutral-800 mt-1">
+                          ${listing.price_mxn.toLocaleString()} MXN/mes
                         </p>
-                        {listing.price_mxn && (
-                          <p className="text-sm font-medium text-neutral-800 mt-1">
-                            ${listing.price_mxn.toLocaleString()} MXN/mes
-                          </p>
-                        )}
-                        {isFeatured && listing.featured_until && (
-                          <p className="text-xs text-orange-700 mt-2">
-                            Destacado hasta:{' '}
-                            {new Date(listing.featured_until).toLocaleDateString('es-MX', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </p>
-                        )}
-                      </Link>
-                      <Link 
-                        href={`/promote/listing/${listing.id}`}
-                        className="inline-flex items-center justify-center h-9 px-3 text-sm rounded-lg font-medium transition-colors bg-orange-600 text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-300 whitespace-nowrap"
+                      )}
+                      {isFeatured && listing.featured_until && (
+                        <p className="text-xs text-brand mt-1">
+                          Destacado hasta: {formatDate(listing.featured_until)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Link
+                        href={`/listings/${listing.id}`}
+                        className="inline-flex items-center justify-center h-8 px-3 text-xs rounded-lg font-medium border border-neutral-200 text-neutral-700 hover:bg-neutral-50 transition-colors"
                       >
-                        Promocionar anuncio
+                        Ver
+                      </Link>
+                      <Link
+                        href={`/listings/${listing.id}/edit`}
+                        className="inline-flex items-center justify-center h-8 px-3 text-xs rounded-lg font-medium border border-neutral-200 text-neutral-700 hover:bg-neutral-50 transition-colors"
+                      >
+                        Editar
+                      </Link>
+                      <Link
+                        href={`/promote/listing/${listing.id}`}
+                        className="inline-flex items-center justify-center h-8 px-3 text-xs rounded-lg font-medium bg-brand text-white hover:bg-brandHover transition-colors"
+                      >
+                        Promocionar
                       </Link>
                     </div>
                   </div>
