@@ -6,6 +6,7 @@ import ListingImage from '../../components/listings/ListingImage'
 import ContactButton from './ContactButton'
 import TrustPanel from '../../components/TrustPanel'
 import ReportButton from '../../components/ReportButton'
+import { formatDate } from '@/lib/utils/formatDate'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({
@@ -53,7 +54,7 @@ export default async function ProfilePage({
   // Obtener perfil por user_id
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('user_id, display_name, city, zone, avatar_url, pets, smoker, cleanliness, parties, schedule, featured_until')
+    .select('user_id, display_name, city, zone, avatar_url, bio, age, pets, smoker, cleanliness, parties, schedule, featured_until')
     .eq('user_id', params.user_id)
     .single()
 
@@ -126,7 +127,13 @@ export default async function ProfilePage({
             </div>
             <p className="text-gray-600">
               {profile.city}, {profile.zone}
+              {profile.age && ` · ${profile.age} años`}
             </p>
+            {profile.bio && (
+              <p className="text-sm text-gray-600 mt-2 max-w-md">
+                {profile.bio}
+              </p>
+            )}
             <LifestyleBadges profile={profile} />
           </div>
         </div>
@@ -194,7 +201,7 @@ export default async function ProfilePage({
                       <p className="text-sm font-semibold text-neutral-800 mb-3">${listing.price_mxn.toLocaleString()} MXN/mes</p>
                     )}
                     <p className="text-xs text-gray-400">
-                      {new Date(listing.created_at).toLocaleDateString('es-MX')}
+                      {formatDate(listing.created_at)}
                     </p>
                     </div>{/* /p-5 */}
                   </div>

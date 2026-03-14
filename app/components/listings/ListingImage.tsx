@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, ReactNode } from 'react'
+import Image from 'next/image'
 
 interface ListingImageProps {
   src?: string | null
@@ -8,6 +9,9 @@ interface ListingImageProps {
   className?: string
   wrapperClassName?: string
   fallback?: ReactNode
+  fill?: boolean
+  width?: number
+  height?: number
 }
 
 export default function ListingImage({
@@ -16,6 +20,9 @@ export default function ListingImage({
   className = '',
   wrapperClassName = '',
   fallback,
+  fill = false,
+  width,
+  height,
 }: ListingImageProps) {
   const [errored, setErrored] = useState(false)
 
@@ -33,12 +40,42 @@ export default function ListingImage({
     )
   }
 
+  // Si fill es true, usar fill layout
+  if (fill) {
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className={className}
+        onError={() => setErrored(true)}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      />
+    )
+  }
+
+  // Si se proveen width y height, usarlos
+  if (width && height) {
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+        onError={() => setErrored(true)}
+      />
+    )
+  }
+
+  // Fallback: usar dimensiones por defecto
   return (
-    <img
+    <Image
       src={src}
       alt={alt}
+      width={800}
+      height={600}
       className={className}
-      loading="lazy"
       onError={() => setErrored(true)}
     />
   )

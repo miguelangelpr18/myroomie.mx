@@ -38,6 +38,17 @@ export default async function OnboardingStep2Page() {
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-2xl">
+      {/* Progress indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-brand">Paso 2 de 2</span>
+          <span className="text-sm text-neutral-500">100% completado</span>
+        </div>
+        <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+          <div className="h-full bg-brand w-full transition-all duration-300"></div>
+        </div>
+      </div>
+
       <h1 className="text-3xl font-bold mb-6">Estilo de vida</h1>
       <p className="text-gray-600 mb-8">
         Comparte información sobre tu estilo de vida para encontrar un roomie compatible.

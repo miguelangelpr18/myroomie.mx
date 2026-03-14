@@ -233,7 +233,6 @@ export default async function ListingDetailPage({
             {/* Microcopy de confianza (solo para no-owner) */}
             {!isOwner && (
             <div className="pt-4 border-t space-y-1 mb-6">
-              <p className="text-xs text-neutral-600">Respuesta típica: &lt; 1 hora</p>
               <p className="text-xs text-neutral-600">Verificación: en proceso</p>
             </div>
             )}

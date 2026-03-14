@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
   }
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
-  console.log('[FORWARD API] Token detectado:', !!mapboxToken)
 
   if (!mapboxToken) {
     return NextResponse.json(

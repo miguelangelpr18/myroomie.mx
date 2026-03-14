@@ -28,9 +28,6 @@ export async function GET(request: NextRequest) {
   const q = typeof qRaw === 'string' ? qRaw.trim() : ''
   const locationId = typeof locationIdRaw === 'string' ? locationIdRaw.trim() : ''
 
-  // LOG 1: Request recibido
-  console.log('[ZONES API] Request:', { q, locationId })
-
   if (q.length < 2) {
     return NextResponse.json({ zones: [] }, { status: 200 })
   }
@@ -43,7 +40,6 @@ export async function GET(request: NextRequest) {
   }
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
-  console.log('[ZONES API] Token detectado:', !!mapboxToken)
   
   if (!mapboxToken) {
     return NextResponse.json(
@@ -71,15 +67,6 @@ export async function GET(request: NextRequest) {
     .eq('id', locationId)
     .single()
 
-  // LOG 2: Datos de DB
-  console.log('[ZONES API] DB location:', { 
-    found: !!location, 
-    city: location?.city, 
-    lat: location?.lat, 
-    lng: location?.lng,
-    error: locationError?.message 
-  })
-
   if (locationError || !location) {
     return NextResponse.json(
       { error: 'Ubicación no encontrada' },
@@ -92,7 +79,6 @@ export async function GET(request: NextRequest) {
   
   // FALLBACK NACIONAL: Si no hay coordenadas, buscar en todo México
   const useFallback = Number.isNaN(lat) || Number.isNaN(lng)
-  console.log('[ZONES API] Coordinates:', { lat, lng, useFallback })
 
   const locCityNorm = normalizeText(location.city ?? '')
 
@@ -125,9 +111,6 @@ export async function GET(request: NextRequest) {
     }
     url += `&access_token=${mapboxToken}`
 
-    // LOG 3: URL de Mapbox
-    console.log('[ZONES API] Mapbox URL:', url.replace(mapboxToken, 'TOKEN_HIDDEN'))
-
     const res = await fetch(url)
 
     if (res.status === 429) {
@@ -146,12 +129,6 @@ export async function GET(request: NextRequest) {
 
     const data = (await res.json()) as { features?: Array<{ text?: string; place_type?: string[]; context?: Array<{ id?: string; text?: string }> }> }
     const features = Array.isArray(data?.features) ? data.features : []
-
-    // LOG 4: Resultados de Mapbox
-    console.log('[ZONES API] Mapbox results:', { 
-      total: features.length,
-      names: features.map(f => f.text).slice(0, 5) 
-    })
 
     const seen = new Set<string>()
     const zones: string[] = []
@@ -180,9 +157,6 @@ export async function GET(request: NextRequest) {
       seen.add(key)
       zones.push(nameTrim)
     }
-
-    // LOG 5: Resultados finales
-    console.log('[ZONES API] Final zones:', { count: zones.length, zones: zones.slice(0, 5) })
 
     return NextResponse.json({ zones })
   } catch (err) {

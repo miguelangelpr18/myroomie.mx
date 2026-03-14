@@ -122,41 +122,11 @@ export default async function Home() {
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         {/* Featured Listings */}
         <section className="py-14 md:py-16">
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-neutral-900">Anuncios recientes</h2>
-              <p className="text-sm text-neutral-500 mt-1">Espacios disponibles ahora mismo</p>
-            </div>
-            <Link
-              href="/listings"
-              className="text-sm font-medium text-brand hover:text-brandHover flex items-center gap-1"
-            >
-              Ver todos
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
           <HomeFeaturedListings />
         </section>
 
         {/* Featured Profiles */}
         <section className="pb-14 md:pb-16 border-t border-neutral-100 pt-14">
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-neutral-900">Roomies disponibles</h2>
-              <p className="text-sm text-neutral-500 mt-1">Personas buscando con quién compartir</p>
-            </div>
-            <Link
-              href="/explore"
-              className="text-sm font-medium text-brand hover:text-brandHover flex items-center gap-1"
-            >
-              Explorar todos
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
           <HomeFeaturedProfiles />
         </section>
 

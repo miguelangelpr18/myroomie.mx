@@ -11,6 +11,7 @@ export default async function HomeFeaturedListings() {
   const { data: featured, error } = await supabase
     .from('listings')
     .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until, image_urls')
+    .eq('is_active', true)
     .gt('featured_until', now)
     .order('featured_until', { ascending: false })
     .limit(12)

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { logout } from '@/app/logout/actions'
+import Avatar from './ui/Avatar'
 
 interface UserMenuProps {
   displayName: string
@@ -59,17 +60,7 @@ export default function UserMenu({ displayName, avatarUrl, userId, initial }: Us
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
       >
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt={displayName}
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-neutral-200 hover:ring-neutral-300 transition"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-sm font-semibold ring-1 ring-neutral-200 hover:ring-neutral-300 transition">
-            {initial}
-          </div>
-        )}
+        <Avatar src={avatarUrl} alt={displayName} size="sm" initial={initial} />
         <span className="text-sm font-medium hidden md:inline">{displayName}</span>
       </button>
 

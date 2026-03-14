@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent } from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
+import Avatar from '../components/ui/Avatar'
 import type { Metadata } from 'next'
 import { formatDate } from '@/lib/utils/formatDate'
 
@@ -57,17 +58,12 @@ export default async function DashboardPage() {
           {profile ? (
             <>
               <div className="flex items-center gap-4 mb-4">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.display_name}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-brand text-white flex items-center justify-center text-2xl font-semibold">
-                    {initial}
-                  </div>
-                )}
+                <Avatar
+                  src={profile.avatar_url}
+                  alt={profile.display_name}
+                  size="lg"
+                  initial={initial}
+                />
                 <div>
                   <p className="font-medium text-lg">{profile.display_name}</p>
                   <Badge variant="subtle" className="mt-1">Activo</Badge>
@@ -107,7 +103,7 @@ export default async function DashboardPage() {
                   href="/promote/profile"
                   className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand/30"
                 >
-                  Promocionar perfil (Roomies)
+                  Promocionar perfil
                 </Link>
               </div>
             </>
