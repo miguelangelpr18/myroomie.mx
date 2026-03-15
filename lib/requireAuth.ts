@@ -9,11 +9,11 @@ interface RequireAuthOptions {
 export async function requireAuthOrRedirect(options?: RequireAuthOptions) {
   const supabase = createServerSupabaseClient()
 
-  // Obtener sesión
-  const { data: { session }, error } = await supabase.auth.getSession()
+  // getUser() re-validates the JWT with the Supabase Auth server — safe for access control.
+  // getSession() reads only from the cookie and must not be used for auth decisions.
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  // Si no hay session.user => redirect a login con next param
-  if (!session?.user || error) {
+  if (!user || error) {
     // Intentar obtener la ruta actual desde el referer header
     const headersList = headers()
     const referer = headersList.get('referer')
@@ -50,7 +50,6 @@ export async function requireAuthOrRedirect(options?: RequireAuthOptions) {
     redirect(loginUrl)
   }
 
-  // Si existe sesión => return { user: session.user }
-  return { user: session.user }
+  return { user }
 }
 

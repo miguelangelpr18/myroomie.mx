@@ -9,30 +9,21 @@ export default async function PromoteListingPage({
 }: {
   params: { id: string }
 }) {
-  await requireAuthOrRedirect({ intent: 'listings' })
+  const { user } = await requireAuthOrRedirect({ intent: 'listings' })
 
   const supabase = createServerSupabaseClient()
 
-  // Obtener sesión
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return null
-  }
-
-  // Cargar listing por id
   const { data: listing, error: listingError } = await supabase
     .from('listings')
     .select('id, title, user_id')
     .eq('id', params.id)
     .single()
 
-  // Si no existe o hay error, mostrar not found
   if (!listing || listingError) {
     notFound()
   }
 
-  // Si no es del usuario, mostrar error humano
-  if (listing.user_id !== session.user.id) {
+  if (listing.user_id !== user.id) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">

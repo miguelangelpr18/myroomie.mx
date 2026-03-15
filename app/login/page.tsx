@@ -37,10 +37,14 @@ export default function Login() {
     }
   }
 
-  // Leer intent y next de query params
   const intentParam = searchParams.get('intent')
   const intent = intentParam === 'listings' || intentParam === 'roomies' ? intentParam : null
-  const nextParam = searchParams.get('next') || searchParams.get('redirectTo') || null
+  const rawNext = searchParams.get('next') || searchParams.get('redirectTo') || null
+  // Only allow relative paths to prevent open redirect attacks
+  const nextParam =
+    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('://')
+      ? rawNext
+      : null
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

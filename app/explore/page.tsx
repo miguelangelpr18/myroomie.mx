@@ -24,14 +24,14 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   const supabase = createServerSupabaseClient()
 
   // Verificar si el usuario actual tiene perfil
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
   let hasMyProfile = false
   
-  if (session?.user) {
+  if (user) {
     const { data: myProfile } = await supabase
       .from('profiles')
       .select('user_id')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .maybeSingle()
     
     hasMyProfile = !!myProfile

@@ -7,12 +7,11 @@ export async function activateListingPromotion(listingId: string, planDays: numb
   const supabase = createServerSupabaseClient()
 
   // Validar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  // Validar planDays
   if (!planDays || planDays <= 0 || planDays > 365) {
     return { error: 'Duración del plan inválida.' }
   }
@@ -28,7 +27,7 @@ export async function activateListingPromotion(listingId: string, planDays: numb
     return { error: 'Anuncio no encontrado.' }
   }
 
-  if (listing.user_id !== session.user.id) {
+  if (listing.user_id !== user.id) {
     return { error: 'No autorizado. Solo puedes promocionar tus propios anuncios.' }
   }
 
@@ -56,8 +55,6 @@ export async function activateListingPromotion(listingId: string, planDays: numb
     return { error: error.message || 'Error al activar promoción.' }
   }
 
-  // Revalidar paths
-  revalidatePath('/listings')
   revalidatePath(`/listings/${listingId}`)
   revalidatePath('/dashboard')
 

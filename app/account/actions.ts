@@ -18,8 +18,8 @@ export async function updateProfile(formData: AccountProfileData) {
 
   const supabase = createServerSupabaseClient()
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
@@ -29,7 +29,7 @@ export async function updateProfile(formData: AccountProfileData) {
       display_name,
       avatar_url,
     })
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .select()
     .single()
 

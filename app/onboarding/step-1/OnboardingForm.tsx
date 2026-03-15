@@ -100,15 +100,15 @@ export default function OnboardingForm({ initialData }: OnboardingFormProps) {
         const supabase = createBrowserSupabaseClient()
 
         // Obtener sesión para user_id
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        if (!session || sessionError) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (!user || authError) {
           setErrorMsg('No autorizado. Por favor inicia sesión.')
           setLoading(false)
           setUploading(false)
           return
         }
 
-        const userId = session.user.id
+        const userId = user.id
         const filePath = `${userId}/avatar.jpg`
 
         // Subir archivo

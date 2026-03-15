@@ -9,15 +9,15 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 export async function hasProfile() {
   const supabase = createServerSupabaseClient()
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
     return false
   }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('user_id')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
   return !!profile

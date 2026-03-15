@@ -34,14 +34,14 @@ export default function ReportButton({ reportedType, reportedId }: ReportButtonP
     setErrorMsg('')
     try {
       const supabase = createBrowserSupabaseClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
         setErrorMsg('Debes iniciar sesión para reportar.')
         setSubmitting(false)
         return
       }
       const { error } = await supabase.from('reports').insert({
-        reporter_id: session.user.id,
+        reporter_id: user.id,
         reported_type: reportedType,
         reported_id: reportedId,
         reason,

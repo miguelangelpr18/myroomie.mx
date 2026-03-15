@@ -23,8 +23,9 @@ interface ListingsPageProps {
 export default async function Listings({ searchParams }: ListingsPageProps) {
   const supabase = createServerSupabaseClient()
 
-  // Obtener sesión para verificar si está logueado (para mostrar botón crear)
-  const { data: { session } } = await supabase.auth.getSession()
+  // Verificar si el usuario está logueado (para mostrar botón crear)
+  const { data: { user } } = await supabase.auth.getUser()
+  const isLoggedIn = !!user
 
   // Extraer parámetros de búsqueda
   const q = typeof searchParams.q === 'string' ? searchParams.q : ''
@@ -216,11 +217,11 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
           <EmptyState
             icon="listings"
             title="Aún no hay anuncios publicados"
-            description={session
+            description={isLoggedIn
               ? 'Sé el primero en publicar un cuarto o buscar roomie.'
               : 'Inicia sesión para crear un anuncio'}
-            ctaLabel={session ? 'Publicar anuncio' : 'Iniciar sesión'}
-            ctaHref={session ? '/listings/new' : '/login'}
+            ctaLabel={isLoggedIn ? 'Publicar anuncio' : 'Iniciar sesión'}
+            ctaHref={isLoggedIn ? '/listings/new' : '/login'}
           />
         )
       ) : (

@@ -1,0 +1,102 @@
+---
+description: MyRoomie.mx project context, stack, goals, code standards, and phase workflow
+alwaysApply: true
+---
+
+# MyRoomie.mx Project Context
+
+You are helping build **MyRoomie.mx** — a production-ready roommate and room rental platform for Mexico.
+
+## Goal
+
+The best platform in Mexico for:
+- Finding roommates
+- Renting rooms
+- Discovering shared housing
+
+Target users: students and young professionals.
+Priority cities: Monterrey, Mexico City, Guadalajara.
+
+Benchmark UX: Airbnb-quality. Must beat Facebook groups, Marketplace, and outdated listing sites.
+
+---
+
+## Stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | Next.js, React, TailwindCSS |
+| Backend | Supabase, PostgreSQL |
+| Infra | Vercel, GitHub |
+| Maps | Mapbox |
+
+---
+
+## Features
+
+1. Authentication
+2. User profiles
+3. Room listings
+4. Roommate discovery
+5. Search & filters
+6. Map-based browsing
+7. Trust & verification
+8. Messaging / contact flows
+9. Moderation readiness
+10. Future monetization
+
+---
+
+## Code Standards
+
+- Production-ready, scalable, secure
+- Clean architecture, clear folder structure
+- Reusable components, no hacks
+- Mobile-first, desktop-polished
+- Strong visual hierarchy, intuitive UX
+
+---
+
+## Security Checklist (always verify)
+
+- Supabase RLS policies on every table
+- Auth flows (no unauthenticated data exposure)
+- Storage access rules
+- No secrets in client-side code
+- Location privacy: never expose exact coordinates
+
+---
+
+## Phase Workflow
+
+```
+0  → Audit
+1  → Architecture
+2  → Design system
+3  → Auth
+4  → Profiles
+5  → Listings
+6  → Search & filters
+7  → Maps
+8  → Trust & verification
+9  → Messaging
+10 → QA
+11 → Production launch
+```
+
+Always develop in phases. At each phase end: developer review, UX review, QA review. Confirm production-readiness before moving on.
+
+---
+
+## Feature Implementation Format
+
+When implementing any feature, always provide:
+
+1. **Goal** — what this feature does
+2. **Why it matters** — user/business impact
+3. **Files involved** — list all affected files
+4. **Steps** — numbered implementation plan
+5. **Code** — full, production-ready implementation
+6. **Env vars** — any required environment variables
+7. **Testing checklist** — manual and automated
+8. **Edge cases** — failure modes, abuse vectors, empty states

@@ -13,11 +13,9 @@ export default async function EditListingPage({
 }: {
   params: { id: string }
 }) {
-  await requireAuthOrRedirect()
+  const { user } = await requireAuthOrRedirect()
 
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/login')
 
   const { data: listing } = await supabase
     .from('listings')
@@ -26,7 +24,7 @@ export default async function EditListingPage({
     .single()
 
   if (!listing) redirect('/listings')
-  if (listing.user_id !== session.user.id) redirect(`/listings/${params.id}`)
+  if (listing.user_id !== user.id) redirect(`/listings/${params.id}`)
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-2xl">

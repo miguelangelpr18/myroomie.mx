@@ -16,16 +16,15 @@ export async function getMyLifestyle() {
   const supabase = createServerSupabaseClient()
 
   // Verificar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     redirect('/login')
   }
 
-  // Buscar perfil del usuario
   const { data, error } = await supabase
     .from('profiles')
     .select('pets, smoker, cleanliness, parties, schedule')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (error && error.code !== 'PGRST116') {
@@ -45,8 +44,8 @@ export async function saveMyLifestyle(formData: LifestyleData) {
 
   const supabase = createServerSupabaseClient()
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
@@ -59,7 +58,7 @@ export async function saveMyLifestyle(formData: LifestyleData) {
       parties,
       schedule,
     })
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .select()
     .single()
 

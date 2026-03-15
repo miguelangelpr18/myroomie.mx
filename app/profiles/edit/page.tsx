@@ -9,16 +9,14 @@ export const metadata: Metadata = {
 }
 
 export default async function EditProfilePage() {
-  await requireAuthOrRedirect()
+  const { user } = await requireAuthOrRedirect()
 
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/login')
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
   if (!profile) redirect('/onboarding/step-1')

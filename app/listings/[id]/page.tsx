@@ -53,8 +53,8 @@ export default async function ListingDetailPage({
   const supabase = createServerSupabaseClient()
 
   // Obtener sesión para verificar si es el owner
-  const { data: { session } } = await supabase.auth.getSession()
-  const viewerId = session?.user?.id
+  const { data: { user } } = await supabase.auth.getUser()
+  const viewerId = user?.id
 
   // Obtener listing por id
   const { data: listing, error: listingError } = await supabase
@@ -217,14 +217,14 @@ export default async function ListingDetailPage({
                   <ContactForm 
                     listingId={listing.id}
                     isOwner={isOwner}
-                    hasSession={!!session}
+                    hasSession={!!viewerId}
                   />
-                  
+
                   {/* Botón Secondary: Guardar */}
                   <SaveButton
                     listingId={listing.id}
                     isSaved={isSaved}
-                    hasSession={!!session}
+                    hasSession={!!viewerId}
                   />
                 </>
               )}

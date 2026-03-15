@@ -72,15 +72,15 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
       if (avatarFile) {
         setUploading(true)
         const supabase = createBrowserSupabaseClient()
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
           setErrorMsg('No autorizado.')
           setLoading(false)
           return
         }
 
         const ext = avatarFile.name.split('.').pop()
-        const fileName = `${session.user.id}/avatar-${Date.now()}.${ext}`
+        const fileName = `${user.id}/avatar-${Date.now()}.${ext}`
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(fileName, avatarFile, { upsert: true })

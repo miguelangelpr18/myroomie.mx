@@ -177,15 +177,15 @@ export default function ListingForm() {
         const supabase = createBrowserSupabaseClient()
         
         // Obtener userId desde la sesión
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
           setErrorMsg('Sesión expirada. Por favor inicia sesión de nuevo.')
           setLoading(false)
           setUploading(false)
           return
         }
 
-        const userId = session.user.id
+        const userId = user.id
         const imageUrls: string[] = []
 
         try {

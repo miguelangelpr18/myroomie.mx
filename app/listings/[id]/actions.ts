@@ -20,8 +20,8 @@ export interface UpdateListingData {
 
 export async function updateListing(listingId: string, data: UpdateListingData) {
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return { error: 'No autorizado.' }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
 
   const { data: existing } = await supabase
     .from('listings')
@@ -29,7 +29,7 @@ export async function updateListing(listingId: string, data: UpdateListingData) 
     .eq('id', listingId)
     .single()
 
-  if (!existing || existing.user_id !== session.user.id) {
+  if (!existing || existing.user_id !== user.id) {
     return { error: 'No tienes permiso para editar este anuncio.' }
   }
 
@@ -49,7 +49,7 @@ export async function updateListing(listingId: string, data: UpdateListingData) 
       ...(data.is_active !== undefined && { is_active: data.is_active }),
     })
     .eq('id', listingId)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
 
   if (error) return { error: error.message }
 
@@ -61,14 +61,14 @@ export async function updateListing(listingId: string, data: UpdateListingData) 
 
 export async function deleteListing(listingId: string) {
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return { error: 'No autorizado.' }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
 
   const { error } = await supabase
     .from('listings')
     .delete()
     .eq('id', listingId)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
 
   if (error) return { error: error.message }
 
@@ -79,14 +79,14 @@ export async function deleteListing(listingId: string) {
 
 export async function toggleListingActive(listingId: string, isActive: boolean) {
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return { error: 'No autorizado.' }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
 
   const { error } = await supabase
     .from('listings')
     .update({ is_active: isActive })
     .eq('id', listingId)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
 
   if (error) return { error: error.message }
 
@@ -96,21 +96,16 @@ export async function toggleListingActive(listingId: string, isActive: boolean) 
   return { error: null }
 }
 
-/**
- * Crear o encontrar thread para un listing y redirigir a /messages/[thread_id]
- */
 export async function getOrCreateListingThread(listingId: string) {
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (!user || authError) {
     redirect('/login?intent=roomies')
   }
 
-  const viewerId = session.user.id
+  const viewerId = user.id
 
-  // Obtener owner del listing
   const { data: listing, error: listingError } = await supabase
     .from('listings')
     .select('user_id')
@@ -123,17 +118,13 @@ export async function getOrCreateListingThread(listingId: string) {
 
   const ownerId = listing.user_id
 
-  // Si el viewer es el owner, no permitir
   if (viewerId === ownerId) {
-    // No hacer nada, el componente no debería mostrar el botón en este caso
     return
   }
 
-  // Ordenar user_ids para buscar thread existente
   const user1Id = viewerId < ownerId ? viewerId : ownerId
   const user2Id = viewerId < ownerId ? ownerId : viewerId
 
-  // Buscar thread existente con listing_id
   const { data: existingThread, error: searchError } = await supabase
     .from('threads')
     .select('id')
@@ -146,12 +137,10 @@ export async function getOrCreateListingThread(listingId: string) {
     redirect(`/listings/${listingId}?error=thread_search_failed`)
   }
 
-  // Si existe, redirigir
   if (existingThread) {
     redirect(`/messages/${existingThread.id}`)
   }
 
-  // Si no existe, crear nuevo thread
   const { data: newThread, error: createError } = await supabase
     .from('threads')
     .insert({
@@ -169,23 +158,16 @@ export async function getOrCreateListingThread(listingId: string) {
   redirect(`/messages/${newThread.id}`)
 }
 
-/**
- * Toggle guardar listing (wishlist)
- * Si existe → delete, si no existe → insert
- * Server action compatible con <form action>
- */
 export async function toggleSave(listingId: string, formData: FormData): Promise<void> {
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (!user || authError) {
     redirect('/login?intent=roomies')
   }
 
-  const userId = session.user.id
+  const userId = user.id
 
-  // Verificar que el listing existe
   const { data: listing, error: listingError } = await supabase
     .from('listings')
     .select('id')
@@ -196,7 +178,6 @@ export async function toggleSave(listingId: string, formData: FormData): Promise
     throw new Error('Anuncio no encontrado.')
   }
 
-  // Verificar si ya está guardado
   const { data: existingSave, error: checkError } = await supabase
     .from('listing_saves')
     .select('id')
@@ -208,7 +189,6 @@ export async function toggleSave(listingId: string, formData: FormData): Promise
     throw new Error(`Error al verificar: ${checkError.message}`)
   }
 
-  // Si existe, eliminar
   if (existingSave) {
     const { error: deleteError } = await supabase
       .from('listing_saves')
@@ -219,7 +199,6 @@ export async function toggleSave(listingId: string, formData: FormData): Promise
       throw new Error(`Error al eliminar: ${deleteError.message}`)
     }
   } else {
-    // Si no existe, crear
     const { error: insertError } = await supabase
       .from('listing_saves')
       .insert({
@@ -232,8 +211,6 @@ export async function toggleSave(listingId: string, formData: FormData): Promise
     }
   }
 
-  // Revalidar paths
   revalidatePath(`/listings/${listingId}`)
   revalidatePath('/saved')
 }
-

@@ -14,32 +14,26 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardPage() {
-  await requireAuthOrRedirect()
+  const { user } = await requireAuthOrRedirect()
 
   const supabase = createServerSupabaseClient()
-
-  // Obtener sesión
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return null
-  }
 
   // Obtener perfil del usuario
   const { data: profile } = await supabase
     .from('profiles')
     .select('user_id, display_name, avatar_url, featured_until')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
   // Obtener listings del usuario
   const { data: listings } = await supabase
     .from('listings')
     .select('id, title, city, zone, price_mxn, listing_type, created_at, featured_until')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(20)
 
-  const initial = profile?.display_name?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || '?'
+  const initial = profile?.display_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'
   const now = new Date()
   const isFeatured = profile?.featured_until && new Date(profile.featured_until) > now
 
@@ -88,7 +82,7 @@ export default async function DashboardPage() {
               )}
               <div className="flex gap-2">
                 <Link
-                  href={`/profiles/${session.user.id}`}
+                  href={`/profiles/${user.id}`}
                   className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors bg-brand text-white hover:bg-brandHover focus:outline-none focus:ring-2 focus:ring-brand/30"
                 >
                   Ver mi perfil

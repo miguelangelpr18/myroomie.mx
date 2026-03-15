@@ -4,22 +4,14 @@ import { redirect } from 'next/navigation'
 import OnboardingLifestyleForm from './OnboardingLifestyleForm'
 
 export default async function OnboardingStep2Page() {
-  // Verificar que el usuario tenga perfil
-  await requireProfileOrRedirect()
+  const { user } = await requireProfileOrRedirect()
 
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
-    redirect('/login')
-  }
-
-  // Buscar perfil del usuario (para verificar que existe)
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('pets, smoker, cleanliness, parties, schedule')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   // Si no existe perfil, redirect a step-1

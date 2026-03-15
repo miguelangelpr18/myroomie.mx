@@ -5,17 +5,15 @@ import OnboardingForm from './OnboardingForm'
 export default async function OnboardingStep1Page() {
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión - si no hay, redirigir a login
-  const { data: { session }, error } = await supabase.auth.getSession()
-  if (!session || error) {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (!user || error) {
     redirect('/login')
   }
 
-  // Obtener perfil existente (si existe)
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   return (

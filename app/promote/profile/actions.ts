@@ -7,12 +7,11 @@ export async function activateProfilePromotion(planDays: number) {
   const supabase = createServerSupabaseClient()
 
   // Validar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  // Validar planDays
   if (!planDays || planDays <= 0 || planDays > 365) {
     return { error: 'Duración del plan inválida.' }
   }
@@ -21,7 +20,7 @@ export async function activateProfilePromotion(planDays: number) {
   const { data: currentProfile, error: readError } = await supabase
     .from('profiles')
     .select('featured_until')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
   if (readError) {
@@ -46,7 +45,7 @@ export async function activateProfilePromotion(planDays: number) {
     .update({
       featured_until: featuredUntil.toISOString(),
     })
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .select()
     .single()
 
@@ -54,10 +53,9 @@ export async function activateProfilePromotion(planDays: number) {
     return { error: error.message || 'Error al activar promoción.' }
   }
 
-  // Revalidar paths
   revalidatePath('/dashboard')
   revalidatePath('/explore')
-  revalidatePath(`/profiles/${session.user.id}`)
+  revalidatePath(`/profiles/${user.id}`)
 
   return { data, error: null }
 }

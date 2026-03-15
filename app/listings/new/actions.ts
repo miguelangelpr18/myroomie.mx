@@ -26,13 +26,13 @@ export async function createListing(formData: ListingData) {
 
   const supabase = createServerSupabaseClient()
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
   const insertPayload: Record<string, unknown> = {
-    user_id: session.user.id,
+    user_id: user.id,
     title,
     description,
     city,
@@ -66,8 +66,8 @@ export async function attachListingImages(listingId: string, imageUrls: string[]
   const supabase = createServerSupabaseClient()
 
   // Verificar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
@@ -82,7 +82,7 @@ export async function attachListingImages(listingId: string, imageUrls: string[]
     return { error: 'Anuncio no encontrado.' }
   }
 
-  if (listing.user_id !== session.user.id) {
+  if (listing.user_id !== user.id) {
     return { error: 'No autorizado. Solo puedes actualizar tus propios anuncios.' }
   }
 
@@ -96,7 +96,7 @@ export async function attachListingImages(listingId: string, imageUrls: string[]
     .from('listings')
     .update({ image_urls: imageUrls })
     .eq('id', listingId)
-    .eq('user_id', session.user.id) // Doble validación de ownership
+    .eq('user_id', user.id)
 
   if (updateError) {
     return { error: updateError.message || 'Error al actualizar imágenes.' }

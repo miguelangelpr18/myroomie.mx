@@ -21,8 +21,8 @@ export async function updateProfile(data: EditProfileData) {
   }
 
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return { error: 'No autorizado.' }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
 
   const payload: Record<string, unknown> = {
     display_name: data.display_name.trim(),
@@ -36,11 +36,11 @@ export async function updateProfile(data: EditProfileData) {
   const { error } = await supabase
     .from('profiles')
     .update(payload)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/profiles/${session.user.id}`)
+  revalidatePath(`/profiles/${user.id}`)
   revalidatePath('/dashboard')
   revalidatePath('/account')
   return { error: null }

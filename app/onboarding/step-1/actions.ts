@@ -16,16 +16,15 @@ export async function getMyProfile() {
   const supabase = createServerSupabaseClient()
 
   // Verificar sesión
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     redirect('/login')
   }
 
-  // Buscar perfil del usuario
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (error && error.code !== 'PGRST116') {
@@ -45,13 +44,13 @@ export async function saveMyProfile(formData: ProfileData) {
 
   const supabase = createServerSupabaseClient()
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
+  const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+  if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
   const upsertPayload: Record<string, unknown> = {
-    user_id: session.user.id,
+    user_id: user.id,
     display_name,
     city,
     zone,

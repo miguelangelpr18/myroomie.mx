@@ -4,11 +4,9 @@ import Link from 'next/link'
 export default async function SignupIntentPage() {
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Si no hay sesión, mostrar CTAs para login/signup
-  if (!session) {
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-2xl">
         <h1 className="text-3xl font-bold mb-8 text-center">¿Qué quieres hacer primero?</h1>

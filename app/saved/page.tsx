@@ -10,19 +10,16 @@ export const metadata: Metadata = {
 }
 
 export default async function SavedPage() {
-  // Requerir autenticación (wishlist es privada)
   await requireAuthOrRedirect()
 
   const supabase = createServerSupabaseClient()
 
-  // Obtener sesión para user_id
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  if (!session || sessionError) {
-    // requireAuthOrRedirect ya debería haber redirigido, pero por seguridad:
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
     return null
   }
 
-  const userId = session.user.id
+  const userId = user.id
 
   // FALLBACK B: 2 queries (más robusto que join en Supabase)
   // 1) Traer listing_ids de listing_saves del usuario (order por created_at desc)

@@ -8,26 +8,19 @@ export const metadata: Metadata = {
 }
 
 export default async function AccountPage() {
-  await requireAuthOrRedirect()
+  const { user } = await requireAuthOrRedirect()
 
   const supabase = createServerSupabaseClient()
 
-  // Obtener sesión
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return null
-  }
-
-  // Obtener perfil del usuario
   const { data: profile } = await supabase
     .from('profiles')
     .select('display_name, avatar_url')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
   const displayName = profile?.display_name || ''
   const avatarUrl = profile?.avatar_url || null
-  const email = session.user.email || ''
+  const email = user.email || ''
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-2xl">

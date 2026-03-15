@@ -10,9 +10,9 @@ export default async function Header() {
   const supabase = createServerSupabaseClient()
 
   // Obtener sesión
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (!user) {
     // No hay sesión: mostrar links públicos
     return (
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-neutral-200/60">
@@ -57,7 +57,7 @@ export default async function Header() {
   const { data: profile } = await supabase
     .from('profiles')
     .select('display_name, avatar_url')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle()
 
   const displayName = profile?.display_name || 'Mi cuenta'
@@ -85,7 +85,7 @@ export default async function Header() {
         
         {/* Right: Actions */}
         <nav className="flex gap-4 items-center flex-shrink-0">
-          <HeaderModeTabs userId={session.user.id} hasProfile={!!profile} />
+          <HeaderModeTabs userId={user.id} hasProfile={!!profile} />
           {/* Minimal Right: Messages Icon + Avatar */}
           <div className="inline-flex items-center gap-2">
             <Link
@@ -112,7 +112,7 @@ export default async function Header() {
               <UserMenu
                 displayName={displayName}
                 avatarUrl={profile?.avatar_url || null}
-                userId={session.user.id}
+                userId={user.id}
                 initial={initial}
               />
             </div>

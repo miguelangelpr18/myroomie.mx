@@ -10,16 +10,11 @@ export default async function ThreadPage({
 }: {
   params: { thread_id: string }
 }) {
-  // Verificar que el usuario tenga perfil
-  await requireProfileOrRedirect()
+  const { user } = await requireProfileOrRedirect()
 
   const supabase = createServerSupabaseClient()
 
-  // Obtener sesión
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return null // requireProfileOrRedirect ya maneja redirect
-  }
+  const viewerId = user.id
 
   // Obtener thread
   const { data: thread, error: threadError } = await supabase
@@ -29,7 +24,7 @@ export default async function ThreadPage({
     .single()
 
   // Verificar que el usuario es participant (después de verificar que existe)
-  const isParticipant = thread && (thread.user1_id === session.user.id || thread.user2_id === session.user.id)
+  const isParticipant = thread && (thread.user1_id === viewerId || thread.user2_id === viewerId)
 
   // Si no existe o hay error o no es participante, mostrar error amigable
   if (!thread || threadError || !isParticipant) {
@@ -57,7 +52,7 @@ export default async function ThreadPage({
   await markThreadAsRead(params.thread_id)
 
   // Identificar el otro usuario
-  const otherUserId = thread.user1_id === session.user.id 
+  const otherUserId = thread.user1_id === viewerId 
     ? thread.user2_id 
     : thread.user1_id
 
@@ -132,7 +127,7 @@ export default async function ThreadPage({
         ) : (
           <div className="space-y-4">
             {messages.map((message) => {
-              const isOwn = message.sender_id === session.user.id
+              const isOwn = message.sender_id === viewerId
 
               return (
                 <div

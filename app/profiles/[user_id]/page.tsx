@@ -48,8 +48,8 @@ export default async function ProfilePage({
   const supabase = createServerSupabaseClient()
 
   // Obtener sesión para verificar si es el propio perfil
-  const { data: { session } } = await supabase.auth.getSession()
-  const isOwnProfile = session?.user?.id === params.user_id
+  const { data: { user } } = await supabase.auth.getUser()
+  const isOwnProfile = user?.id === params.user_id
 
   // Obtener perfil por user_id
   const { data: profile, error: profileError } = await supabase

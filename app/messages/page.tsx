@@ -153,22 +153,15 @@ function ThreadRow({
 }
 
 export default async function MessagesPage({ searchParams }: MessagesPageProps) {
-  // Verificar que el usuario tenga perfil
-  await requireProfileOrRedirect()
+  const { user } = await requireProfileOrRedirect()
 
   const supabase = createServerSupabaseClient()
-
-  // Obtener sesión para filtrar threads
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return null // requireProfileOrRedirect ya maneja redirect
-  }
 
   // Obtener perfil del usuario actual
   const { data: currentProfile, error: profileError } = await supabase
     .from('profiles')
     .select('user_id')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (!currentProfile || profileError) {
@@ -191,7 +184,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
       listing_id, 
       created_at
     `)
-    .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
+    .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
     .order('created_at', { ascending: false })
     .limit(50)
 
@@ -201,7 +194,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
     // Extraer IDs únicos
     const threadIds = rawThreads.map((t) => t.id)
     const otherUserIds = rawThreads.map((t) =>
-      t.user1_id === session.user.id ? t.user2_id : t.user1_id
+      t.user1_id === user.id ? t.user2_id : t.user1_id
     )
 
     // Batch fetch: perfiles de otros usuarios
@@ -244,7 +237,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
 
     threadsWithData = rawThreads.map((thread) => {
       const otherUserId =
-        thread.user1_id === session.user.id ? thread.user2_id : thread.user1_id
+        thread.user1_id === user.id ? thread.user2_id : thread.user1_id
       const otherProfile = profilesMap.get(otherUserId) || null
       const lastMessage = lastMessagesMap.get(thread.id) || null
       const participant = participantsMap.get(thread.id)
