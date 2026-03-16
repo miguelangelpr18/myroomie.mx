@@ -3,6 +3,7 @@ import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
 import MessageForm from './[thread_id]/MessageForm'
 import LifestyleBadges from '../components/LifestyleBadges'
+import Avatar from '../components/ui/Avatar'
 import AutoScrollToBottom from './AutoScrollToBottom'
 import { markThreadAsRead } from './actions'
 
@@ -85,17 +86,12 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
       {/* Header fijo */}
       <div className="flex-shrink-0 border-b border-neutral-200 bg-white px-5 py-4">
         <div className="flex items-center gap-3">
-          {otherProfile?.avatar_url ? (
-            <img
-              src={otherProfile.avatar_url}
-              alt={otherProfile.display_name || 'Usuario'}
-              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-brand text-white flex items-center justify-center text-lg font-semibold flex-shrink-0">
-              {initial}
-            </div>
-          )}
+          <Avatar
+            src={otherProfile?.avatar_url}
+            alt={otherProfile?.display_name || 'Usuario'}
+            size="md"
+            initial={initial}
+          />
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-semibold text-neutral-900 leading-none truncate">{otherProfile?.display_name || 'Usuario'}</h1>
             {otherProfile && (
@@ -118,8 +114,8 @@ export default async function ThreadPanel({ threadId }: { threadId: string }) {
       {/* Body scroll */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 min-w-0 min-h-0 bg-neutral-50">
         {messagesError && (
-          <div className="p-4 bg-red-100 text-red-700 rounded-lg mb-4">
-            <p className="text-sm">Error al cargar mensajes: {messagesError.message}</p>
+          <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg mb-4 text-sm">
+            Error al cargar los mensajes. Intenta de nuevo.
           </div>
         )}
 

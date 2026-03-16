@@ -165,31 +165,8 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
   // Ejecutar query
   const { data: profiles, count: totalCount, error } = await query
 
-  // Ordenar perfiles: featured primero (featured_until > now), luego mantener orden de Supabase
-  const now = new Date()
-  const sortedProfiles = profiles
-    ? [...profiles].sort((a, b) => {
-        const aFeatured = a.featured_until && new Date(a.featured_until) > now
-        const bFeatured = b.featured_until && new Date(b.featured_until) > now
-
-        // Si uno es featured y el otro no, featured va primero
-        if (aFeatured && !bFeatured) return -1
-        if (!aFeatured && bFeatured) return 1
-
-        // Si ambos son featured, ordenar por featured_until desc
-        if (aFeatured && bFeatured) {
-          const aDate = new Date(a.featured_until!).getTime()
-          const bDate = new Date(b.featured_until!).getTime()
-          return bDate - aDate
-        }
-
-        // Si ninguno es featured, mantener orden original (ya viene ordenado por Supabase)
-        return 0
-      })
-    : null
-
   // Calcular número de resultados
-  const resultCount = sortedProfiles?.length || 0
+  const resultCount = profiles?.length || 0
 
   // Construir objeto de filtros activos para ResultHeader
   const activeFilters = {
@@ -243,8 +220,8 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
       )}
 
       {error && (
-        <div className="p-4 bg-red-100 text-red-700 rounded-lg mb-6">
-          Error al cargar perfiles: {error.message}
+        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg mb-6 text-sm">
+          Error al cargar los perfiles. Intenta de nuevo.
         </div>
       )}
 
@@ -276,7 +253,7 @@ export default async function Explore({ searchParams }: ExplorePageProps) {
         )
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-          {sortedProfiles?.map((profile) => (
+          {profiles?.map((profile) => (
             <RoomieCard
               key={profile.user_id}
               profile={profile}

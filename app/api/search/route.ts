@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
+function sanitizeSearchQuery(q: string): string {
+  // Remove characters that have meaning in PostgREST filter syntax
+  return q.replace(/[(),%\\"']/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get('q')?.trim() || ''
+  const rawQ = req.nextUrl.searchParams.get('q')?.trim() || ''
+
+  if (!rawQ || rawQ.length < 2) {
+    return NextResponse.json({ listings: [], profiles: [] })
+  }
+
+  const q = sanitizeSearchQuery(rawQ)
 
   if (!q || q.length < 2) {
     return NextResponse.json({ listings: [], profiles: [] })
@@ -14,6 +25,7 @@ export async function GET(req: NextRequest) {
     supabase
       .from('listings')
       .select('id, title, city, zone, price_mxn, image_urls')
+      .eq('is_active', true)
       .or(`title.ilike.%${q}%,city.ilike.%${q}%,zone.ilike.%${q}%`)
       .limit(5),
     supabase

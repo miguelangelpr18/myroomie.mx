@@ -3,6 +3,7 @@ import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
 import MessageForm from './MessageForm'
 import LifestyleBadges from '../../components/LifestyleBadges'
+import Avatar from '../../components/ui/Avatar'
 import { markThreadAsRead } from '../actions'
 
 export default async function ThreadPage({
@@ -26,15 +27,14 @@ export default async function ThreadPage({
   // Verificar que el usuario es participant (después de verificar que existe)
   const isParticipant = thread && (thread.user1_id === viewerId || thread.user2_id === viewerId)
 
-  // Si no existe o hay error o no es participante, mostrar error amigable
   if (!thread || threadError || !isParticipant) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+        <div className="text-center py-12 bg-neutral-50 rounded-xl border border-neutral-200">
+          <h2 className="text-xl font-semibold text-neutral-900 mb-2">
             Conversación no disponible
           </h2>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-neutral-500 text-sm mb-4">
             No tienes acceso a esta conversación o ya no existe.
           </p>
           <Link
@@ -84,19 +84,14 @@ export default async function ThreadPage({
         </Link>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
         <div className="flex items-center gap-4 mb-4">
-          {otherProfile?.avatar_url ? (
-            <img
-              src={otherProfile.avatar_url}
-              alt={otherProfile.display_name}
-              className="w-16 h-16 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-brand text-white flex items-center justify-center text-xl font-semibold">
-              {initial}
-            </div>
-          )}
+          <Avatar
+            src={otherProfile?.avatar_url}
+            alt={otherProfile?.display_name || 'Usuario'}
+            size="lg"
+            initial={initial}
+          />
           <div>
             <h1 className="text-2xl font-bold">{otherProfile?.display_name || 'Usuario'}</h1>
             {otherProfile && <LifestyleBadges profile={otherProfile} />}
@@ -113,16 +108,16 @@ export default async function ThreadPage({
       </div>
 
       {messagesError && (
-        <div className="p-4 bg-red-100 text-red-700 rounded-lg mb-6">
-          Error al cargar mensajes: {messagesError.message}
+        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg mb-6 text-sm">
+          Error al cargar los mensajes. Intenta de nuevo.
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-lg shadow min-h-[400px] max-h-[600px] overflow-y-auto overflow-x-hidden">
+      <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm min-h-[400px] max-h-[600px] overflow-y-auto overflow-x-hidden">
         {!messages || messages.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p>No hay mensajes aún.</p>
-            <p className="text-sm mt-2">Envía el primer mensaje abajo.</p>
+          <div className="text-center py-12 text-neutral-500">
+            <p className="font-medium">No hay mensajes aún.</p>
+            <p className="text-sm mt-2 text-neutral-400">Envía el primer mensaje abajo.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -135,16 +130,16 @@ export default async function ThreadPage({
                   className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[75%] md:max-w-[65%] rounded-lg px-4 py-2 overflow-hidden min-w-0 ${
+                    className={`max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-3 overflow-hidden min-w-0 ${
                       isOwn
                         ? 'bg-brand text-white'
-                        : 'bg-gray-100 text-gray-900'
+                        : 'bg-neutral-100 text-neutral-900'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words" style={{ overflowWrap: 'anywhere' }}>{message.body}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed" style={{ overflowWrap: 'anywhere' }}>{message.body}</p>
                     <p
                       className={`text-xs mt-1 ${
-                        isOwn ? 'text-white/80' : 'text-gray-500'
+                        isOwn ? 'text-white/80' : 'text-neutral-400'
                       }`}
                     >
                       {new Date(message.created_at).toLocaleString('es-MX', {

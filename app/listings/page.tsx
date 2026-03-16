@@ -133,32 +133,8 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
   // Ejecutar query
   const { data: listings, count: totalCount, error } = await query
 
-  // Ordenar listings: destacados primero (featured_until > now), luego mantener orden de Supabase
-  const now = new Date()
-  const sortedListings = listings
-    ? [...listings].sort((a, b) => {
-        // Verificar si está destacado: featured_until IS NOT NULL AND featured_until > now()
-        const aFeatured = a.featured_until && new Date(a.featured_until) > now
-        const bFeatured = b.featured_until && new Date(b.featured_until) > now
-
-        // Si uno es destacado y el otro no, destacado va primero
-        if (aFeatured && !bFeatured) return -1
-        if (!aFeatured && bFeatured) return 1
-
-        // Si ambos son destacados, ordenar por featured_until desc
-        if (aFeatured && bFeatured) {
-          const aDate = new Date(a.featured_until!).getTime()
-          const bDate = new Date(b.featured_until!).getTime()
-          return bDate - aDate
-        }
-
-        // Si ninguno es destacado, mantener orden original (ya viene ordenado por Supabase según sort param)
-        return 0
-      })
-    : null
-
   // Calcular número de resultados
-  const resultCount = sortedListings?.length || 0
+  const resultCount = listings?.length || 0
 
   const activeFilterLabels: string[] = []
   if (q.trim()) activeFilterLabels.push(`Buscar: "${q.trim()}"`)
@@ -181,7 +157,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight mb-2">Anuncios</h1>
-          <p className="text-gray-600 text-sm">Cuartos disponibles y personas buscando roomie.</p>
+          <p className="text-neutral-500 text-sm">Cuartos disponibles y personas buscando roomie.</p>
         </div>
         <Link
           href="/listings/new"
@@ -199,8 +175,8 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
       )}
 
       {error && (
-        <div className="p-4 bg-red-100 text-red-700 rounded-lg mb-6">
-          Error al cargar listings: {error.message}
+        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg mb-6 text-sm">
+          Error al cargar los anuncios. Intenta de nuevo.
         </div>
       )}
 
@@ -226,7 +202,7 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
         )
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {sortedListings?.map((listing) => (
+          {listings?.map((listing) => (
             <ListingCard
               key={listing.id}
               listing={listing}

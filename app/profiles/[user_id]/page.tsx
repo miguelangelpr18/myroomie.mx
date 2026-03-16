@@ -2,11 +2,12 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { requireProfileOrRedirect } from '@/lib/requireProfile'
 import Link from 'next/link'
 import LifestyleBadges from '../../components/LifestyleBadges'
-import ListingImage from '../../components/listings/ListingImage'
+import ListingCard from '../../components/listings/ListingCard'
+import Avatar from '../../components/ui/Avatar'
+import EmptyState from '../../components/ui/EmptyState'
 import ContactButton from './ContactButton'
 import TrustPanel from '../../components/TrustPanel'
 import ReportButton from '../../components/ReportButton'
-import { formatDate } from '@/lib/utils/formatDate'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({
@@ -58,15 +59,14 @@ export default async function ProfilePage({
     .eq('user_id', params.user_id)
     .single()
 
-  // Si no existe o hay error, mostrar error amigable
   if (!profile || profileError) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+        <div className="text-center py-12 bg-neutral-50 rounded-xl border border-neutral-200">
+          <h2 className="text-xl font-semibold text-neutral-900 mb-2">
             Perfil no encontrado
           </h2>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-neutral-500 text-sm mb-4">
             Es posible que este perfil haya sido eliminado o no esté disponible.
           </p>
           <Link
@@ -83,8 +83,9 @@ export default async function ProfilePage({
   // Obtener listings del usuario
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, title, city, zone, price_mxn, listing_type, created_at, image_urls')
+    .select('id, title, description, city, zone, price_mxn, listing_type, created_at, featured_until, image_urls')
     .eq('user_id', params.user_id)
+    .eq('is_active', true)
     .order('created_at', { ascending: false })
     .limit(20)
 
@@ -103,19 +104,14 @@ export default async function ProfilePage({
         </Link>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
         <div className="flex items-center gap-4 mb-4">
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={profile.display_name}
-              className="w-24 h-24 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-brand text-white flex items-center justify-center text-3xl font-semibold">
-              {initial}
-            </div>
-          )}
+          <Avatar
+            src={profile.avatar_url}
+            alt={profile.display_name}
+            size="xl"
+            initial={initial}
+          />
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">{profile.display_name}</h1>
@@ -125,12 +121,12 @@ export default async function ProfilePage({
                 </span>
               )}
             </div>
-            <p className="text-gray-600">
+            <p className="text-neutral-600">
               {profile.city}, {profile.zone}
               {profile.age && ` · ${profile.age} años`}
             </p>
             {profile.bio && (
-              <p className="text-sm text-gray-600 mt-2 max-w-md">
+              <p className="text-sm text-neutral-600 mt-2 max-w-md">
                 {profile.bio}
               </p>
             )}
@@ -153,61 +149,29 @@ export default async function ProfilePage({
       </div>
 
       {/* Trust Panel: Ratings + Verifications */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
         <TrustPanel isOwner={isOwnProfile} />
       </div>
 
       <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-6">Anuncios publicados</h2>
+        <h2 className="text-xl font-semibold mb-6">Anuncios publicados</h2>
 
         {!listings || listings.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-gray-600 text-sm">Este usuario aún no ha publicado anuncios.</p>
-          </div>
+          <EmptyState
+            icon="listings"
+            title="Sin anuncios publicados"
+            description="Este usuario aún no ha publicado anuncios."
+            variant="compact"
+          />
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            {listings.map((listing) => {
-              const typeLabel = listing.listing_type === 'room' ? 'Rento cuarto' : 'Busco roomie'
-
-              return (
-                <Link key={listing.id} href={`/listings/${listing.id}`}>
-                  <div className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">
-                    {/* Foto principal */}
-                    {Array.isArray(listing.image_urls) && listing.image_urls.length > 0 ? (
-                      <div className="aspect-[4/3] w-full overflow-hidden bg-neutral-100">
-                        <ListingImage
-                          src={listing.image_urls[0]}
-                          alt={listing.title}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          wrapperClassName="h-full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-[4/3] w-full bg-neutral-100 flex items-center justify-center text-neutral-300">
-                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="p-5">
-                    <div className="mb-3">
-                      <span className="inline-block px-3 py-1 bg-brand/10 text-brand rounded-full text-sm font-medium">
-                        {typeLabel}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
-                    <p className="text-sm text-gray-500 mb-1">{listing.city}{listing.zone ? ` · ${listing.zone}` : ''}</p>
-                    {listing.price_mxn && (
-                      <p className="text-sm font-semibold text-neutral-800 mb-3">${listing.price_mxn.toLocaleString()} MXN/mes</p>
-                    )}
-                    <p className="text-xs text-gray-400">
-                      {formatDate(listing.created_at)}
-                    </p>
-                    </div>{/* /p-5 */}
-                  </div>
-                </Link>
-              )
-            })}
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                href={`/listings/${listing.id}`}
+              />
+            ))}
           </div>
         )}
       </div>

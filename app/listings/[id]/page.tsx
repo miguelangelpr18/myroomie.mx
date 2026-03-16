@@ -7,6 +7,7 @@ import ContactForm from './ContactForm'
 import SaveButton from './SaveButton'
 import OwnerActions from './OwnerActions'
 import ReportButton from '../../components/ReportButton'
+import Avatar from '../../components/ui/Avatar'
 import type { Metadata } from 'next'
 import { formatDate } from '@/lib/utils/formatDate'
 
@@ -90,15 +91,14 @@ export default async function ListingDetailPage({
   const now = new Date()
   const isFeatured = listing?.featured_until && new Date(listing.featured_until) > now
 
-  // Si no existe o hay error, mostrar error amigable
   if (!listing || listingError) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+        <div className="text-center py-12 bg-neutral-50 rounded-xl border border-neutral-200">
+          <h2 className="text-xl font-semibold text-neutral-900 mb-2">
             Anuncio no encontrado
           </h2>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-neutral-500 text-sm mb-4">
             Es posible que este anuncio haya sido eliminado o ya no esté disponible.
           </p>
           <Link
@@ -243,20 +243,15 @@ export default async function ListingDetailPage({
               {profile ? (
                 <Link href={`/profiles/${listing.user_id}`}>
                   <div className="flex items-start gap-4 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
-                    {profile.avatar_url ? (
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.display_name}
-                        className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-brandSoft text-brandText border border-brandBorder flex items-center justify-center text-xl font-semibold flex-shrink-0">
-                        {initial}
-                      </div>
-                    )}
+                    <Avatar
+                      src={profile.avatar_url}
+                      alt={profile.display_name}
+                      size="lg"
+                      initial={initial}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-lg">{profile.display_name}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-neutral-500">
                         {profile.city || 'Ciudad no especificada'} · {profile.zone || 'Zona no especificada'}
                       </p>
                       <LifestyleBadges profile={profile} />
@@ -265,12 +260,10 @@ export default async function ListingDetailPage({
                 </Link>
               ) : (
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-full bg-brandSoft text-brandText border border-brandBorder flex items-center justify-center text-xl font-semibold flex-shrink-0">
-                    {initial}
-                  </div>
+                  <Avatar src={null} alt="Usuario" size="lg" initial="?" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-lg">Usuario</p>
-                    <p className="text-sm text-gray-500 italic">Información del autor no disponible</p>
+                    <p className="text-sm text-neutral-400 italic">Información del autor no disponible</p>
                   </div>
                 </div>
               )}
