@@ -1,13 +1,51 @@
 import { NextRequest } from 'next/server'
 
-const WINDOW_MS = 60_000 // 1 minuto
-const MAX_REQUESTS_PER_WINDOW = 40
+// ─── Upstash Redis rate limiter ───────────────────────────────────────────────
+// Uses @upstash/ratelimit when UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
+// are configured. Falls back to a no-op (allows all) when they are not, so the
+// app works in local dev without Redis.
+//
+// To enable in production:
+//   1. Create a free Redis database at https://console.upstash.com/
+//   2. Add to .env.local (and Vercel environment variables):
+//        UPSTASH_REDIS_REST_URL=https://...
+//        UPSTASH_REDIS_REST_TOKEN=...
+//   3. The rate limiter will activate automatically.
 
-/** Entradas: count en ventana y timestamp de fin de ventana */
-const store = new Map<string, { count: number; resetAt: number }>()
+let _ratelimiter: { limit: (id: string) => Promise<{ success: boolean }> } | null = null
+
+async function getRateLimiter() {
+  if (_ratelimiter) return _ratelimiter
+
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+
+  if (!url || !token) {
+    // No Redis configured — return a pass-through limiter (local dev / pre-setup)
+    _ratelimiter = {
+      limit: async () => ({ success: true }),
+    }
+    return _ratelimiter
+  }
+
+  const { Ratelimit } = await import('@upstash/ratelimit')
+  const { Redis } = await import('@upstash/redis')
+
+  const redis = new Redis({ url, token })
+
+  _ratelimiter = new Ratelimit({
+    redis,
+    // 40 requests per 60 seconds per IP, using a sliding window
+    limiter: Ratelimit.slidingWindow(40, '60 s'),
+    analytics: false,
+    prefix: 'myroomie:geo',
+  })
+
+  return _ratelimiter
+}
 
 /**
- * Obtiene la IP del cliente (x-forwarded-for primero, típico detrás de proxy/Vercel).
+ * Extracts the client IP from Vercel/proxy headers.
  */
 export function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -21,21 +59,12 @@ export function getClientIp(request: NextRequest): string {
 }
 
 /**
- * Rate limit por IP en ventana deslizante de 60s.
- * Retorna true si la petición está permitida, false si se excedió el límite.
+ * Rate-limits by IP using a distributed sliding window (Upstash Redis).
+ * Returns true if the request is allowed, false if it should be blocked.
+ * Falls back to allowing all requests when Redis is not configured.
  */
-export function checkGeoRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = store.get(ip)
-  if (!entry) {
-    store.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-    return true
-  }
-  if (entry.resetAt <= now) {
-    store.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-    return true
-  }
-  entry.count += 1
-  if (entry.count > MAX_REQUESTS_PER_WINDOW) return false
-  return true
+export async function checkGeoRateLimit(ip: string): Promise<boolean> {
+  const limiter = await getRateLimiter()
+  const { success } = await limiter.limit(ip)
+  return success
 }

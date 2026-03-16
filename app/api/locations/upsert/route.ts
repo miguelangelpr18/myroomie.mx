@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authenticated user before any write operation
+    const supabaseAuth = createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+    if (!user || authError) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { provider, place_id, label, city, region, country, lat, lng } = body
 
@@ -151,7 +159,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error al hacer upsert en locations:', error)
       return NextResponse.json(
-        { error: `Error al guardar ubicación: ${error.message}` },
+        { error: 'Error al guardar ubicación.' },
         { status: 500 }
       )
     }
@@ -162,7 +170,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error en upsert de locations:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { error: 'Error interno del servidor.' },
       { status: 500 }
     )
   }

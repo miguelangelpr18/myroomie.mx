@@ -3,7 +3,7 @@ import { getClientIp, checkGeoRateLimit } from '@/app/lib/rateLimit'
 
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request)
-  if (!checkGeoRateLimit(ip)) {
+  if (!(await checkGeoRateLimit(ip))) {
     return NextResponse.json(
       { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
       { status: 429 }

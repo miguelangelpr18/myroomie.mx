@@ -1,8 +1,9 @@
 'use server'
 
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+
 export async function testSupabaseConnection() {
   try {
-    // Validar que las env vars existen (sin mostrar keys completas)
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const hasKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     const urlPreview = url ? `${url.substring(0, 30)}...` : 'NO CONFIGURADO'
@@ -16,14 +17,10 @@ export async function testSupabaseConnection() {
       }
     }
 
-    // Intentar importar y crear el cliente
     try {
-      const { supabase } = await import('@/lib/supabaseClient')
-      
-      // Usar auth.getSession() como método simple de prueba de conexión (no requiere tablas ni RPC)
-      const { data, error } = await supabase.auth.getSession()
+      const supabase = createServerSupabaseClient()
+      const { error } = await supabase.auth.getUser()
 
-      // Si hay error, la conexión falló
       if (error) {
         return {
           error: error.message || 'Error al conectar con Supabase',
@@ -33,7 +30,6 @@ export async function testSupabaseConnection() {
         }
       }
 
-      // Si no hay error, la conexión funcionó (no importa si hay sesión o no)
       return {
         error: null,
         message: 'Conexión exitosa',
@@ -41,7 +37,6 @@ export async function testSupabaseConnection() {
         hasKey,
       }
     } catch (clientError) {
-      // Error al crear/importar el cliente (env vars inválidas o error en creación)
       return {
         error: clientError instanceof Error ? clientError.message : 'Error al crear cliente de Supabase',
         message: '',
@@ -58,4 +53,3 @@ export async function testSupabaseConnection() {
     }
   }
 }
-
