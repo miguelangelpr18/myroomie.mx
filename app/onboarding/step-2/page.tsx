@@ -41,8 +41,8 @@ export default async function OnboardingStep2Page() {
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold mb-6">Estilo de vida</h1>
-      <p className="text-gray-600 mb-8">
+      <h1 className="text-2xl font-semibold tracking-tight mb-3">Estilo de vida</h1>
+      <p className="text-neutral-500 text-sm mb-8">
         Comparte información sobre tu estilo de vida para encontrar un roomie compatible.
       </p>
 

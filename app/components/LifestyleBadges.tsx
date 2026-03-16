@@ -64,7 +64,7 @@ export default function LifestyleBadges({ profile }: LifestyleBadgesProps) {
       {badges.map((badge, index) => (
         <span
           key={index}
-          className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium border border-gray-200"
+          className="inline-block px-3 py-1 bg-neutral-100 text-neutral-700 rounded-full text-xs font-medium border border-neutral-200"
         >
           {badge}
         </span>

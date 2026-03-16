@@ -32,8 +32,8 @@ export default async function SavedPage() {
   if (savesError) {
     return (
       <div className="container mx-auto px-4 md:px-8 py-16">
-        <div className="p-4 bg-red-100 text-red-700 rounded-lg">
-          Error al cargar guardados: {savesError.message}
+        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
+          Error al cargar tus guardados. Intenta de nuevo.
         </div>
       </div>
     )
@@ -45,7 +45,7 @@ export default async function SavedPage() {
       <div className="container mx-auto px-4 md:px-8 py-16">
         <div className="mb-4">
           <h1 className="text-2xl font-semibold tracking-tight mb-2">Guardados</h1>
-          <p className="text-gray-600 text-sm">Tus anuncios guardados para comparar después.</p>
+          <p className="text-neutral-500 text-sm">Tus anuncios guardados para comparar después.</p>
         </div>
         <EmptyState
           icon="listings"
@@ -68,8 +68,8 @@ export default async function SavedPage() {
   if (listingsError) {
     return (
       <div className="container mx-auto px-4 md:px-8 py-16">
-        <div className="p-4 bg-red-100 text-red-700 rounded-lg">
-          Error al cargar anuncios: {listingsError.message}
+        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
+          Error al cargar los anuncios. Intenta de nuevo.
         </div>
       </div>
     )
@@ -98,13 +98,13 @@ export default async function SavedPage() {
     <div className="container mx-auto px-4 md:px-8 py-16">
       <div className="mb-4">
         <h1 className="text-2xl font-semibold tracking-tight mb-2">Guardados</h1>
-        <p className="text-gray-600 text-sm">Tus anuncios guardados para comparar después.</p>
+        <p className="text-neutral-500 text-sm">Tus anuncios guardados para comparar después.</p>
       </div>
 
       {/* Resumen de resultados */}
       {resultCount > 0 && (
         <div className="mb-6">
-          <p className="text-gray-600 text-sm">
+          <p className="text-neutral-500 text-sm">
             Mostrando <strong>{resultCount}</strong> {resultCount === 1 ? 'anuncio guardado' : 'anuncios guardados'}
           </p>
         </div>

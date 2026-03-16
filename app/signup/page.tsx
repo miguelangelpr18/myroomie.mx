@@ -155,15 +155,21 @@ export default function Signup() {
         )}
 
         {success && (
-          <div className="p-3 bg-green-100 text-green-700 rounded-lg text-sm">
-            {success}
+          <div className="p-3 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm">
+            <p>{success}</p>
+            <a
+              href="/login"
+              className="mt-2 inline-block text-brand font-medium hover:underline"
+            >
+              Ir a iniciar sesión
+            </a>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full bg-brand text-white px-6 py-3 rounded-lg hover:bg-brandHover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>

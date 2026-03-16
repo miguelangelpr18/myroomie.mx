@@ -29,8 +29,8 @@ export default async function OnboardingStep1Page() {
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold mb-6">Completa tu perfil</h1>
-      <p className="text-gray-600 mb-8">
+      <h1 className="text-2xl font-semibold tracking-tight mb-3">Completa tu perfil</h1>
+      <p className="text-neutral-500 text-sm mb-8">
         Comparte información básica para que otros usuarios puedan encontrarte.
       </p>
 

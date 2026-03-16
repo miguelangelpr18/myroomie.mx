@@ -10,7 +10,7 @@ export default async function PromoteProfilePage() {
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-3xl font-bold mb-3">Promociona tu perfil (Roomies)</h1>
-        <p className="text-gray-600 text-lg">
+        <p className="text-neutral-500 text-lg">
           Aparece primero en Explorar roomies y recibe más mensajes.
         </p>
       </div>
@@ -18,12 +18,12 @@ export default async function PromoteProfilePage() {
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-3 gap-6 mb-8">
         {/* Plan 1: 3 días */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow border border-neutral-200">
           <div className="text-center mb-6">
             <h3 className="text-xl font-semibold mb-2">3 días</h3>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-gray-900">$99</span>
-              <span className="text-gray-600 ml-1">MXN</span>
+              <span className="text-3xl font-bold text-neutral-900">$99</span>
+              <span className="text-neutral-500 ml-1">MXN</span>
             </div>
           </div>
           <ul className="space-y-3 mb-6">
@@ -39,7 +39,7 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Apareces en la parte superior</span>
+              <span className="text-sm text-neutral-700">Apareces en la parte superior</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -53,7 +53,7 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Badge destacado</span>
+              <span className="text-sm text-neutral-700">Badge destacado</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -67,19 +67,19 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Más vistas y mensajes</span>
+              <span className="text-sm text-neutral-700">Más vistas y mensajes</span>
             </li>
           </ul>
-          <PromoteButton planName="3 días" planDays={3} />
+          <PromoteButton planDays={3} />
         </div>
 
         {/* Plan 2: 7 días */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow border border-neutral-200">
           <div className="text-center mb-6">
             <h3 className="text-xl font-semibold mb-2">7 días</h3>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-gray-900">$199</span>
-              <span className="text-gray-600 ml-1">MXN</span>
+              <span className="text-3xl font-bold text-neutral-900">$199</span>
+              <span className="text-neutral-500 ml-1">MXN</span>
             </div>
           </div>
           <ul className="space-y-3 mb-6">
@@ -95,7 +95,7 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Apareces en la parte superior</span>
+              <span className="text-sm text-neutral-700">Apareces en la parte superior</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -109,7 +109,7 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Badge destacado</span>
+              <span className="text-sm text-neutral-700">Badge destacado</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -123,10 +123,10 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Más vistas y mensajes</span>
+              <span className="text-sm text-neutral-700">Más vistas y mensajes</span>
             </li>
           </ul>
-          <PromoteButton planName="7 días" planDays={7} />
+          <PromoteButton planDays={7} />
         </div>
 
         {/* Plan 3: 30 días - Mejor valor */}
@@ -139,8 +139,8 @@ export default async function PromoteProfilePage() {
           <div className="text-center mb-6">
             <h3 className="text-xl font-semibold mb-2">30 días</h3>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-gray-900">$499</span>
-              <span className="text-gray-600 ml-1">MXN</span>
+              <span className="text-3xl font-bold text-neutral-900">$499</span>
+              <span className="text-neutral-500 ml-1">MXN</span>
             </div>
           </div>
           <ul className="space-y-3 mb-6">
@@ -156,7 +156,7 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Apareces en la parte superior</span>
+              <span className="text-sm text-neutral-700">Apareces en la parte superior</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -170,7 +170,7 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Badge destacado</span>
+              <span className="text-sm text-neutral-700">Badge destacado</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -184,10 +184,10 @@ export default async function PromoteProfilePage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Más vistas y mensajes</span>
+              <span className="text-sm text-neutral-700">Más vistas y mensajes</span>
             </li>
           </ul>
-          <PromoteButton planName="30 días" planDays={30} />
+          <PromoteButton planDays={30} />
         </div>
       </div>
 

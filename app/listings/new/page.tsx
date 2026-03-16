@@ -8,8 +8,8 @@ export default async function NewListingPage() {
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-6">Publicar anuncio</h1>
-      <p className="text-gray-600 mb-8">
+      <h1 className="text-2xl font-semibold tracking-tight mb-3">Publicar anuncio</h1>
+      <p className="text-neutral-500 text-sm mb-8">
         Publica tu anuncio para encontrar roomie o departamento.
       </p>
 

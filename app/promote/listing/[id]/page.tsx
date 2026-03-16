@@ -26,11 +26,11 @@ export default async function PromoteListingPage({
   if (listing.user_id !== user.id) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+        <div className="text-center py-12 bg-neutral-50 rounded-lg border border-neutral-200">
+          <h2 className="text-xl font-semibold text-neutral-900 mb-2">
             No autorizado
           </h2>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-neutral-500 text-sm mb-4">
             Solo puedes promocionar tus propios anuncios.
           </p>
           <Link
@@ -49,10 +49,10 @@ export default async function PromoteListingPage({
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-3xl font-bold mb-3">Promociona tu anuncio</h1>
-        <p className="text-gray-600 text-lg mb-2">
+        <p className="text-neutral-500 text-lg mb-2">
           Aparece primero en Anuncios y recibe más contactos.
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-neutral-400">
           Anuncio: <strong>{listing.title}</strong>
         </p>
       </div>
@@ -60,12 +60,12 @@ export default async function PromoteListingPage({
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-3 gap-6 mb-8">
         {/* Plan 1: 3 días */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow border border-neutral-200">
           <div className="text-center mb-6">
             <h3 className="text-xl font-semibold mb-2">3 días</h3>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-gray-900">$99</span>
-              <span className="text-gray-600 ml-1">MXN</span>
+              <span className="text-3xl font-bold text-neutral-900">$99</span>
+              <span className="text-neutral-500 ml-1">MXN</span>
             </div>
           </div>
           <ul className="space-y-3 mb-6">
@@ -81,7 +81,7 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Apareces en la parte superior</span>
+              <span className="text-sm text-neutral-700">Apareces en la parte superior</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -95,7 +95,7 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Badge destacado</span>
+              <span className="text-sm text-neutral-700">Badge destacado</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -109,19 +109,19 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Más vistas y contactos</span>
+              <span className="text-sm text-neutral-700">Más vistas y contactos</span>
             </li>
           </ul>
-          <PromoteButton listingId={listing.id} planName="3 días" planDays={3} />
+          <PromoteButton listingId={listing.id} planDays={3} />
         </div>
 
         {/* Plan 2: 7 días */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow border border-neutral-200">
           <div className="text-center mb-6">
             <h3 className="text-xl font-semibold mb-2">7 días</h3>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-gray-900">$199</span>
-              <span className="text-gray-600 ml-1">MXN</span>
+              <span className="text-3xl font-bold text-neutral-900">$199</span>
+              <span className="text-neutral-500 ml-1">MXN</span>
             </div>
           </div>
           <ul className="space-y-3 mb-6">
@@ -137,7 +137,7 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Apareces en la parte superior</span>
+              <span className="text-sm text-neutral-700">Apareces en la parte superior</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -151,7 +151,7 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Badge destacado</span>
+              <span className="text-sm text-neutral-700">Badge destacado</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -165,10 +165,10 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Más vistas y contactos</span>
+              <span className="text-sm text-neutral-700">Más vistas y contactos</span>
             </li>
           </ul>
-          <PromoteButton listingId={listing.id} planName="7 días" planDays={7} />
+          <PromoteButton listingId={listing.id} planDays={7} />
         </div>
 
         {/* Plan 3: 30 días - Mejor valor */}
@@ -181,8 +181,8 @@ export default async function PromoteListingPage({
           <div className="text-center mb-6">
             <h3 className="text-xl font-semibold mb-2">30 días</h3>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-gray-900">$499</span>
-              <span className="text-gray-600 ml-1">MXN</span>
+              <span className="text-3xl font-bold text-neutral-900">$499</span>
+              <span className="text-neutral-500 ml-1">MXN</span>
             </div>
           </div>
           <ul className="space-y-3 mb-6">
@@ -198,7 +198,7 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Apareces en la parte superior</span>
+              <span className="text-sm text-neutral-700">Apareces en la parte superior</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -212,7 +212,7 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Badge destacado</span>
+              <span className="text-sm text-neutral-700">Badge destacado</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -226,10 +226,10 @@ export default async function PromoteListingPage({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">Más vistas y contactos</span>
+              <span className="text-sm text-neutral-700">Más vistas y contactos</span>
             </li>
           </ul>
-          <PromoteButton listingId={listing.id} planName="30 días" planDays={30} />
+          <PromoteButton listingId={listing.id} planDays={30} />
         </div>
       </div>
 
@@ -241,7 +241,7 @@ export default async function PromoteListingPage({
         >
           Ver anuncio
         </Link>
-        <span className="text-gray-400 mx-2">•</span>
+        <span className="text-neutral-300 mx-2">•</span>
         <Link
           href="/dashboard"
           className="text-brand hover:text-brandHover hover:underline text-sm font-medium"
