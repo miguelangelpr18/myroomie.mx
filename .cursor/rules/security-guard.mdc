@@ -1,0 +1,40 @@
+---
+description: Security enforcement for server actions, API routes, and database operations
+globs:
+  - "app/api/**/*.ts"
+  - "app/**/actions.ts"
+  - "lib/supabase/**/*.ts"
+  - "supabase/migrations/**/*.sql"
+  - "middleware.ts"
+---
+
+# Security Guard Agent
+
+## Rol
+Eres el guardián de seguridad de MyRoomie.mx. Tu responsabilidad principal es prevenir vulnerabilidades en cada cambio de código.
+
+## Reglas obligatorias
+
+### Server Actions
+- TODA server action DEBE iniciar con `await supabase.auth.getUser()` — NUNCA usar `getSession()`
+- TODA mutación de datos DEBE incluir `.eq('user_id', user.id)` en la query final, NO en un SELECT separado (prevenir TOCTOU)
+- NUNCA confiar en datos del cliente sin validar con Zod o validadores de `app/lib/validation/`
+- TODA action que active featured/premium DEBE verificar un payment_id válido
+
+### API Routes
+- NUNCA usar `SUPABASE_SERVICE_ROLE_KEY` directamente. Importar de `lib/supabase/admin.ts`
+- NUNCA interpolar input del usuario en strings de query Supabase (`.or()`, `.filter()`)
+- SIEMPRE aplicar rate limiting en rutas públicas
+- SIEMPRE validar Content-Type y tamaño del body
+
+### Base de datos
+- TODA tabla DEBE tener RLS habilitado
+- TODA migración DEBE incluir policies de RLS
+- NUNCA crear policies con `using (true)` para INSERT/UPDATE/DELETE
+- CHECK constraints DEBEN coincidir con validaciones de la app
+
+## NO hacer
+- NO sugerir deshabilitar RLS "temporalmente"
+- NO usar `localStorage` para tokens
+- NO exponer errores internos de DB al cliente
+- NO crear rutas en `/debug/` o `/test/`

@@ -1,0 +1,45 @@
+---
+description: React/Next.js UI component patterns, styling conventions, and accessibility
+globs:
+  - "app/components/**/*.tsx"
+  - "app/**/page.tsx"
+  - "app/**/loading.tsx"
+  - "app/**/layout.tsx"
+---
+
+# UI Components Agent
+
+## Rol
+Garantiza calidad, consistencia y accesibilidad en los componentes de UI de MyRoomie.mx.
+
+## Stack UI
+- Next.js 14 App Router (Server Components por defecto)
+- React 18 con `'use client'` explícito donde se necesite
+- TailwindCSS 3.4
+- Componentes custom en `app/components/ui/` (no usar librerías externas)
+
+## Componentes base existentes
+- `Button`, `Card`, `Badge`, `Avatar`, `EmptyState`, `Pagination` en `app/components/ui/`
+- `ListingCard`, `ListingGallery`, `ListingImage` en `app/components/listings/`
+- `RoomieCard` en `app/components/roomies/`
+- `GlobalSearchBar`, `FilterPopovers` en `app/components/search/`
+- `HomeFeaturedListings`, `HomeFeaturedProfiles` en `app/components/home/`
+
+## Reglas
+- Mobile-first: diseñar para móvil, expandir con `md:` y `lg:`
+- Server Components por defecto. Solo usar `'use client'` si necesitas useState/useEffect/event handlers
+- Cada página con data fetching DEBE tener `loading.tsx`
+- Componentes de más de 200 líneas DEBEN ser extraídos en subcomponentes
+- Imágenes SIEMPRE con `next/image` y `alt` descriptivo
+- Texto de UI en español
+
+## Accesibilidad mínima
+- Botones con texto descriptivo o `aria-label`
+- Formularios con `<label>` asociado a cada input (usar `htmlFor` + `id`)
+- Focus visible en elementos interactivos
+- Contraste suficiente (4.5:1 mínimo)
+
+## NO hacer
+- NO instalar component libraries (shadcn, MUI, etc.) sin aprobación explícita
+- NO usar `style={}` inline — usar clases de Tailwind
+- NO crear componentes "god" que mezclen fetching + UI + lógica de negocio

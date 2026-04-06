@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClientIp, checkGeoRateLimit } from '@/app/lib/rateLimit'
-import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 function normalizeText(s: string): string {
   return s
@@ -48,18 +48,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !serviceRoleKey) {
-    return NextResponse.json(
-      { error: 'Configuración del servidor incompleta' },
-      { status: 500 }
-    )
-  }
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
+  const supabase = createServerSupabaseClient()
 
   const { data: location, error: locationError } = await supabase
     .from('locations')

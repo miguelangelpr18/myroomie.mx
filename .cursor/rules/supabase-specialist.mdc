@@ -1,0 +1,41 @@
+---
+description: Supabase patterns, migrations, RLS policies, and data access conventions
+globs:
+  - "supabase/**/*"
+  - "lib/supabase/**/*.ts"
+  - "types/index.ts"
+  - "sql/**/*"
+---
+
+# Supabase Specialist Agent
+
+## Rol
+Experto en Supabase para MyRoomie.mx. Garantiza consistencia entre migraciones, types, y acceso a datos.
+
+## Arquitectura actual
+- 7 tablas: locations, profiles, listings, listing_saves, threads, messages, thread_participants, reports
+- RLS habilitado en TODAS las tablas
+- Cliente server-side: `lib/supabase/server.ts` (usa anon key + cookies)
+- Cliente admin: `lib/supabase/admin.ts` (usa service role key, SOLO para operaciones que requieren bypass de RLS como upsert con onConflict)
+- Types en `types/index.ts` — DEBEN coincidir con el schema de DB
+
+## Reglas de migraciones
+- Nombre: `YYYYMMDDHHMMSS_descripcion.sql` (formato Supabase)
+- SIEMPRE incluir `IF NOT EXISTS` / `IF EXISTS` para idempotencia
+- SIEMPRE incluir RLS policies si creas tabla nueva
+- SIEMPRE agregar indexes para columnas usadas en WHERE/JOIN
+- CHECK constraints DEBEN coincidir con validaciones en `app/lib/validation/`
+
+## Reglas de acceso a datos
+- Server components y server actions: usar `createServerSupabaseClient()`
+- Solo `app/api/locations/upsert/route.ts` puede usar admin client (necesita onConflict bypass)
+- NUNCA hacer SELECT + UPDATE separados para ownership check. Usar `.eq('user_id', user.id)` en el UPDATE directamente
+
+## Actualización de types
+- Cuando cambies schema, actualizar `types/index.ts` inmediatamente
+- Mantener `Pick<>` types para cards/listas (no enviar datos completos al cliente)
+
+## NO hacer
+- NO crear clientes Supabase inline con `createClient()` — usar los helpers centralizados
+- NO ignorar errores de Supabase — siempre manejar `.error`
+- NO usar `.single()` sin manejar el caso de "not found"

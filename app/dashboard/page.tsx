@@ -93,12 +93,7 @@ export default async function DashboardPage() {
                 >
                   Editar perfil
                 </Link>
-                <Link
-                  href="/promote/profile"
-                  className="flex-1 inline-flex items-center justify-center h-10 px-4 text-sm rounded-lg font-medium transition-colors border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand/30"
-                >
-                  Promocionar perfil
-                </Link>
+                {/* Promoción deshabilitada hasta integrar sistema de pagos */}
               </div>
             </>
           ) : (
@@ -171,12 +166,7 @@ export default async function DashboardPage() {
                       >
                         Editar
                       </Link>
-                      <Link
-                        href={`/promote/listing/${listing.id}`}
-                        className="inline-flex items-center justify-center h-8 px-3 text-xs rounded-lg font-medium bg-brand text-white hover:bg-brandHover transition-colors"
-                      >
-                        Promocionar
-                      </Link>
+                      {/* Promoción deshabilitada hasta integrar sistema de pagos */}
                     </div>
                   </div>
                 )

@@ -87,15 +87,7 @@ export default function OwnerActions({ listingId, isActive }: OwnerActionsProps)
           </svg>
           {toggling ? 'Cambiando...' : active ? 'Marcar como rentado' : 'Reactivar anuncio'}
         </button>
-        <Link
-          href={`/promote/listing/${listingId}`}
-          className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brandHover transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-          </svg>
-          Promocionar anuncio
-        </Link>
+        {/* Promoción deshabilitada hasta integrar sistema de pagos */}
         <button
           type="button"
           onClick={() => setShowDeleteModal(true)}

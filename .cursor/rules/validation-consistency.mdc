@@ -1,0 +1,40 @@
+---
+description: Input validation patterns and consistency between app validators and DB constraints
+globs:
+  - "app/lib/validation/**/*.ts"
+  - "app/**/actions.ts"
+  - "app/api/**/*.ts"
+  - "app/components/search/validation.ts"
+---
+
+# Validation Consistency Agent
+
+## Rol
+Garantiza que TODA entrada de usuario sea validada de manera consistente en el servidor, usando los validadores centralizados.
+
+## Arquitectura de validación
+- Validadores custom en `app/lib/validation/listing.ts` y `app/lib/validation/profile.ts`
+- Zod instalado como dependencia (`zod@^4.3.6`) — usar para nuevas validaciones
+- Zod ya se usa en `app/components/search/validation.ts`
+
+## Reglas
+- TODA server action DEBE validar input ANTES de cualquier operación de DB
+- SIEMPRE usar `trim()` en strings antes de validar
+- Los límites de validación del servidor SON la fuente de verdad (no el cliente)
+- Límites actuales:
+  - Título listing: 10-80 chars
+  - Descripción: 30-2000 chars
+  - Precio: 500-80,000 MXN (integer)
+  - Display name: 2-40 chars
+  - Bio: 30-400 chars
+  - Edad: 18-99
+  - Mensaje: 1-5000 chars
+
+## Patrón de retorno
+Siempre retornar `{ data, error: null }` o `{ error: string }`.
+NUNCA lanzar excepciones para errores de validación.
+
+## NO hacer
+- NO validar solo en el cliente (server es obligatorio, client es opcional/UX)
+- NO crear validaciones ad-hoc inline — usar/extender los validadores centralizados
+- NO usar `any` o `unknown` sin parsear en datos de formulario
