@@ -61,7 +61,6 @@ export type ValidateProfileBaseOptions = {
   requireLocationId?: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateProfileInput(
   input: any,
   options: ValidateProfileBaseOptions = {}
@@ -160,7 +159,6 @@ export type ProfileLifestyleNormalized = {
   schedule: 'day' | 'night'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateProfileLifestyleInput(
   input: any
 ): { ok: true; data: ProfileLifestyleNormalized } | { ok: false; error: string } {

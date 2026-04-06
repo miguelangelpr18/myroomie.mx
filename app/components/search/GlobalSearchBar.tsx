@@ -337,7 +337,7 @@ export default function GlobalSearchBar({ mode: propMode }: GlobalSearchBarProps
                 <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
                   {(filters.q ?? '').trim() && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium truncate max-w-[120px]">
-                      "{(filters.q ?? '').trim().slice(0, 15)}{(filters.q ?? '').trim().length > 15 ? '...' : ''}"
+                      &ldquo;{(filters.q ?? '').trim().slice(0, 15)}{(filters.q ?? '').trim().length > 15 ? '...' : ''}&rdquo;
                     </span>
                   )}
                   {(filters.city ?? '').trim() && (

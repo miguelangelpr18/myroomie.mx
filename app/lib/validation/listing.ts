@@ -45,7 +45,6 @@ const listingSchema = z.object({
 export type ListingInput = z.input<typeof listingSchema>
 export type ListingNormalized = z.output<typeof listingSchema>
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateListingInput(
   input: any
 ): { ok: true; data: ListingNormalized } | { ok: false; error: string } {
