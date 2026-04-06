@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { validateListingInput } from '@/app/lib/validation/listing'
+import { checkActionRateLimit } from '@/app/lib/rateLimit'
 
 export interface ListingData {
   title: string
@@ -29,6 +30,10 @@ export async function createListing(formData: ListingData) {
   const { data: { user }, error: sessionError } = await supabase.auth.getUser()
   if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
+  }
+
+  if (!(await checkActionRateLimit(user.id, 'createListing', 5, '60 s'))) {
+    return { error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }
   }
 
   const insertPayload: Record<string, unknown> = {
@@ -58,51 +63,55 @@ export async function createListing(formData: ListingData) {
   return { error: null, listingId: data.id, locationId: data.location_id ?? null }
 }
 
+const SUPABASE_STORAGE_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/`
+const MAX_IMAGES = 10
+
+function isValidStorageUrl(url: string): boolean {
+  return url.startsWith(SUPABASE_STORAGE_PREFIX)
+}
+
 /**
- * Adjuntar URLs de imágenes a un listing
- * Valida ownership antes de actualizar
+ * Adjuntar URLs de imágenes a un listing.
+ * Solo acepta URLs de Supabase Storage. Ownership se valida atómicamente en el UPDATE.
  */
 export async function attachListingImages(listingId: string, imageUrls: string[]) {
   const supabase = createServerSupabaseClient()
 
-  // Verificar sesión
   const { data: { user }, error: sessionError } = await supabase.auth.getUser()
   if (!user || sessionError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
   }
 
-  // Validar que el listing existe y pertenece al usuario
-  const { data: listing, error: listingError } = await supabase
-    .from('listings')
-    .select('user_id')
-    .eq('id', listingId)
-    .single()
-
-  if (listingError || !listing) {
-    return { error: 'Anuncio no encontrado.' }
-  }
-
-  if (listing.user_id !== user.id) {
-    return { error: 'No autorizado. Solo puedes actualizar tus propios anuncios.' }
-  }
-
-  // Validar imageUrls (array de strings)
   if (!Array.isArray(imageUrls)) {
     return { error: 'imageUrls debe ser un array.' }
   }
 
-  // Actualizar image_urls
-  const { error: updateError } = await supabase
+  if (imageUrls.length > MAX_IMAGES) {
+    return { error: `Máximo ${MAX_IMAGES} imágenes por anuncio.` }
+  }
+
+  for (const url of imageUrls) {
+    if (typeof url !== 'string' || !isValidStorageUrl(url)) {
+      return { error: 'Una o más URLs de imagen no son válidas.' }
+    }
+  }
+
+  // Ownership check atómico: el .eq('user_id') en el UPDATE previene TOCTOU
+  const { data, error: updateError } = await supabase
     .from('listings')
     .update({ image_urls: imageUrls })
     .eq('id', listingId)
     .eq('user_id', user.id)
+    .select('id')
 
   if (updateError) {
-    return { error: updateError.message || 'Error al actualizar imágenes.' }
+    return { error: 'Error al actualizar imágenes.' }
   }
 
-  // Revalidar paths
+  if (!data || data.length === 0) {
+    return { error: 'Anuncio no encontrado o no autorizado.' }
+  }
+
   revalidatePath('/listings')
   revalidatePath(`/listings/${listingId}`)
   revalidatePath('/dashboard')

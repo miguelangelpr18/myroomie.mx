@@ -23,17 +23,8 @@ export async function updateListing(listingId: string, data: UpdateListingData) 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autorizado.' }
 
-  const { data: existing } = await supabase
-    .from('listings')
-    .select('user_id')
-    .eq('id', listingId)
-    .single()
-
-  if (!existing || existing.user_id !== user.id) {
-    return { error: 'No tienes permiso para editar este anuncio.' }
-  }
-
-  const { error } = await supabase
+  // Ownership check atómico: .eq('user_id', user.id) en el UPDATE previene TOCTOU
+  const { data: updated, error } = await supabase
     .from('listings')
     .update({
       title: data.title,
@@ -50,8 +41,13 @@ export async function updateListing(listingId: string, data: UpdateListingData) 
     })
     .eq('id', listingId)
     .eq('user_id', user.id)
+    .select('id')
 
-  if (error) return { error: error.message }
+  if (error) return { error: 'Error al actualizar anuncio.' }
+
+  if (!updated || updated.length === 0) {
+    return { error: 'Anuncio no encontrado o no tienes permiso para editarlo.' }
+  }
 
   revalidatePath(`/listings/${listingId}`)
   revalidatePath('/listings')

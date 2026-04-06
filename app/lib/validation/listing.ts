@@ -1,112 +1,87 @@
+'use strict'
+
+import { z } from 'zod'
+
 const TITLE_MIN = 10
 const TITLE_MAX = 80
 const DESC_MIN = 30
 const DESC_MAX = 2_000
 const PRICE_MIN = 500
 const PRICE_MAX = 80_000
-const CITY_ZONE_MIN = 2
 const ZONE_MAX = 80
 const LOCATION_ID_MIN_LEN = 10
 
-export type ListingInput = {
-  title: string
-  description: string
-  city: string
-  zone: string
-  price_mxn: number | null
-  listing_type: 'room' | 'roommate'
-  location_id?: string | null
-  listing_subtype?: 'solo_renta' | 'buscar_roomie'
-  lifestyle_prefs?: Record<string, unknown> | null
-  amenities?: string[]
-}
+const listingSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(TITLE_MIN, `El título debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.`)
+    .max(TITLE_MAX, `El título debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.`),
+  description: z
+    .string()
+    .trim()
+    .min(DESC_MIN, `La descripción debe tener entre ${DESC_MIN} y ${DESC_MAX} caracteres.`)
+    .max(DESC_MAX, `La descripción debe tener entre ${DESC_MIN} y ${DESC_MAX} caracteres.`),
+  city: z.string().trim().default(''),
+  zone: z.string().trim().default(''),
+  price_mxn: z
+    .union([
+      z.null(),
+      z.number().int('El precio debe ser un número entero.')
+        .min(PRICE_MIN, `El precio mínimo es $${PRICE_MIN} MXN.`)
+        .max(PRICE_MAX, `El precio máximo es $${PRICE_MAX} MXN.`),
+    ])
+    .nullable()
+    .default(null),
+  listing_type: z.enum(['room', 'roommate'], {
+    error: 'Tipo de anuncio inválido. Elige "Rento cuarto" o "Busco roomie".',
+  }),
+  location_id: z.string().trim().nullable().optional(),
+  listing_subtype: z.enum(['solo_renta', 'buscar_roomie']).optional(),
+  lifestyle_prefs: z.record(z.string(), z.unknown()).nullable().optional(),
+  amenities: z.array(z.string()).optional(),
+})
 
-export type ListingNormalized = ListingInput
+export type ListingInput = z.input<typeof listingSchema>
+export type ListingNormalized = z.output<typeof listingSchema>
 
-function trim(s: unknown): string {
-  if (s == null) return ''
-  const t = String(s).trim()
-  return t
-}
-
-function isEmptyPrice(v: unknown): boolean {
-  if (v === null || v === undefined) return true
-  if (trim(v) === '') return true
-  return false
-}
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateListingInput(
-  input: Partial<Record<keyof ListingInput, unknown>>
+  input: any
 ): { ok: true; data: ListingNormalized } | { ok: false; error: string } {
-  const title = trim(input?.title)
-  const description = trim(input?.description)
-  const city = trim(input?.city)
-  const zone = trim(input?.zone)
-  const location_id = trim(input?.location_id)
-  const listing_type = input?.listing_type
-  const listing_subtype = input?.listing_subtype
-  const lifestyle_prefs = input?.lifestyle_prefs
-  const amenities = input?.amenities
-  const hasLocationId = location_id.length >= LOCATION_ID_MIN_LEN
+  const result = listingSchema.safeParse(input)
 
-  if (!title) return { ok: false, error: 'El título es requerido.' }
-  if (title.length < TITLE_MIN) return { ok: false, error: `El título debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.` }
-  if (title.length > TITLE_MAX) return { ok: false, error: `El título debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.` }
+  if (!result.success) {
+    return { ok: false, error: result.error.issues[0].message }
+  }
 
-  if (!description) return { ok: false, error: 'La descripción es requerida.' }
-  if (description.length < DESC_MIN) return { ok: false, error: `La descripción debe tener entre ${DESC_MIN} y ${DESC_MAX} caracteres.` }
-  if (description.length > DESC_MAX) return { ok: false, error: `La descripción debe tener entre ${DESC_MIN} y ${DESC_MAX} caracteres.` }
+  const data = result.data
+  const hasLocationId = !!data.location_id && data.location_id.length >= LOCATION_ID_MIN_LEN
 
+  // Location-dependent city/zone validation
   if (hasLocationId) {
-    // Con location_id válido: zone obligatoria (2–80 chars); city opcional pero si viene >= 2
-    if (!zone || zone.length < CITY_ZONE_MIN) {
+    if (!data.zone || data.zone.length < 2) {
       return { ok: false, error: 'La zona / colonia es obligatoria.' }
     }
-    if (zone.length > ZONE_MAX) {
+    if (data.zone.length > ZONE_MAX) {
       return { ok: false, error: 'La zona / colonia debe tener entre 2 y 80 caracteres.' }
     }
-    if (city.length > 0 && city.length < CITY_ZONE_MIN) {
+    if (data.city.length > 0 && data.city.length < 2) {
       return { ok: false, error: 'La ciudad debe tener al menos 2 caracteres.' }
     }
   } else {
-    if (!city) return { ok: false, error: 'La ciudad es requerida.' }
-    if (city.length < CITY_ZONE_MIN) return { ok: false, error: 'La ciudad debe tener al menos 2 caracteres.' }
-    if (!zone) return { ok: false, error: 'La zona es requerida.' }
-    if (zone.length < CITY_ZONE_MIN) return { ok: false, error: 'La zona debe tener al menos 2 caracteres.' }
-    if (zone.length > ZONE_MAX) return { ok: false, error: 'La zona / colonia debe tener entre 2 y 80 caracteres.' }
-  }
-
-  if (listing_type !== 'room' && listing_type !== 'roommate') {
-    return { ok: false, error: 'Tipo de anuncio inválido. Elige "Rento cuarto" o "Busco roomie".' }
-  }
-
-  let priceFinal: number | null = null
-  if (!isEmptyPrice(input?.price_mxn)) {
-    const num = Number(input?.price_mxn)
-    if (Number.isNaN(num)) {
-      return { ok: false, error: 'El precio debe ser un número entero.' }
-    }
-    if (!Number.isInteger(num)) {
-      return { ok: false, error: 'El precio debe ser un número entero.' }
-    }
-    if (num < PRICE_MIN) return { ok: false, error: `El precio mínimo es $${PRICE_MIN} MXN.` }
-    if (num > PRICE_MAX) return { ok: false, error: `El precio máximo es $${PRICE_MAX} MXN.` }
-    priceFinal = num
+    if (!data.city) return { ok: false, error: 'La ciudad es requerida.' }
+    if (data.city.length < 2) return { ok: false, error: 'La ciudad debe tener al menos 2 caracteres.' }
+    if (!data.zone) return { ok: false, error: 'La zona es requerida.' }
+    if (data.zone.length < 2) return { ok: false, error: 'La zona debe tener al menos 2 caracteres.' }
+    if (data.zone.length > ZONE_MAX) return { ok: false, error: 'La zona / colonia debe tener entre 2 y 80 caracteres.' }
   }
 
   return {
     ok: true,
     data: {
-      title,
-      description,
-      city: city || '',
-      zone: zone || '',
-      price_mxn: priceFinal,
-      listing_type,
-      location_id: hasLocationId ? location_id : null,
-      listing_subtype: listing_subtype as 'solo_renta' | 'buscar_roomie' | undefined,
-      lifestyle_prefs: lifestyle_prefs as Record<string, unknown> | null | undefined,
-      amenities: Array.isArray(amenities) ? amenities : undefined,
+      ...data,
+      location_id: hasLocationId ? data.location_id! : null,
     },
   }
 }

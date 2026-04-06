@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { checkActionRateLimit } from '@/app/lib/rateLimit'
 
 export async function findOrCreateThread(otherUserId: string, listingId: string | null) {
   const supabase = createServerSupabaseClient()
@@ -66,6 +67,10 @@ export async function sendMessage(threadId: string, body: string) {
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (!user || authError) {
     return { error: 'No autorizado. Por favor inicia sesión.' }
+  }
+
+  if (!(await checkActionRateLimit(user.id, 'sendMessage', 20, '60 s'))) {
+    return { error: 'Estás enviando mensajes muy rápido. Espera un momento.' }
   }
 
   if (!body || body.trim().length === 0) {
