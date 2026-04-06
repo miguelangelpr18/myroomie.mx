@@ -40,6 +40,14 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Validate coordinates are within Mexico's approximate bounds
+  if (latNum < 14 || latNum > 33 || lngNum < -118 || lngNum > -86) {
+    return NextResponse.json(
+      { error: 'Coordenadas fuera del rango de México.' },
+      { status: 400 }
+    )
+  }
+
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
   
   if (!mapboxToken) {
@@ -168,7 +176,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error en reverse geocoding:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { error: 'Error al procesar la ubicación. Intenta de nuevo.' },
       { status: 500 }
     )
   }

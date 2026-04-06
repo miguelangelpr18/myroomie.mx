@@ -18,6 +18,13 @@ async function getLimiter(prefix: string, maxRequests: number, window: string): 
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
 
   if (!url || !token) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`⚠️ Rate limiting disabled: UPSTASH_REDIS_REST_URL/TOKEN not set. Blocking requests in production.`)
+      const blocked: Limiter = { limit: async () => ({ success: false }) }
+      _limiters.set(key, blocked)
+      return blocked
+    }
+    // Dev/test: allow all when Redis not configured
     const passthrough: Limiter = { limit: async () => ({ success: true }) }
     _limiters.set(key, passthrough)
     return passthrough

@@ -66,7 +66,10 @@ export async function deleteListing(listingId: string) {
     .eq('id', listingId)
     .eq('user_id', user.id)
 
-  if (error) return { error: error.message }
+  if (error) {
+    console.error('deleteListing failed:', error)
+    return { error: 'Error al eliminar el anuncio. Intenta de nuevo.' }
+  }
 
   revalidatePath('/listings')
   revalidatePath('/dashboard')
@@ -84,7 +87,10 @@ export async function toggleListingActive(listingId: string, isActive: boolean) 
     .eq('id', listingId)
     .eq('user_id', user.id)
 
-  if (error) return { error: error.message }
+  if (error) {
+    console.error('toggleListingActive failed:', error)
+    return { error: 'Error al cambiar estado del anuncio.' }
+  }
 
   revalidatePath(`/listings/${listingId}`)
   revalidatePath('/listings')
@@ -182,7 +188,8 @@ export async function toggleSave(listingId: string, formData: FormData): Promise
     .maybeSingle()
 
   if (checkError && checkError.code !== 'PGRST116') {
-    throw new Error(`Error al verificar: ${checkError.message}`)
+    console.error('toggleSave check failed:', checkError)
+    throw new Error('Error al verificar guardado.')
   }
 
   if (existingSave) {
@@ -192,7 +199,8 @@ export async function toggleSave(listingId: string, formData: FormData): Promise
       .eq('id', existingSave.id)
 
     if (deleteError) {
-      throw new Error(`Error al eliminar: ${deleteError.message}`)
+      console.error('toggleSave delete failed:', deleteError)
+      throw new Error('Error al quitar de guardados.')
     }
   } else {
     const { error: insertError } = await supabase
@@ -203,7 +211,8 @@ export async function toggleSave(listingId: string, formData: FormData): Promise
       })
 
     if (insertError) {
-      throw new Error(`Error al guardar: ${insertError.message}`)
+      console.error('toggleSave insert failed:', insertError)
+      throw new Error('Error al guardar anuncio.')
     }
   }
 

@@ -34,7 +34,8 @@ export async function updateProfile(formData: AccountProfileData) {
     .single()
 
   if (error) {
-    return { error: error.message }
+    console.error('updateProfile (account) failed:', error)
+    return { error: 'Error al actualizar perfil. Intenta de nuevo.' }
   }
 
   // Revalidar paths para actualizar UI

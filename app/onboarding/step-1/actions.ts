@@ -29,7 +29,8 @@ export async function getMyProfile() {
 
   if (error && error.code !== 'PGRST116') {
     // Error diferente a "no encontrado"
-    return { data: null, error: error.message }
+    console.error('getMyProfile failed:', error)
+    return { data: null, error: 'Error al cargar perfil.' }
   }
 
   return { data: data || null, error: null }
@@ -65,7 +66,8 @@ export async function saveMyProfile(formData: ProfileData) {
     .single()
 
   if (error) {
-    return { error: error.message }
+    console.error('saveMyProfile failed:', error)
+    return { error: 'Error al guardar perfil. Intenta de nuevo.' }
   }
 
   // Si OK => redirect a /onboarding/step-2

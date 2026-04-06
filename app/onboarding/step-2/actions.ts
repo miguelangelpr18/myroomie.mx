@@ -29,7 +29,8 @@ export async function getMyLifestyle() {
 
   if (error && error.code !== 'PGRST116') {
     // Error diferente a "no encontrado"
-    return { data: null, error: error.message }
+    console.error('getMyLifestyle failed:', error)
+    return { data: null, error: 'Error al cargar preferencias.' }
   }
 
   return { data: data || null, error: null }
@@ -63,7 +64,8 @@ export async function saveMyLifestyle(formData: LifestyleData) {
     .single()
 
   if (error) {
-    return { error: error.message }
+    console.error('saveMyLifestyle failed:', error)
+    return { error: 'Error al guardar preferencias. Intenta de nuevo.' }
   }
 
   // Si OK => redirect a home

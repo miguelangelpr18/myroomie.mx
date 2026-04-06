@@ -57,7 +57,8 @@ export async function createListing(formData: ListingData) {
     .single()
 
   if (error) {
-    return { error: error.message, listingId: null }
+    console.error('createListing failed:', error)
+    return { error: 'No se pudo crear el anuncio. Intenta de nuevo.', listingId: null }
   }
 
   return { error: null, listingId: data.id, locationId: data.location_id ?? null }

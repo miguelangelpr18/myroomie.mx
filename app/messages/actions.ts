@@ -37,7 +37,8 @@ export async function findOrCreateThread(otherUserId: string, listingId: string 
   const { data: existingThread, error: searchError } = await query.maybeSingle()
 
   if (searchError && searchError.code !== 'PGRST116') {
-    return { error: `Error al buscar thread: ${searchError.message}` }
+    console.error('findOrCreateThread search failed:', searchError)
+    return { error: 'Error al buscar conversación. Intenta de nuevo.' }
   }
 
   if (existingThread) {
@@ -55,7 +56,8 @@ export async function findOrCreateThread(otherUserId: string, listingId: string 
     .single()
 
   if (createError) {
-    return { error: `Error al crear thread: ${createError.message}` }
+    console.error('findOrCreateThread create failed:', createError)
+    return { error: 'Error al crear conversación. Intenta de nuevo.' }
   }
 
   return { data: newThread.id, error: null }
@@ -106,7 +108,8 @@ export async function sendMessage(threadId: string, body: string) {
     .single()
 
   if (insertError) {
-    return { error: `Error al enviar mensaje: ${insertError.message}` }
+    console.error('sendMessage failed:', insertError)
+    return { error: 'Error al enviar mensaje. Intenta de nuevo.' }
   }
 
   revalidatePath(`/messages/${threadId}`)
@@ -161,7 +164,8 @@ export async function markThreadAsRead(threadId: string) {
     })
 
   if (upsertError) {
-    return { error: `Error al marcar thread como leído: ${upsertError.message}` }
+    console.error('markThreadAsRead failed:', upsertError)
+    return { error: 'Error al actualizar conversación.' }
   }
 
   return { data: null, error: null }

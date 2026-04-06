@@ -21,6 +21,22 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Validate query length
+  if (query.trim().length > 200) {
+    return NextResponse.json(
+      { error: 'Query demasiado largo (máximo 200 caracteres).' },
+      { status: 400 }
+    )
+  }
+
+  // Validate query characters (letters, numbers, spaces, common punctuation, accented chars)
+  if (!/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s.,\-#]+$/.test(query.trim())) {
+    return NextResponse.json(
+      { error: 'Query contiene caracteres no válidos.' },
+      { status: 400 }
+    )
+  }
+
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
 
   if (!mapboxToken) {
@@ -101,7 +117,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error en forward geocoding:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { error: 'Error al procesar la búsqueda. Intenta de nuevo.' },
       { status: 500 }
     )
   }

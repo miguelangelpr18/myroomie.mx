@@ -288,6 +288,36 @@ export default async function ListingDetailPage({
           <ReportButton reportedType="listing" reportedId={listing.id} />
         </div>
       )}
+
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Offer',
+            name: listing.title,
+            description: listing.description?.slice(0, 300),
+            price: listing.price_mxn ?? undefined,
+            priceCurrency: listing.price_mxn ? 'MXN' : undefined,
+            url: `https://www.myroomie.mx/listings/${listing.id}`,
+            image: Array.isArray(listing.image_urls) && listing.image_urls[0]
+              ? listing.image_urls[0]
+              : undefined,
+            areaServed: {
+              '@type': 'City',
+              name: listing.city,
+            },
+            offeredBy: profile ? {
+              '@type': 'Person',
+              name: profile.display_name,
+              url: `https://www.myroomie.mx/profiles/${listing.user_id}`,
+            } : undefined,
+            datePosted: listing.created_at,
+            availability: 'https://schema.org/InStock',
+          }),
+        }}
+      />
     </div>
   )
 }

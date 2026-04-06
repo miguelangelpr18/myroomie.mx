@@ -38,7 +38,10 @@ export async function updateProfile(data: EditProfileData) {
     .update(payload)
     .eq('user_id', user.id)
 
-  if (error) return { error: error.message }
+  if (error) {
+    console.error('updateProfile failed:', error)
+    return { error: 'Error al actualizar perfil. Intenta de nuevo.' }
+  }
 
   revalidatePath(`/profiles/${user.id}`)
   revalidatePath('/dashboard')
