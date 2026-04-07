@@ -4,7 +4,9 @@ import { useState, FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn, signOut } from '@/lib/auth'
 import { hasProfile } from './actions'
+import { checkLoginRateLimit } from './rate-limit-action'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import TurnstileWidget from '@/app/components/ui/TurnstileWidget'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -12,6 +14,7 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -56,6 +59,13 @@ export default function Login() {
     setIsSubmitting(true)
 
     try {
+      // Rate limit check (server-side by IP)
+      const rateCheck = await checkLoginRateLimit(turnstileToken)
+      if (!rateCheck.allowed) {
+        setErrorMsg(rateCheck.message || 'Demasiados intentos.')
+        return
+      }
+
       const { data, error: signInError } = await signIn(email, password)
 
       if (signInError) {
@@ -176,6 +186,8 @@ export default function Login() {
             placeholder="Tu contraseña"
           />
         </div>
+
+        <TurnstileWidget onSuccess={setTurnstileToken} />
 
         <button
           type="submit"

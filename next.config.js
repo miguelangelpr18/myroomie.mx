@@ -10,6 +10,15 @@ const nextConfig = {
     ],
   },
 
+  async redirects() {
+    return [
+      { source: '/registro', destination: '/signup', permanent: true },
+      { source: '/anuncios', destination: '/listings', permanent: true },
+      { source: '/roomies', destination: '/explore', permanent: true },
+      { source: '/como-funciona', destination: '/#como-funciona', permanent: true },
+    ]
+  },
+
   async headers() {
     return [
       {
