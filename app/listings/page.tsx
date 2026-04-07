@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { sanitizeSearchQuery } from '@/app/lib/validation/search-sanitize'
 import Link from 'next/link'
 import EmptyState from '../components/ui/EmptyState'
 import ListingCard from '../components/listings/ListingCard'
@@ -84,7 +85,10 @@ export default async function Listings({ searchParams }: ListingsPageProps) {
 
   // Aplicar filtro de búsqueda por texto (q)
   if (q.trim()) {
-    query = query.or(`title.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%`)
+    const safeQ = sanitizeSearchQuery(q)
+    if (safeQ) {
+      query = query.or(`title.ilike.%${safeQ}%,description.ilike.%${safeQ}%`)
+    }
   }
 
   // Filtro por ubicación: location_id (exacto) o city/zone legacy (solo cuando no hay locationId)

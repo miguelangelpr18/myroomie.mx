@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-
-const MAX_QUERY_LENGTH = 100
-
-function sanitizeSearchQuery(q: string): string {
-  // Remove characters that have meaning in PostgREST filter syntax
-  return q
-    .replace(/[(),%\\"'.*+?^${}|[\]]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, MAX_QUERY_LENGTH)
-}
+import { sanitizeSearchQuery } from '@/app/lib/validation/search-sanitize'
 
 export async function GET(req: NextRequest) {
   const rawQ = req.nextUrl.searchParams.get('q')?.trim() || ''

@@ -1,15 +1,5 @@
 import { describe, it, expect } from 'vitest'
-
-// Extract the sanitizer logic to test it directly
-const MAX_QUERY_LENGTH = 100
-
-function sanitizeSearchQuery(q: string): string {
-  return q
-    .replace(/[(),%\\"'.*+?^${}|[\]]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, MAX_QUERY_LENGTH)
-}
+import { sanitizeSearchQuery } from '../search-sanitize'
 
 describe('sanitizeSearchQuery', () => {
   it('passes through normal text', () => {
