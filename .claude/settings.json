@@ -4,7 +4,13 @@
       "WebFetch(domain:www.myroomie.mx)",
       "Bash(find /Users/miguelangelpenar/myroomie.mx/app/api -name \"route.ts\" -exec head -30 {} +)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\nRedirect URL: %{redirect_url}\\\\nFinal URL: %{url_effective}\\\\n\" -L -D - https://www.myroomie.mx/registro)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\nRedirect URL: %{redirect_url}\\\\nFinal URL: %{url_effective}\\\\n\" -L -D - https://www.myroomie.mx/anuncios)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\nRedirect URL: %{redirect_url}\\\\nFinal URL: %{url_effective}\\\\n\" -L -D - https://www.myroomie.mx/roomies)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\nRedirect URL: %{redirect_url}\\\\nFinal URL: %{url_effective}\\\\n\" -L -D - https://www.myroomie.mx/como-funciona)",
+      "Bash(curl -s -L -w \"\\\\n---\\\\nHTTP Status: %{http_code}\\\\nFinal URL: %{url_effective}\\\\n\" https://www.myroomie.mx/signup)",
+      "Bash(curl -s -L -w \"\\\\n---\\\\nHTTP Status: %{http_code}\\\\nFinal URL: %{url_effective}\\\\n\" https://www.myroomie.mx/login)"
     ],
     "additionalDirectories": [
       "/Users/miguelangelpenar/myroomie.mx/.claude"
