@@ -10,7 +10,15 @@
       "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\nRedirect URL: %{redirect_url}\\\\nFinal URL: %{url_effective}\\\\n\" -L -D - https://www.myroomie.mx/roomies)",
       "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\nRedirect URL: %{redirect_url}\\\\nFinal URL: %{url_effective}\\\\n\" -L -D - https://www.myroomie.mx/como-funciona)",
       "Bash(curl -s -L -w \"\\\\n---\\\\nHTTP Status: %{http_code}\\\\nFinal URL: %{url_effective}\\\\n\" https://www.myroomie.mx/signup)",
-      "Bash(curl -s -L -w \"\\\\n---\\\\nHTTP Status: %{http_code}\\\\nFinal URL: %{url_effective}\\\\n\" https://www.myroomie.mx/login)"
+      "Bash(curl -s -L -w \"\\\\n---\\\\nHTTP Status: %{http_code}\\\\nFinal URL: %{url_effective}\\\\n\" https://www.myroomie.mx/login)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} | Redirects: %{num_redirects} | Final URL: %{url_effective}\" -L \"https://www.myroomie.mx/registro\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} | Redirects: %{num_redirects} | Final URL: %{url_effective}\" -L \"https://www.myroomie.mx/anuncios\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} | Redirects: %{num_redirects} | Final URL: %{url_effective}\" -L \"https://www.myroomie.mx/roomies\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} | Redirects: %{num_redirects} | Final URL: %{url_effective}\" -L \"https://www.myroomie.mx/como-funciona\")",
+      "Bash(curl -s -L \"https://www.myroomie.mx/signup\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" -L \"https://www.myroomie.mx/signup\")",
+      "Bash(curl -s -L \"https://www.myroomie.mx/login\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" -L \"https://www.myroomie.mx/login\")"
     ],
     "additionalDirectories": [
       "/Users/miguelangelpenar/myroomie.mx/.claude"
