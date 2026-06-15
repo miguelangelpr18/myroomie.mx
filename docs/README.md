@@ -31,7 +31,3 @@
 
 - (Próximamente) CHANGELOG.md — Registro de cambios por fecha
 - (Próximamente) decisions.md — ADRs: por qué elegimos X sobre Y
-
-## Archivo
-
-Documentos antiguos migrados desde la raíz del proyecto: [archive/](archive/)
