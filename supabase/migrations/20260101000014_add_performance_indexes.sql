@@ -1,5 +1,4 @@
--- Migration: Performance Indexes
--- Created: 2026-04-06
+-- Migration 014: Performance Indexes
 -- Description: Adds indexes for common query patterns to improve page load times
 
 BEGIN;

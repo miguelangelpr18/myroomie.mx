@@ -1,5 +1,5 @@
 -- Migration 003: Create listings table
--- No source file existed — reconstructed from squema.sql column snapshot + app code
+-- No source file existed — reconstructed from the production column snapshot + app code
 
 create table if not exists public.listings (
   id uuid primary key default gen_random_uuid(),
